@@ -1,0 +1,619 @@
+openapi: 3.1.0
+info:
+  title: Ronin Runner API - contrato preliminar de design
+  version: 0.18.0-draft
+  description: |
+    Contrato de especificacao, nao implementacao. Prefixo /api/v1.
+    Produto fechado; limites indicados como baseline devem ser aferidos antes do deploy.
+    Nunca aceitar score, vida, posicao ou eventos de kill declarados pelo cliente como verdade.
+servers:
+  - url: https://play.ronin.dev.br/api/v1
+    description: Origem proposta, sujeita a confirmacao de DNS/Caddy
+tags:
+  - name: Auth
+  - name: Profile
+  - name: Runs
+  - name: Leaderboards
+  - name: Weekly
+security:
+  - roninSession: []
+paths:
+  /auth/guest:
+    post:
+      tags: [Auth]
+      summary: Criar ou reutilizar identidade visitante
+      security: []
+      responses:
+        '200':
+          description: Sessao de visitante restaurada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlayerSummary' }
+        '201':
+          description: Identidade visitante criada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlayerSummary' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Registrar conta por email e senha
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegisterRequest' }
+      responses:
+        '202':
+          description: Confirmacao solicitada sem enumeracao de contas
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login email/senha
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EmailLoginRequest' }
+      responses:
+        '200':
+          description: Sessao autenticada emitida em cookie seguro
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlayerSummary' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /auth/google:
+    post:
+      tags: [Auth]
+      summary: Login com credencial do Google verificada no servidor
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id_token, csrf_proof]
+              properties:
+                id_token: { type: string, minLength: 1 }
+                csrf_proof: { type: string, minLength: 1 }
+              additionalProperties: false
+      responses:
+        '200':
+          description: Identidade Google autenticada e vinculada ao sub
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlayerSummary' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /auth/verify-email:
+    post:
+      tags: [Auth]
+      summary: Confirmar email por token de uso unico
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token: { type: string }
+              additionalProperties: false
+      responses:
+        '204': { description: Endereco confirmado }
+        '422': { $ref: '#/components/responses/InvalidState' }
+  /auth/password/forgot:
+    post:
+      tags: [Auth]
+      summary: Pedir redefinicao de senha sem revelar se conta existe
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+              additionalProperties: false
+      responses:
+        '202': { description: Pedido recebido; resposta neutra }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /auth/password/reset:
+    post:
+      tags: [Auth]
+      summary: Redefinir senha com token de uso unico
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, new_password]
+              properties:
+                token: { type: string }
+                new_password: { type: string, minLength: 12, maxLength: 256 }
+              additionalProperties: false
+      responses:
+        '204': { description: Senha atualizada, sessoes rotacionadas }
+        '422': { $ref: '#/components/responses/InvalidState' }
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Revogar sessao atual
+      responses:
+        '204': { description: Sessao encerrada }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /auth/merge/preview:
+    post:
+      tags: [Auth]
+      summary: Consultar potencial mesclagem com prova de ambas identidades
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [target_session_proof]
+              properties:
+                target_session_proof: { type: string }
+              additionalProperties: false
+      responses:
+        '200':
+          description: Comparativo sem modificar dados
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [merge_nonce, source_player_id, target_player_id]
+                properties:
+                  merge_nonce: { type: string }
+                  source_player_id: { type: string, format: uuid }
+                  target_player_id: { type: string, format: uuid }
+                  summary: { type: object }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /auth/merge/confirm:
+    post:
+      tags: [Auth]
+      summary: Mesclar duas identidades autenticadas com idempotencia
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [merge_nonce, confirmed]
+              properties:
+                merge_nonce: { type: string }
+                confirmed: { type: boolean, const: true }
+              additionalProperties: false
+      responses:
+        '200':
+          description: Perfil canonico, sem duplicar eventos
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlayerSummary' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /me:
+    get:
+      tags: [Profile]
+      summary: Perfil atual da identidade
+      responses:
+        '200':
+          description: Perfil e configuracoes
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlayerSummary' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /character/catalog:
+    get:
+      tags: [Profile]
+      summary: Pecas basicas livres e cosmeticos desbloqueaveis
+      security: []
+      responses:
+        '200':
+          description: Catalogo versionado
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [catalog_version, parts]
+                properties:
+                  catalog_version: { type: string }
+                  parts:
+                    type: array
+                    items: { $ref: '#/components/schemas/CharacterPart' }
+  /me/character:
+    get:
+      tags: [Profile]
+      summary: Aparencia atual
+      responses:
+        '200':
+          description: Equipamento atual
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Character' }
+    patch:
+      tags: [Profile]
+      summary: Atualizar IDs de pecas permitidas com controle de concorrencia
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CharacterUpdate' }
+      responses:
+        '200':
+          description: Aparencia canonica atualizada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Character' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /runs/start:
+    post:
+      tags: [Runs]
+      summary: Criar tentativa competitiva FULL ou REGIONAL
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mode]
+              properties:
+                mode: { $ref: '#/components/schemas/RunMode' }
+                region_id: { type: string }
+              additionalProperties: false
+      responses:
+        '201':
+          description: Tentativa autorizada, seed e versoes do servidor
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RunTicket' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /runs/{run_id}/segments/{index}:
+    put:
+      tags: [Runs]
+      summary: Enviar bloco compacto de comandos em ticks
+      parameters:
+        - { $ref: '#/components/parameters/RunId' }
+        - { name: index, in: path, required: true, schema: { type: integer, minimum: 0 } }
+        - { name: X-Start-Tick, in: header, required: true, schema: { type: integer, minimum: 0 } }
+        - { name: X-End-Tick, in: header, required: true, schema: { type: integer, minimum: 1 } }
+        - { name: X-Segment-Hash, in: header, required: true, schema: { type: string } }
+        - { name: X-Previous-Segment-Hash, in: header, required: false, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema: { type: string, format: binary }
+      responses:
+        '200':
+          description: Segmento identico ja recebido
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SegmentAck' }
+        '201':
+          description: Segmento persistido; ainda nao verificado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SegmentAck' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+  /runs/{run_id}/finish:
+    post:
+      tags: [Runs]
+      summary: Finalizar e pedir verificacao server-side
+      parameters:
+        - { $ref: '#/components/parameters/RunId' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [final_segment_index, final_tick, final_hash, end_reason]
+              properties:
+                final_segment_index: { type: integer, minimum: 0 }
+                final_tick: { type: integer, minimum: 0 }
+                final_hash: { type: string }
+                end_reason: { type: string, enum: [HP_ZERO, ABYSS, QUIT] }
+              additionalProperties: false
+      responses:
+        '202':
+          description: Verificacao pendente, score ainda nao publicado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RunStatus' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/InvalidState' }
+  /runs/{run_id}:
+    get:
+      tags: [Runs]
+      summary: Consultar somente a propria tentativa
+      parameters:
+        - { $ref: '#/components/parameters/RunId' }
+      responses:
+        '200':
+          description: Status e resultados confirmados se VERIFIED
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RunStatus' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /leaderboards/{kind}:
+    get:
+      tags: [Leaderboards]
+      security: []
+      summary: Ranking FULL global ou REGIONAL separado por versao de regra
+      parameters:
+        - { name: kind, in: path, required: true, schema: { type: string, enum: [global, global_weekly, regional, regional_weekly, hall_of_fame] } }
+        - { name: region_id, in: query, required: false, schema: { type: string } }
+        - { name: rules_major, in: query, required: false, schema: { type: integer, minimum: 1 } }
+        - { name: cursor, in: query, required: false, schema: { type: string } }
+      responses:
+        '200':
+          description: Melhor run VERIFIED por jogador por quadro e paginacao cursor
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LeaderboardPage' }
+  /weekly/current:
+    get:
+      tags: [Weekly]
+      security: []
+      summary: Edicao global publicada de desafios
+      responses:
+        '200':
+          description: Cinco desafios e prazo UTC
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WeeklyEdition' }
+  /weekly/me:
+    get:
+      tags: [Weekly]
+      summary: Progresso atual validado e selos 2/4/5
+      responses:
+        '200':
+          description: Edicao, progresso individual e maior tier
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [edition, challenges_completed, earned_tiers]
+                properties:
+                  edition: { $ref: '#/components/schemas/WeeklyEdition' }
+                  challenges_completed: { type: integer, minimum: 0, maximum: 5 }
+                  earned_tiers: { type: array, items: { type: string, enum: [BRONZE, SILVER, GOLD] } }
+  /me/cosmetics:
+    get:
+      tags: [Profile]
+      summary: Inventario de cosmeticos
+      responses:
+        '200':
+          description: Itens e estado de posse/equipamento
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  unlocked_part_ids: { type: array, items: { type: string } }
+                  equipped: { $ref: '#/components/schemas/Character' }
+  /me/emblems/equip:
+    patch:
+      tags: [Profile]
+      summary: Equipar um unico emblema ja concedido
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [emblem_instance_id]
+              properties:
+                emblem_instance_id: { type: [string, 'null'] }
+              additionalProperties: false
+      responses:
+        '204': { description: Emblema atualizado apos verificacao de posse }
+        '403': { $ref: '#/components/responses/Forbidden' }
+components:
+  securitySchemes:
+    roninSession:
+      type: apiKey
+      in: cookie
+      name: rr_sid
+      description: Cookie opaco host-only Secure HttpOnly SameSite com CSRF separado nas mutacoes
+  parameters:
+    RunId:
+      name: run_id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  schemas:
+    RunMode:
+      type: string
+      enum: [FULL, REGIONAL]
+    PlayerSummary:
+      type: object
+      required: [player_id, account_type, nickname, locale]
+      properties:
+        player_id: { type: string, format: uuid }
+        account_type: { type: string, enum: [GUEST, EMAIL, GOOGLE, MULTI] }
+        nickname: { type: [string, 'null'] }
+        locale: { type: string, enum: [pt-BR, en] }
+        email_verified: { type: boolean }
+        region_unlocks: { type: array, items: { type: string } }
+    RegisterRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, minLength: 12, maxLength: 256 }
+        nickname: { type: string, minLength: 3, maxLength: 20 }
+      additionalProperties: false
+    EmailLoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string }
+      additionalProperties: false
+    CharacterPart:
+      type: object
+      required: [part_id, slot, is_basic_free, rig_version]
+      properties:
+        part_id: { type: string }
+        slot: { type: string }
+        is_basic_free: { type: boolean }
+        unlock_requirement_id: { type: [string, 'null'] }
+        rig_version: { type: string }
+        locale_key: { type: string }
+    Character:
+      type: object
+      required: [player_id, appearance_version, slots]
+      properties:
+        player_id: { type: string, format: uuid }
+        appearance_version: { type: integer, minimum: 1 }
+        slots: { type: object, additionalProperties: { type: string } }
+    CharacterUpdate:
+      type: object
+      required: [expected_appearance_version, slots]
+      properties:
+        expected_appearance_version: { type: integer, minimum: 1 }
+        slots: { type: object, additionalProperties: { type: string } }
+      additionalProperties: false
+    RunTicket:
+      type: object
+      required: [run_id, mode, seed, rules_major, rules_patch, generator_version, replay_protocol_version, started_at]
+      properties:
+        run_id: { type: string, format: uuid }
+        mode: { $ref: '#/components/schemas/RunMode' }
+        starting_region_id: { type: string }
+        seed: { type: string }
+        rules_major: { type: integer }
+        rules_patch: { type: integer }
+        generator_version: { type: string }
+        replay_protocol_version: { type: string }
+        started_at: { type: string, format: date-time }
+    SegmentAck:
+      type: object
+      required: [run_id, index, segment_hash, persisted]
+      properties:
+        run_id: { type: string, format: uuid }
+        index: { type: integer, minimum: 0 }
+        segment_hash: { type: string }
+        persisted: { type: boolean, const: true }
+    RunStatus:
+      type: object
+      required: [run_id, status]
+      properties:
+        run_id: { type: string, format: uuid }
+        status: { type: string, enum: [CREATED, ACTIVE, PENDING, VERIFYING, VERIFIED, REJECTED, ABANDONED, EXPIRED] }
+        score: { type: [string, 'null'], description: Pontuacao inteira decimal somente quando verificada }
+        distance_m: { type: [integer, 'null'], minimum: 0 }
+        verified_at: { type: [string, 'null'], format: date-time }
+        rejection_code: { type: [string, 'null'] }
+    LeaderboardEntry:
+      type: object
+      required: [rank, public_name, score, distance_m, rules_major]
+      properties:
+        rank: { type: integer, minimum: 1 }
+        player_id: { type: string, format: uuid }
+        public_name: { type: string }
+        avatar_parts: { type: object, additionalProperties: { type: string } }
+        score: { type: string, description: Inteiro decimal para evitar overflow de JavaScript }
+        distance_m: { type: integer, minimum: 0 }
+        rules_major: { type: integer, minimum: 1 }
+    LeaderboardPage:
+      type: object
+      required: [entries, rules_major]
+      properties:
+        entries: { type: array, items: { $ref: '#/components/schemas/LeaderboardEntry' } }
+        next_cursor: { type: [string, 'null'] }
+        rules_major: { type: integer, minimum: 1 }
+    WeeklyEdition:
+      type: object
+      required: [week_id, starts_at, ends_at, challenges]
+      properties:
+        week_id: { type: string }
+        starts_at: { type: string, format: date-time }
+        ends_at: { type: string, format: date-time }
+        challenges:
+          type: array
+          minItems: 5
+          maxItems: 5
+          items:
+            type: object
+            required: [challenge_id, tier, metric, target, locale_key]
+            properties:
+              challenge_id: { type: string }
+              tier: { type: string, enum: [EASY, MEDIUM, HARD] }
+              metric: { type: string }
+              target: { type: integer, minimum: 1 }
+              locale_key: { type: string }
+    ApiError:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message_key, request_id]
+          properties:
+            code: { type: string }
+            message_key: { type: string }
+            request_id: { type: string }
+            details: { type: object }
+  responses:
+    BadRequest:
+      description: Corpo ou formato invalido
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    Unauthorized:
+      description: Sessao ou credencial invalida
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    Forbidden:
+      description: Sem permissao sobre recurso
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    NotFound:
+      description: Recurso inexistente
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    Conflict:
+      description: Idempotencia, versao concorrente ou estado de run invalido
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    InvalidState:
+      description: Estado invalido ou token expirado
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    PayloadTooLarge:
+      description: Segmento maior que limite da politica
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    RateLimited:
+      description: Muitas requisicoes, usar Retry-After
+      headers:
+        Retry-After:
+          schema: { type: integer, minimum: 1 }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
