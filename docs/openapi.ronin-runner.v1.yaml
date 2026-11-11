@@ -204,6 +204,176 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/PlayerSummary' }
         '409': { $ref: '#/components/responses/Conflict' }
+  /auth/link:
+    post:
+      tags: [Auth]
+      summary: Vincular Google ou email a identidade autenticada
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [method, proof]
+              properties:
+                method: { type: string, enum: [EMAIL, GOOGLE] }
+                proof: { type: string, description: Prova de posse validada no servidor }
+              additionalProperties: false
+      responses:
+        '200':
+          description: Metodo associado, sessao rotacionada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlayerSummary' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /me/sessions:
+    get:
+      tags: [Auth]
+      summary: Sessoes ativas e autenticacoes recentes resumidas
+      responses:
+        '200':
+          description: Dispositivos sem dados sensiveis
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sessions:
+                    type: array
+                    items:
+                      type: object
+                      required: [session_id, created_at, current]
+                      properties:
+                        session_id: { type: string }
+                        created_at: { type: string, format: date-time }
+                        current: { type: boolean }
+                        last_seen_at: { type: [string, 'null'], format: date-time }
+  /me/sessions/{session_id}:
+    delete:
+      tags: [Auth]
+      summary: Revogar sessao do proprio usuario
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '204': { description: Sessao revogada }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /me/preferences:
+    patch:
+      tags: [Profile]
+      summary: Idioma, som, acessibilidade e qualidade
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                locale: { type: string, enum: [pt-BR, en] }
+                reduced_motion: { type: boolean }
+                graphics_quality: { type: string, enum: [AUTO, LOW, HIGH] }
+                music_volume: { type: number, minimum: 0, maximum: 1 }
+                effects_volume: { type: number, minimum: 0, maximum: 1 }
+              additionalProperties: false
+      responses:
+        '200':
+          description: Preferencias persistidas
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /me/progress:
+    get:
+      tags: [Profile]
+      summary: Metricas de carreira e regioes desbloqueadas verificadas
+      responses:
+        '200':
+          description: Progresso e marcos
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [verified_distance_m, verified_perfect_slashes, verified_kills, unlocked_regions]
+                properties:
+                  verified_distance_m: { type: integer, minimum: 0 }
+                  verified_perfect_slashes: { type: integer, minimum: 0 }
+                  verified_kills: { type: integer, minimum: 0 }
+                  unlocked_regions: { type: array, items: { type: string } }
+  /me/missions:
+    get:
+      tags: [Profile]
+      summary: Catalogo de missoes e progresso confiavel
+      responses:
+        '200':
+          description: Progresso das missoes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  missions: { type: array, items: { type: object, additionalProperties: true } }
+  /me/achievements:
+    get:
+      tags: [Profile]
+      summary: Conquistas e quatro selos de chefes
+      responses:
+        '200':
+          description: Conquistas concedidas
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  achievements: { type: array, items: { type: string } }
+                  boss_seals: { type: array, items: { type: string } }
+  /me/regions:
+    get:
+      tags: [Profile]
+      summary: Regioes atingidas legitimamente
+      responses:
+        '200':
+          description: Lista de region IDs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  unlocked_regions: { type: array, items: { type: string } }
+  /players/{player_id}/public:
+    get:
+      tags: [Profile]
+      security: []
+      summary: Somente dados publicos de perfil
+      parameters:
+        - { name: player_id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Nome publico, avatar sintetico e conquistas publicas
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [player_id, public_name]
+                properties:
+                  player_id: { type: string, format: uuid }
+                  public_name: { type: string }
+                  avatar_parts: { type: object, additionalProperties: { type: string } }
+                  achievements_public: { type: array, items: { type: string } }
+  /me/export:
+    post:
+      tags: [Profile]
+      summary: Solicitar exportacao de dados protegida
+      responses:
+        '202': { description: Pedido aceito apos autenticacao recente quando necessario }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /me/delete-request:
+    post:
+      tags: [Profile]
+      summary: Solicitar exclusao de conta apos reautenticacao
+      responses:
+        '202': { description: Pedido aceito com instrucoes e periodo de confirmacao }
+        '403': { $ref: '#/components/responses/Forbidden' }
   /me:
     get:
       tags: [Profile]
@@ -393,6 +563,41 @@ paths:
                 required: [edition, challenges_completed, earned_tiers]
                 properties:
                   edition: { $ref: '#/components/schemas/WeeklyEdition' }
+                  challenges_completed: { type: integer, minimum: 0, maximum: 5 }
+                  earned_tiers: { type: array, items: { type: string, enum: [BRONZE, SILVER, GOLD] } }
+  /weekly/archive:
+    get:
+      tags: [Weekly]
+      security: []
+      summary: Historico de edicoes, sem progresso privado
+      parameters:
+        - { name: cursor, in: query, required: false, schema: { type: string } }
+      responses:
+        '200':
+          description: Pagina de edicoes ja publicadas
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  editions: { type: array, items: { $ref: '#/components/schemas/WeeklyEdition' } }
+                  next_cursor: { type: [string, 'null'] }
+  /weekly/{week_id}/me:
+    get:
+      tags: [Weekly]
+      summary: Progresso individual de edicao historica
+      parameters:
+        - { name: week_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Recompensas bronze prata e ouro da edicao
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [week_id, challenges_completed, earned_tiers]
+                properties:
+                  week_id: { type: string }
                   challenges_completed: { type: integer, minimum: 0, maximum: 5 }
                   earned_tiers: { type: array, items: { type: string, enum: [BRONZE, SILVER, GOLD] } }
   /me/cosmetics:
