@@ -5,9 +5,10 @@
 > **Regras confirmadas de encontro, retirada e recompensas:** [Chefes e recompensas v0.11](./RONIN_RUNNER_CHEFES_RECOMPENSAS.md). Chefes que não forem derrotados recuam e a corrida continua, sem punição pela retirada.
 > **Missões, conquistas e progressão permanente:** [Game Design v0.12](./RONIN_RUNNER_PROGRESSAO_MISSOES.md). **Traço da Aurora confirmado** como efeito permanente de katana pela coleção completa dos quatro selos. Catálogos e metas adicionais são propostas sujeitas a revisão.
 > **Desafios semanais autogerados na versão completa:** [Game Design v0.13–v0.14](./RONIN_RUNNER_DESAFIOS_SEMANAIS.md). Publicação e validação automáticas, sem curadoria manual toda semana, mesmos desafios para visitantes e contas vinculadas. **Recompensas confirmadas:** selos Bronze (2/5), Prata (4/5) e Ouro (5/5).
-> **Interface, criador visual e Ronin ID:** [Game Design v0.14](./RONIN_RUNNER_INTERFACE_PERSONAGEM_RONIN_ID.md). Define telas, fluxos de visitante/e-mail/Google, customização modular proposta, recuperação, mesclagem segura e testes E2E.
+> **Interface, criador visual e Ronin ID:** [Game Design v0.14, atualizado em v0.15](./RONIN_RUNNER_INTERFACE_PERSONAGEM_RONIN_ID.md). Define telas, fluxos de visitante/e-mail/Google, criador modular **confirmado**, recuperação, mesclagem segura e testes E2E.
+> **Criador completo, rig, animações, telas e critérios de aceite:** [Game Design v0.15](./RONIN_RUNNER_PERSONAGEM_ANIMACOES_VALIDACAO.md). Personalização completa de cabelo, rosto, tom de pele, roupas, acessórios e katana é obrigatória no primeiro lançamento.
 
-Versão: 0.14 — consolidada até game design v0.14 (planejamento pré-implementação)  
+Versão: 0.15 — consolidada até game design v0.15 (planejamento pré-implementação)  
 Status: **escopo funcional completo definido; parâmetros de balanceamento e decisões de UX sujeitos a playtest**  
 Repositório: `Kennedh/ronin-jogos`  
 Ecossistema futuro: `play.ronin.dev.br`
@@ -179,12 +180,24 @@ Desktop: espaço/↑ pular, ↓/S deslizar, J atacar; configurações para alter
 
 - **Telas de lançamento:** carregamento, menu principal, escolha Jornada Completa/Expedição Regional, preparação mobile/gestos, corrida/HUD, pausa, resultados, ranking, Pergaminho (missões e semanas), Meu Ronin, criador de aparência/coleção, autenticação e segurança da conta, configurações e privacidade.
 - **Jogar sem cadastro** continua obrigatório: criar/reusar sessão visitante, escolher apelido antes de exibir no ranking, recomendar vínculo de conta discretamente após marcos relevantes.
-- **Criador visual proposto**, ainda sujeito à confirmação de abrangência: cabelo, cores, detalhes faciais e de pele, trajes, acessórios, aparência da katana e efeitos cosméticos, todos com corpo, hitboxes e comandos idênticos. Nada de uploads pessoais/IA para imagens de personagem no lançamento. Alterações apenas fora da corrida.
+- **DECISÃO CONFIRMADA em v0.15: Criador de Ronin completo e modular na primeira versão pública**, abrangendo cabelo, rosto, tom de pele, roupas, acessórios e katana (cabo/bainha/visual), além de cosméticos desbloqueados como o Traço da Aurora. Todos os visuais compartilham rig/animações-base, hitboxes, física, velocidade e janela de golpe; não alteram o ranking. Alterações somente fora de corrida. Catálogo de quantidade de peças, pipeline e otimização seguem parâmetros a validar; não exigir upload de foto pessoal ou geração por IA.
 - Traço da Aurora pode equipar em qualquer traje, sem alterar alcance. Bronze/Prata/Ouro semanal são **emblemas de perfil independentes**, nível máximo exibido por edição, histórico preservado.
 - Fluxos completos de **e-mail/senha** (verificação, recuperação, troca, sessão), **Google** (token verificado pelo servidor e associação via sub), **visitante** e **mesclagem autenticada** sem juntar contas só por e-mail ou apelido; replays e eventos deduplicados.
 - Menus responsivos mobile/desktop, **orientação horizontal recomendada durante a corrida**, fullscreen quando permitido, fallback sem fullscreen; PT-BR/EN inclusive em emails, erros e informações legais.
 - Política de erro: score e recompensas pendentes até validação, conexão interrompida, sessão expirada, e-mail atrasado, desconexão da API, reautenticação, contas duplicadas e tentativa de fusão.
-- **Fluxos, modelo lógico, testes e decisões ainda abertas:** [documento v0.14](./RONIN_RUNNER_INTERFACE_PERSONAGEM_RONIN_ID.md).
+- **Fluxos de Ronin ID, modelo lógico e telas:** [documento v0.14](./RONIN_RUNNER_INTERFACE_PERSONAGEM_RONIN_ID.md). **Rig, camadas, animações, acessibilidade, custo de assets, testes e aceite:** [documento v0.15](./RONIN_RUNNER_PERSONAGEM_ANIMACOES_VALIDACAO.md).
+
+## 9.2 Criador de Ronin completo, animações e validação — CONFIRMADO (v0.15)
+
+- Primeira versão pública inclui **personalização completa e modular de cabelo, rosto, tom de pele, roupas, acessórios e katana**. O jogador pode jogar com o visual padrão sem precisar abrir o criador.
+- Renderizador de personagem montado por **camadas visuais com rig/pivôs compartilhados** ou spritesheets compostos equivalentes, compatível com todas as animações do jogo: idle, correr, pular, salto duplo, deslizar, golpear, corte perfeito, concentração, dano e morte.
+- Corpo autoritativo/hitbox, alcance e timing da katana, vida, salto duplo, física, ritmo e resultados **não variam** por aparência; trajes, acessórios, katana e efeitos são cosméticos.
+- Avatar de perfil/leaderboard é representação sintética do equipamento do jogador, sem exigir upload de foto ou geração externa. Somente peças desbloqueadas podem ser equipadas; preview de bloqueadas pode ser mostrado.
+- Persistência integrada ao Ronin ID visitante/Google/e-mail, atualização fora de partida, controle de concorrência por `appearance_version` ou equivalente, fusão segura de contas e fallback visual sem apagar a personalização legítima.
+- Confirmado o catálogo de **categorias**; números exatos de cabelo, cor, rosto, tom, acessórios, trajes e skins de katana são **propostas de arte para aprovação**, sem reduzir a abrangência do criador.
+- Telas S00–S13 seguem a especificação de interface; modos e HUD são independentes de cosméticos. O criador deve permitir preview de animações relevantes e operar em desktop/mobile com menus responsivos.
+- Validação obrigatória por testes de slot, incompatibilidades de camadas, combinações pairwise, screenshots, paridade de física/replay, segurança da API, consistência de avatar/perfil, desempenho mobile, 4 regiões e múltiplos ciclos, PT-BR/EN e acessibilidade.
+- **Documento técnico e critérios detalhados:** [Criador, animações e validação v0.15](./RONIN_RUNNER_PERSONAGEM_ANIMACOES_VALIDACAO.md).
 
 ## 10. Ronin ID — identidade compartilhada entre jogos
 
@@ -297,4 +310,4 @@ O sequenciamento serve à validação incremental, **não** reduz escopo nem dis
 - Google Identity: https://developers.google.com/identity/gsi/web/guides/verify-google-id-token
 - MDN Screen Orientation API: https://developer.mozilla.org/en-US/docs/Web/API/ScreenOrientation/lock
 
-**Últimas decisões CONFIRMADAS:** salto duplo para todos desde o começo; nove arquétipos propostos de inimigos e quatro chefes obrigatórios para o lançamento completo; combate de precisão, três vidas sem cura, ciclos infinitos, gestos mobile, PT-BR/EN, ranking global com visitante, cadastro e-mail/senha e login Google. **Chefes podem recuar sem encerrar a corrida.** **Reunir os quatro selos concede Traço da Aurora, efeito exclusivamente cosmético de katana.** **Desafios semanais opcionais autogerados na versão completa e três selos cosméticos progressivos Bronze 2/5, Prata 4/5, Ouro 5/5.** Interface e fluxos de Ronin ID detalhados em v0.14. Criador de personagem modular e quantidade de opções seguem como proposta para confirmação, não como decisão já aprovada. Catálogos, distâncias e metas sujeitos a playtests.
+**Últimas decisões CONFIRMADAS:** salto duplo para todos desde o começo; nove arquétipos propostos de inimigos e quatro chefes obrigatórios para o lançamento completo; combate de precisão, três vidas sem cura, ciclos infinitos, gestos mobile, PT-BR/EN, ranking global com visitante, cadastro e-mail/senha e login Google. **Chefes podem recuar sem encerrar a corrida.** **Reunir os quatro selos concede Traço da Aurora, efeito exclusivamente cosmético de katana.** **Desafios semanais opcionais autogerados na versão completa e três selos cosméticos progressivos Bronze 2/5, Prata 4/5, Ouro 5/5.** **Criador de Ronin COMPLETO e MODULAR obrigatório no primeiro lançamento**, com cabelo, rosto, tom de pele, roupas, acessórios e katana, aparência integrada ao Ronin ID sem afetar física e ranking. Documentos v0.14–v0.15 detalham telas, animações, rig e validação. Quantidade de opções e catálogos numéricos continuam propostos, sujeitos a aprovação e playtests.
