@@ -4,9 +4,10 @@
 > **Catálogo completo e regras de geração:** [Inimigos, chefes e obstáculos v0.10](./RONIN_RUNNER_INIMIGOS_CHEFES_OBSTACULOS.md). Salto duplo padrão para todos; quatro chefes no escopo de lançamento.
 > **Regras confirmadas de encontro, retirada e recompensas:** [Chefes e recompensas v0.11](./RONIN_RUNNER_CHEFES_RECOMPENSAS.md). Chefes que não forem derrotados recuam e a corrida continua, sem punição pela retirada.
 > **Missões, conquistas e progressão permanente:** [Game Design v0.12](./RONIN_RUNNER_PROGRESSAO_MISSOES.md). **Traço da Aurora confirmado** como efeito permanente de katana pela coleção completa dos quatro selos. Catálogos e metas adicionais são propostas sujeitas a revisão.
-> **Desafios semanais autogerados na versão completa:** [Game Design v0.13](./RONIN_RUNNER_DESAFIOS_SEMANAIS.md). Publicação e validação automáticas, sem curadoria manual toda semana, mesmos desafios para visitantes e contas vinculadas.
+> **Desafios semanais autogerados na versão completa:** [Game Design v0.13–v0.14](./RONIN_RUNNER_DESAFIOS_SEMANAIS.md). Publicação e validação automáticas, sem curadoria manual toda semana, mesmos desafios para visitantes e contas vinculadas. **Recompensas confirmadas:** selos Bronze (2/5), Prata (4/5) e Ouro (5/5).
+> **Interface, criador visual e Ronin ID:** [Game Design v0.14](./RONIN_RUNNER_INTERFACE_PERSONAGEM_RONIN_ID.md). Define telas, fluxos de visitante/e-mail/Google, customização modular proposta, recuperação, mesclagem segura e testes E2E.
 
-Versão: 0.13 — consolidada até game design v0.13 (planejamento pré-implementação)  
+Versão: 0.14 — consolidada até game design v0.14 (planejamento pré-implementação)  
 Status: **escopo funcional completo definido; parâmetros de balanceamento e decisões de UX sujeitos a playtest**  
 Repositório: `Kennedh/ronin-jogos`  
 Ecossistema futuro: `play.ronin.dev.br`
@@ -154,10 +155,10 @@ Todos cosméticos e com colisões idênticas. **Traço da Aurora** confirmado co
 - **Obrigatórios na primeira versão pública completa**: seleção, publicação, acompanhamento e encerramento automáticos **sem seleção manual de missões pelo proprietário a cada semana**.
 - Diretor de Desafios determinístico escolhe modelos testados e versionados, metas e diversidade, valida completabilidade, limita repetições e possui fallback publicado por transação idempotente se cron falhar.
 - Mesma edição global para todos os Ronin IDs: visitantes com apelido, contas e-mail/senha e Google; sem login diário obrigatório, sem moeda, loja, loot box, cura, buffs ou pontos de ranking por cumprir desafio.
-- **Parâmetros PROPOSTOS:** cinco desafios simultâneos por semana, distribuídos em dois acessíveis, dois intermediários e um avançado; semana ISO segunda 00:00 UTC (exibir hora local corretamente); recompensa cosmética de Selo da Semana por conclusão do conjunto.
+- **RECOMPENSA CONFIRMADA:** três selos cosméticos semanais progressivos, **Bronze ao completar 2/5**, **Prata ao completar 4/5** e **Ouro ao completar 5/5** desafios verificados. Exibir o maior nível no perfil, registrar marcos por edição com idempotência e manter histórico. **Parâmetros ainda propostos:** distribuição 2 acessíveis, 2 intermediários, 1 avançado e semana ISO segunda 00:00 UTC; metas e tempos sujeitos a playtest.
 - Persistência PostgreSQL, progresso incrementado por replays verificados e transações idempotentes; uso de assets de recompensa reutilizáveis para permitir muitos anos de edições sem demanda artística semanal.
 - O desafio não pode exigir região desbloqueada em tier acessível nem contradizer três vidas sem cura, salto duplo inicial e chefes que podem recuar.
-- **Detalhamento, dados, exemplos e casos de teste:** [v0.13](./RONIN_RUNNER_DESAFIOS_SEMANAIS.md).
+- **Detalhamento, dados, exemplos e casos de teste:** [v0.13–v0.14](./RONIN_RUNNER_DESAFIOS_SEMANAIS.md); integração com o [Ronin ID e personagem v0.14](./RONIN_RUNNER_INTERFACE_PERSONAGEM_RONIN_ID.md).
 
 ## 9. Mobile, fullscreen e controles
 
@@ -173,6 +174,17 @@ Interpretador de gestos distingue toque versus swipe por deslocamento, duração
 Ao clicar em Jogar: solicitar fullscreen e bloqueio de orientação quando o navegador suportar e permitir; se recusados, usar layout imersivo responsivo e orientação solicitada por overlay, sem assumir que Safari/iOS ofereça suporte equivalente. Nunca prometer fullscreen obrigatório. Pausar/reconciliar estado ao perder foco, trocar app, receber chamada, sair da tela cheia ou mudar orientação.
 
 Desktop: espaço/↑ pular, ↓/S deslizar, J atacar; configurações para alterar teclas e áudio.
+
+## 9.1 Interface completa e Criador de Ronin — proposta v0.14
+
+- **Telas de lançamento:** carregamento, menu principal, escolha Jornada Completa/Expedição Regional, preparação mobile/gestos, corrida/HUD, pausa, resultados, ranking, Pergaminho (missões e semanas), Meu Ronin, criador de aparência/coleção, autenticação e segurança da conta, configurações e privacidade.
+- **Jogar sem cadastro** continua obrigatório: criar/reusar sessão visitante, escolher apelido antes de exibir no ranking, recomendar vínculo de conta discretamente após marcos relevantes.
+- **Criador visual proposto**, ainda sujeito à confirmação de abrangência: cabelo, cores, detalhes faciais e de pele, trajes, acessórios, aparência da katana e efeitos cosméticos, todos com corpo, hitboxes e comandos idênticos. Nada de uploads pessoais/IA para imagens de personagem no lançamento. Alterações apenas fora da corrida.
+- Traço da Aurora pode equipar em qualquer traje, sem alterar alcance. Bronze/Prata/Ouro semanal são **emblemas de perfil independentes**, nível máximo exibido por edição, histórico preservado.
+- Fluxos completos de **e-mail/senha** (verificação, recuperação, troca, sessão), **Google** (token verificado pelo servidor e associação via sub), **visitante** e **mesclagem autenticada** sem juntar contas só por e-mail ou apelido; replays e eventos deduplicados.
+- Menus responsivos mobile/desktop, **orientação horizontal recomendada durante a corrida**, fullscreen quando permitido, fallback sem fullscreen; PT-BR/EN inclusive em emails, erros e informações legais.
+- Política de erro: score e recompensas pendentes até validação, conexão interrompida, sessão expirada, e-mail atrasado, desconexão da API, reautenticação, contas duplicadas e tentativa de fusão.
+- **Fluxos, modelo lógico, testes e decisões ainda abertas:** [documento v0.14](./RONIN_RUNNER_INTERFACE_PERSONAGEM_RONIN_ID.md).
 
 ## 10. Ronin ID — identidade compartilhada entre jogos
 
@@ -285,4 +297,4 @@ O sequenciamento serve à validação incremental, **não** reduz escopo nem dis
 - Google Identity: https://developers.google.com/identity/gsi/web/guides/verify-google-id-token
 - MDN Screen Orientation API: https://developer.mozilla.org/en-US/docs/Web/API/ScreenOrientation/lock
 
-**Últimas decisões CONFIRMADAS:** salto duplo para todos desde o começo; nove arquétipos propostos de inimigos e quatro chefes obrigatórios para o lançamento completo; combate de precisão, três vidas sem cura, ciclos infinitos, gestos mobile, PT-BR/EN, ranking global com visitante, cadastro e-mail/senha e login Google. **Chefes podem recuar sem encerrar a corrida**. **Reunir os quatro selos concede Traço da Aurora, efeito exclusivamente cosmético de katana.** **Desafios semanais opcionais autogerados entram no lançamento completo, sem curadoria manual semanal.** Quantidade de desafios, metas, selos semanais e trajes adicionais ainda são propostas a validar. Documentos v0.11–v0.13 definem os detalhes.
+**Últimas decisões CONFIRMADAS:** salto duplo para todos desde o começo; nove arquétipos propostos de inimigos e quatro chefes obrigatórios para o lançamento completo; combate de precisão, três vidas sem cura, ciclos infinitos, gestos mobile, PT-BR/EN, ranking global com visitante, cadastro e-mail/senha e login Google. **Chefes podem recuar sem encerrar a corrida.** **Reunir os quatro selos concede Traço da Aurora, efeito exclusivamente cosmético de katana.** **Desafios semanais opcionais autogerados na versão completa e três selos cosméticos progressivos Bronze 2/5, Prata 4/5, Ouro 5/5.** Interface e fluxos de Ronin ID detalhados em v0.14. Criador de personagem modular e quantidade de opções seguem como proposta para confirmação, não como decisão já aprovada. Catálogos, distâncias e metas sujeitos a playtests.
