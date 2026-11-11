@@ -1,7 +1,7 @@
-# Ronin Runner — Missões, conquistas, cosméticos e progressão permanente (Game Design v0.12, atualizado em v0.13)
+# Ronin Runner — Missões, conquistas, cosméticos e progressão permanente (Game Design v0.12, atualizado em v0.14)
 
 **Status:** design antes de implementar. Regras **CONFIRMADAS** permanecem obrigatórias; números e catálogos marcados **PROPOSTOS** precisam de aprovação e testes de balanceamento.  
-**Documentos:** [Visão e regras](./RONIN_RUNNER_SPEC.md) · [Controles e combate](./RONIN_RUNNER_MOVIMENTACAO_COMBATE.md) · [Inimigos, chefes e obstáculos](./RONIN_RUNNER_INIMIGOS_CHEFES_OBSTACULOS.md) · [Chefes e recompensas](./RONIN_RUNNER_CHEFES_RECOMPENSAS.md) · [Desafios Semanais Autogerados v0.13](./RONIN_RUNNER_DESAFIOS_SEMANAIS.md).
+**Documentos:** [Visão e regras](./RONIN_RUNNER_SPEC.md) · [Controles e combate](./RONIN_RUNNER_MOVIMENTACAO_COMBATE.md) · [Inimigos, chefes e obstáculos](./RONIN_RUNNER_INIMIGOS_CHEFES_OBSTACULOS.md) · [Chefes e recompensas](./RONIN_RUNNER_CHEFES_RECOMPENSAS.md) · [Desafios Semanais Autogerados v0.13–v0.14](./RONIN_RUNNER_DESAFIOS_SEMANAIS.md) · [Interface, Criador de Ronin e ID v0.14](./RONIN_RUNNER_INTERFACE_PERSONAGEM_RONIN_ID.md).
 
 ## 1. Decisão definitiva desta revisão
 
@@ -174,7 +174,7 @@ Cada definição de missão/recompensa registra:
 
 **Decisão do produto:** desafios semanais opcionais fazem parte da **primeira versão pública completa**; um diretor automático seleciona, valida, publica, acompanha e encerra novos desafios **sem criação ou curadoria manual semanal**. Serão iguais para todos (visitantes, Google e e-mail), sem dias de login obrigatórios nem vantagens competitivas. O sistema usa templates versionados e faixas de metas, diversidade e proteção contra repetição, gerador determinístico, edição global imutável, PostgreSQL e eventos de runs verificados com atualização idempotente.
 
-**Parâmetros propostos:** cinco desafios por semana (dois acessíveis, dois intermediários, um avançado); virada segunda 00:00 UTC; selo cosmético comemorativo da edição por conclusão total, gerado por combinação de assets reutilizáveis. Não criar itens manuais a cada semana. Detalhes, fallback, escalabilidade, segurança, UX e testes: [v0.13](./RONIN_RUNNER_DESAFIOS_SEMANAIS.md).
+**Recompensas CONFIRMADAS em v0.14:** três selos cosméticos progressivos por edição: **Bronze após 2/5**, **Prata após 4/5**, **Ouro após 5/5 desafios completos e verificados**. Os três marcos podem ser concedidos e auditados separadamente; o nível mais alto aparece no perfil. Motivos/molduras reutilizáveis sem arte manual semanal, nenhum bônus no ranking e nenhuma exigência de login diário. **Parâmetros ainda sujeitos a testes:** cinco desafios distribuídos em dois acessíveis, dois intermediários e um avançado, e virada segunda 00:00 UTC. Detalhes, fallback, escalabilidade, segurança, UX e testes: [v0.13–v0.14](./RONIN_RUNNER_DESAFIOS_SEMANAIS.md).
 
 ## 11. Balanceamento por metas humanas
 
@@ -209,7 +209,7 @@ Distância de mundo e velocidade ainda são **parâmetros de teste**, não tempo
 
 - Aprovar ou ajustar os **quatro trajes adicionais propostos**; três trajes anteriores e Traço da Aurora já fazem parte do planejamento.
 - Aprovar seleção exata e metas dos 10 desafios de partida, 8 de carreira e 10 conquistas listadas (valores alvo são provisórios).
-- **Resolvido:** desafios semanais entram desde a versão completa e serão autogerados, sem intervenção manual rotineira nem login diário. **Pendente:** confirmar o modelo de Selo da Semana (recompensa somente cosmética), os cinco slots/tiers e ajustar metas por playtest.
+- **Resolvido em v0.14:** desafios semanais autogerados, sem login diário, com **selos progressivos aos 2/4/5 desafios**. **Pendente:** arte/nomenclatura final dos níveis e metas por playtest; distribuição sugerida de dificuldades 2/2/1.
 - Confirmar se o jogador pode escolher somente um efeito de katana por vez; recomendação: um efeito equipável e um traje, ambos independentes.
 - Política final de contagem quando uma run é interrompida por rede, morte, refresh ou timeout da verificação.
 - Definir tempo de feedback dos desbloqueios quando servidor estiver ocupado.
