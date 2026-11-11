@@ -1,7 +1,7 @@
-# Ronin Runner — Interface, Criador de Ronin e Identidade (Game Design v0.14)
+# Ronin Runner — Interface, Criador de Ronin e Identidade (Game Design v0.14, Criador aprovado em v0.15)
 
 **Status:** especificação funcional e de UX, anterior à programação. Regras **CONFIRMADAS** vindas do histórico são mandatórias; propostas de layout, quantidade de opções e sequência de onboarding serão validadas antes de congelar design.  
-**Referências:** [Produto e regras gerais](./RONIN_RUNNER_SPEC.md) · [Movimentação e combate](./RONIN_RUNNER_MOVIMENTACAO_COMBATE.md) · [Progressão permanente](./RONIN_RUNNER_PROGRESSAO_MISSOES.md) · [Desafios semanais](./RONIN_RUNNER_DESAFIOS_SEMANAIS.md) · [Chefes e recompensa](./RONIN_RUNNER_CHEFES_RECOMPENSAS.md).
+**Referências:** [Produto e regras gerais](./RONIN_RUNNER_SPEC.md) · [Movimentação e combate](./RONIN_RUNNER_MOVIMENTACAO_COMBATE.md) · [Progressão permanente](./RONIN_RUNNER_PROGRESSAO_MISSOES.md) · [Desafios semanais](./RONIN_RUNNER_DESAFIOS_SEMANAIS.md) · [Chefes e recompensa](./RONIN_RUNNER_CHEFES_RECOMPENSAS.md) · [Criador modular, rig, animações e validação v0.15](./RONIN_RUNNER_PERSONAGEM_ANIMACOES_VALIDACAO.md).
 
 ## 1. Requisitos CONFIRMADOS
 
@@ -75,9 +75,9 @@
 
 **Pausa:** manual por ícone/Esc; automática ao perder foco ou alterar orientação, com pausa de relógio da simulação. Continuar com breve contagem visual; gerenciar pausas em partidas ranqueadas por regras explícitas que não punam rede móvel instável. Sair/reiniciar pede confirmação para evitar perda acidental de run.
 
-## 5. Criador de personagem — proposta, não alterar fairness
+## 5. Criador de personagem — CONFIRMADO para versão completa, sem alterar fairness
 
-**Objetivo:** o jogador configura aparência própria, preservando identidade visual de ronin, animação e colisões iguais para todos, sem custo de renderização desproporcional.
+**DECISÃO CONFIRMADA em v0.15:** o jogador terá um Criador de Ronin **completo e modular** desde o lançamento, com **cabelo, rosto, tom de pele, roupas, acessórios e katana**. Animações e colisões devem ser idênticas entre combinações, sem custo de renderização desproporcional. O catálogo de quantidades de peças **continua sendo proposta** até aprovação/testes. Pipeline e matriz de validação: [v0.15](./RONIN_RUNNER_PERSONAGEM_ANIMACOES_VALIDACAO.md).
 
 **Estrutura de slots proposta:**
 - `base_body`: corpo e proporções de combate fixos, sem sliders que alterem hitbox.
@@ -117,6 +117,15 @@ Validações:
 - animações e hitbox fixas, não vinculadas à customização;
 - imagem do avatar de ranking sintetizada no cliente (com fallback seguro), não arquivo pessoal enviado ao servidor;
 - mudanças idempotentes com `appearance_version`/controle otimista para não perder atualizações feitas em dois dispositivos simultâneos.
+
+### 5.3 Animações, rig e testes do Criador (v0.15)
+
+- O criador deverá apresentar prévia real do personagem em **idle, corrida, salto, salto duplo, deslize, ataque normal/perfeito e dano**, permitindo inspecionar roupas, cabelos e acessórios com a animação do jogo.
+- **Rig e pivôs compartilhados**; camadas de roupa/cabelo/rosto/katana com ordem de oclusão adaptada à pose, sem redesenhar lógica da física para cada opção.
+- Slots confirmados por categoria; propostas de quantidade, manifest de assets, compatibilidade, otimização para mobile, campos de perfil e casos de teste E2E foram detalhados no [documento de v0.15](./RONIN_RUNNER_PERSONAGEM_ANIMACOES_VALIDACAO.md).
+- Pré-visualização de itens bloqueados não concede posse: somente o servidor confirma e persiste equipamentos desbloqueados.
+- A aparência muda **somente fora da corrida**; atualizações concorrentes em dois dispositivos precisam de `appearance_version` ou política transacional equivalente.
+- Sem vantagem de ranking ou física em qualquer variação do avatar, inclusive se exibido em classificação mundial.
 
 ## 6. Ronin ID — fluxos de autenticação
 
@@ -205,8 +214,8 @@ Propostas complementares: `GET /me/character`, `PATCH /me/character`, `GET /cosm
 
 ## 10. Próximas decisões a confirmar
 
-- **Escopo do Criador de Ronin:** personalização modular de cabelo, pele, rosto e acessórios desde o primeiro lançamento (proposta), ou somente trajes/equipamentos mantendo rosto-base fixo? Definir antes de fechar a arte e a arquitetura dos sprites.
-- Quantidade mínima de presets e aparências, cor e papel permanente da faixa vermelha, combinação de acessórios e opção de capacete/chapéu.
+- **RESOLVIDO em v0.15:** Criador completo e modular de cabelo, rosto, tom de pele, roupas, acessórios e katana **obrigatório no primeiro lançamento público**. A regra de aparência sem impacto em hitboxes, física e ranking também está fechada.
+- **PENDENTE:** quantidade mínima de opções e presets, variações de penteados, cores, acessórios e opções visuais da katana; papel da faixa vermelha como marca visual permanente; avaliação de rig e clipping. O formato completo está documentado em [v0.15](./RONIN_RUNNER_PERSONAGEM_ANIMACOES_VALIDACAO.md).
 - Preservar 5 desafios/semana e 3 níveis (2/4/5): **níveis já confirmados**, quantidade 5 foi implícita na escolha e é coerente com a edição v0.13.
 - Políticas de moderação/alteração de apelido, apresentação pública do personagem (avatar e cosméticos visíveis).
 - Detalhamento visual de acessibilidade, telas vazias, design tokens, animações de menu e indicadores de carregamento.
