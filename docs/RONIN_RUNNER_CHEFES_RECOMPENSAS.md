@@ -1,9 +1,11 @@
-# Ronin Runner — Encontros de chefes, retirada e recompensas (Game Design v0.11)
+# Ronin Runner — Encontros de chefes, retirada e recompensas (Game Design v0.11, revisado em v0.12)
 
 **Estado:** design revisável antes da implementação; regras em “Confirmado” são decisões do produto, parâmetros marcados “proposto” precisam de balanceamento.  
-**Referências:** [Especificação principal](./RONIN_RUNNER_SPEC.md) · [Movimentação e combate](./RONIN_RUNNER_MOVIMENTACAO_COMBATE.md) · [Inimigos e obstáculos](./RONIN_RUNNER_INIMIGOS_CHEFES_OBSTACULOS.md).
+**Referências:** [Especificação principal](./RONIN_RUNNER_SPEC.md) · [Movimentação e combate](./RONIN_RUNNER_MOVIMENTACAO_COMBATE.md) · [Inimigos e obstáculos](./RONIN_RUNNER_INIMIGOS_CHEFES_OBSTACULOS.md) · [Missões e progressão v0.12](./RONIN_RUNNER_PROGRESSAO_MISSOES.md).
 
 ## 1. Regras confirmadas — contrato do produto
+
+**Decisão v0.12 CONFIRMADA:** a recompensa por reunir os quatro selos é o efeito **Traço da Aurora** para a katana. É uma personalização permanente e puramente cosmética, independente do traje, obtida uma única vez por Ronin ID após quatro vitórias contra os quatro chefes (podem ocorrer em partidas diferentes). Os critérios e a persistência completos estão em [progressão v0.12](./RONIN_RUNNER_PROGRESSAO_MISSOES.md).
 
 1. O jogo terá **quatro chefes temáticos**, um próximo do fim de cada região, em todos os ciclos.
 2. **Chefes PODEM RECUAR, e a corrida SEMPRE CONTINUA** quando acaba o encontro e o personagem está vivo. Derrotá-los **não é requisito** para desbloquear a próxima região ou ciclo.
@@ -91,7 +93,7 @@ Com chefes: `P_total = P_base + soma(bonus_derrota_chefe_por_instância_verifica
 | Primeira derrota do Guardião do Sino | Conquista "Sino Silenciado" + selo do Templo | Não |
 | Primeira derrota do Espírito da Nevasca | Conquista "Vento Dominado" + selo das Montanhas | Não |
 | Primeira derrota do Senhor do Eclipse | Conquista "Eclipse Dissipado" + selo do Castelo | Não |
-| Reunir quatro selos | Conquista "Guardião das Quatro Trilhas" + **efeito cosmético de rastro da katana "Traço da Aurora"** | Não |
+| Reunir quatro selos | **CONFIRMADO:** conquista "Guardião das Quatro Trilhas" + efeito cosmético permanente de katana **"Traço da Aurora"** | Não |
 | Derrotar todos os quatro na **mesma Jornada Completa**, sem morrer antes | Conquista difícil "Lenda do Caminho" e emblema especial de perfil | Uma vez |
 | Derrotar chefe em novo ciclo | Pontos normais da instância + progresso de estatísticas/missões acumuladas | Sim, uma vez por instância |
 | Deixar chefe fugir | Sem penalidade; progresso de distância e ações válidas permanece | N/A |
@@ -153,7 +155,7 @@ Registro recomendado por instância de chefe:
 ## 10. Pontos pendentes de playtest, sem desfazer decisões anteriores
 
 - Quantidade de acertos e oportunidades, comprimento exato dos encontros e bônus de pontos (+300/+450/+600/+900) são parâmetros *propostos*.
-- Confirmar se o "Traço da Aurora" será a recompensa visual do conjunto de quatro selos e qual arte final.
+- **Recompensa já confirmada:** Traço da Aurora é o efeito cosmético da katana ao reunir os quatro selos; resta apenas validar a arte final, animação e efeitos reduzidos.
 - Métricas de reação ao telegraph, legibilidade na corrupção, latência de touch e a tolerância de hitboxes.
 - Política de reclassificação de rankings após futuras versões de regra.
 - Efeito audiovisual da retirada e transições de boss para região seguinte.
