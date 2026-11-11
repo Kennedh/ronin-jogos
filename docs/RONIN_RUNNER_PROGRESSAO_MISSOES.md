@@ -1,7 +1,7 @@
-# Ronin Runner — Missões, conquistas, cosméticos e progressão permanente (Game Design v0.12)
+# Ronin Runner — Missões, conquistas, cosméticos e progressão permanente (Game Design v0.12, atualizado em v0.13)
 
 **Status:** design antes de implementar. Regras **CONFIRMADAS** permanecem obrigatórias; números e catálogos marcados **PROPOSTOS** precisam de aprovação e testes de balanceamento.  
-**Documentos:** [Visão e regras](./RONIN_RUNNER_SPEC.md) · [Controles e combate](./RONIN_RUNNER_MOVIMENTACAO_COMBATE.md) · [Inimigos, chefes e obstáculos](./RONIN_RUNNER_INIMIGOS_CHEFES_OBSTACULOS.md) · [Chefes e recompensas](./RONIN_RUNNER_CHEFES_RECOMPENSAS.md).
+**Documentos:** [Visão e regras](./RONIN_RUNNER_SPEC.md) · [Controles e combate](./RONIN_RUNNER_MOVIMENTACAO_COMBATE.md) · [Inimigos, chefes e obstáculos](./RONIN_RUNNER_INIMIGOS_CHEFES_OBSTACULOS.md) · [Chefes e recompensas](./RONIN_RUNNER_CHEFES_RECOMPENSAS.md) · [Desafios Semanais Autogerados v0.13](./RONIN_RUNNER_DESAFIOS_SEMANAIS.md).
 
 ## 1. Decisão definitiva desta revisão
 
@@ -170,9 +170,11 @@ Cada definição de missão/recompensa registra:
 - Não usar e-mail ou apelido público como chave de identidade de estatísticas.
 - Dados pessoais e ferramentas de exclusão/exportação seguem política de privacidade e LGPD.
 
-## 10. Desafios temporários: pendente de decisão
+## 10. Desafios semanais — CONFIRMADOS, automáticos e escaláveis (v0.13)
 
-**Sugestão, NÃO confirmada:** no futuro, desafio semanal opcional com início/fim UTC e objetivos que não exijam login em vários dias. Benefício: retorno orgânico sem punição por ausência. Não criar streak diário, calendário compulsório, recompensas exclusivas irrecuperáveis, vantagens no ranking ou obrigação de cadastro. Se aprovados para a versão completa, definir catálogo, fuso, reprocessamento e telemetria antes da implementação.
+**Decisão do produto:** desafios semanais opcionais fazem parte da **primeira versão pública completa**; um diretor automático seleciona, valida, publica, acompanha e encerra novos desafios **sem criação ou curadoria manual semanal**. Serão iguais para todos (visitantes, Google e e-mail), sem dias de login obrigatórios nem vantagens competitivas. O sistema usa templates versionados e faixas de metas, diversidade e proteção contra repetição, gerador determinístico, edição global imutável, PostgreSQL e eventos de runs verificados com atualização idempotente.
+
+**Parâmetros propostos:** cinco desafios por semana (dois acessíveis, dois intermediários, um avançado); virada segunda 00:00 UTC; selo cosmético comemorativo da edição por conclusão total, gerado por combinação de assets reutilizáveis. Não criar itens manuais a cada semana. Detalhes, fallback, escalabilidade, segurança, UX e testes: [v0.13](./RONIN_RUNNER_DESAFIOS_SEMANAIS.md).
 
 ## 11. Balanceamento por metas humanas
 
@@ -207,7 +209,7 @@ Distância de mundo e velocidade ainda são **parâmetros de teste**, não tempo
 
 - Aprovar ou ajustar os **quatro trajes adicionais propostos**; três trajes anteriores e Traço da Aurora já fazem parte do planejamento.
 - Aprovar seleção exata e metas dos 10 desafios de partida, 8 de carreira e 10 conquistas listadas (valores alvo são provisórios).
-- Desafios semanais opcionais: entram na primeira versão ou ficam de fora? Não construir compulsões de login diário.
+- **Resolvido:** desafios semanais entram desde a versão completa e serão autogerados, sem intervenção manual rotineira nem login diário. **Pendente:** confirmar o modelo de Selo da Semana (recompensa somente cosmética), os cinco slots/tiers e ajustar metas por playtest.
 - Confirmar se o jogador pode escolher somente um efeito de katana por vez; recomendação: um efeito equipável e um traje, ambos independentes.
 - Política final de contagem quando uma run é interrompida por rede, morte, refresh ou timeout da verificação.
 - Definir tempo de feedback dos desbloqueios quando servidor estiver ocupado.
