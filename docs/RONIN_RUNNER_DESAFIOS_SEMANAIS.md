@@ -1,7 +1,7 @@
-# Ronin Runner — Desafios Semanais Autogerados (Game Design v0.13)
+# Ronin Runner — Desafios Semanais Autogerados (Game Design v0.13, recompensas confirmadas em v0.14)
 
 **Estado:** especificação funcional de pré-implementação; decisões de negócio CONFIRMADAS versus parâmetros PROPOSTOS. **Não programar ainda.**
-**Links:** [Especificação principal](./RONIN_RUNNER_SPEC.md) · [Missões e Progressão](./RONIN_RUNNER_PROGRESSAO_MISSOES.md) · [Chefes e Recompensas](./RONIN_RUNNER_CHEFES_RECOMPENSAS.md).
+**Links:** [Especificação principal](./RONIN_RUNNER_SPEC.md) · [Missões e Progressão](./RONIN_RUNNER_PROGRESSAO_MISSOES.md) · [Chefes e Recompensas](./RONIN_RUNNER_CHEFES_RECOMPENSAS.md) · [Interface, Criador e Ronin ID v0.14](./RONIN_RUNNER_INTERFACE_PERSONAGEM_RONIN_ID.md).
 
 ## 1. Decisões CONFIRMADAS
 
@@ -80,20 +80,27 @@ Proposta de alocação automática por semana:
 - Progresso é materializado por `(week_id, player_id, challenge_id)` em agregações incrementais de eventos **verificados**, em vez de varrer todas as partidas a cada leitura.
 - Atualização de progresso **idempotente por `run_id` e desafio**; aplicar somente após `verified`, em worker/filas duráveis com retry e deduplicação. Evitar depender de fila externa paga.
 - A página busca definições públicas com cache curto e revalidação no fechamento da semana; preferir ETag e índices por `week_id`.
-- Recompensas de conclusão são emitidas via transações com unicidade por jogador/desafio/semana; eventos em lotes e replay de fila devem ser seguros contra duplicação.
+- Recompensas de conclusão são emitidas via transações com unicidade por jogador/desafio/semana **e unicidade por (player_id, week_id, tier)** nos três selos Bronze/Prata/Ouro; eventos em lotes e replay de fila devem ser seguros contra duplicação.
 - Sem tarefas que renderizem assets únicos em lote toda semana. Arte semanal é composição de **assets de selos e bordas reutilizáveis** (paleta/motivo/número semana), ou emblema de perfil gerado no cliente a partir de metadados estáveis.
 - Limitar retenção de logs brutos e replays conforme requisitos de auditoria, segurança e privacidade, com arquivamento/expurgo planejados; preservar resumos de conquistas.
 - Métricas técnicas: duração da geração, falhas do fallback, edições duplicadas (ideal 0), atraso de verificação, tempo de consulta, backlog da fila, volume de reprocessamento e uso de CPU/RAM/PostgreSQL. Alertar falhas reais, **não exigir operação manual semanal**.
 
-## 5. Recompensas semanais sem economia infinita de itens
+## 5. Recompensas semanais progressivas — CONFIRMADAS em v0.14
 
-**Proposta recomendada para confirmação final:**
-- Cada missão concluída acrescenta uma **marca de conclusão** verificável àquela semana, estatísticas de carreira e visual de progresso no Pergaminho do Ronin.
-- Ao completar **os cinco desafios** da semana, o jogador ganha um **Selo da Semana** (emblema de perfil puramente cosmético), composto de uma biblioteca fixa de motivos e paletas + texto da semana ISO. Pode ser arquivado no histórico do Ronin ID sem necessidade de artista criar um traje novo semanalmente.
-- O jogador pode ostentar **um emblema e um traje**; a biblioteca de selos pode crescer por variações visuais reutilizáveis sem introduzir moeda, loot boxes, compra ou vantagem.
-- O Selo da Semana indica participação histórica naquela semana; os mesmos **motivos/bordas/cores podem reaparecer**. Não bloquear uma aparência mecânica exclusiva de forma irrecuperável; emblemas históricos específicos permanecem registros da data, não itens com poderes.
-- Recompensas de missões de carreira e chefes seguem independentes. Quatro selos dos chefes => **Traço da Aurora** (confirmado). Concluir desafios semanais **não substitui** requisitos de chefes ou trajes.
-- Se cinco objetivos forem considerados exigentes demais em playtest, avaliar meta de conclusão de 3/5 para emblema de semana sem mudar a estrutura de 5 slots.
+**Decisão definitiva do produto:** conceder **três níveis de selos cosméticos semanais**, em patamares de quantidade de desafios distintos concluídos e verificados:
+- **Bronze:** 2 de 5 desafios completos da edição.
+- **Prata:** 4 de 5 desafios completos da mesma edição.
+- **Ouro:** 5 de 5 desafios completos da mesma edição.
+
+Todos os três níveis são **recompensas válidas e separadas por marco**, mas usam **um motivo visual da semana com acabamento crescente**. Bronze → Prata → Ouro: ao alcançar nível superior, o perfil exibe a variante superior por padrão e mantém histórico/auditoria de todas as metas alcançadas. Nenhum jogador que termine com 2/5 ou 4/5 fica sem reconhecimento.
+
+- Cada `(player_id, week_id, tier)` é concedido **uma única vez**, por evento verificado. Se uma mesma run completa 5/5 de uma vez, todos os três níveis são reconhecidos **atomicamente e sem duplicação**.
+- Os selos usam **assets-base reutilizáveis** (motivo, moldura, paleta, identificação da edição) e composição leve; **sem criação de trajes ou ilustrações manuais a cada semana**.
+- Um jogador pode exibir um emblema de perfil equipado por vez; na seleção da edição, mostrar maior tier já obtido, enquanto o histórico guarda `bronze_at`, `silver_at`, `gold_at` ou eventos únicos equivalentes.
+- Recompensas semanais não afetam pontuação, ranking, vida, katana, concentração, salto duplo ou velocidade. Não são moeda, loot box, microtransação, item com poder ou motivo para exigir login diário.
+- Marcas antigas continuam consultáveis mesmo após virada semanal; não revogar Bronze/Prata quando desbloquear Ouro.
+- Missões permanentes e conquistas de chefes são independentes. **Os quatro selos dos chefes continuam concedendo Traço da Aurora**, não substituído pelos selos semanais.
+- A edição possui 5 desafios como proposta formalizada de v0.13, compatível com os marcos agora **confirmados** 2/4/5; ajustar dificuldade das metas por playtest sem mudar os três limiares sem nova decisão do produto.
 
 ## 6. Gameplay e fairness
 
@@ -113,7 +120,7 @@ Tabelas/entidades:
 - `weekly_editions`: unique week_id/start_at/end_at/published_at/generator_version/rules_version/seed/fingerprint/status.
 - `weekly_edition_challenges`: edition_id/slot/template_id/target/tier/parameters/definition_snapshot.
 - `player_weekly_progress`: player_id/edition_id/challenge_id/current_value/completed_at/verified_at.
-- `player_weekly_rewards`: player_id/edition_id/reward_id/granted_at/source_run_id.
+- `player_weekly_rewards`: player_id/edition_id/tier (BRONZE|SILVER|GOLD)/reward_id/granted_at/source_run_id, **UNIQUE(player_id, edition_id, tier)**.
 - `weekly_run_applications`: player_id/run_id/edition_id/challenge_id/applied_at, unique constraint for dedup.
 - `challenge_generation_audits`: outcomes, fallback usage, algorithms, generated/approved hashes.
 - `player_profile_emblems`: collection/slot/equip metadata for weekly stamp and other badges.
@@ -146,15 +153,15 @@ Endpoints candidatos:
 8. Dupla submissão/retry/corrida válida duplicada não duplica progresso ou selos. Vinculação de visitante a e-mail/Google também não duplica métricas.
 9. Runs de virada de semana atribuídas pelo horário de início no servidor e finalização dentro da graça proposta; relógio do cliente nunca decide.
 10. Tempo de resposta e capacidade com milhares de jogadores/semana, consumo controlado de memória e índices de PostgreSQL.
-11. Um usuário sem completar nada não perde missões permanentes ou trajes já ganhos. Cumprir 5/5 gera **um único Selo da Semana**, exclusivamente cosmético.
+11. Sem completar nada, não perde missões permanentes ou trajes; **2/5 → Bronze; 4/5 → Prata; 5/5 → Ouro**, exclusivamente cosméticos. Se 5/5 for alcançado em uma só atualização, conceder **os três marcos únicos** de uma vez, com Ouro como maior nível exibido, sem duplicar após reprocessar.
 12. Verificar traduções PT-BR/EN, fuso exibido, metas claras e acessibilidade mobile.
 13. Se edição for invalidada por bug grave, fluxo de correção auditado sem apagar injustamente progressos válidos ou mudar metas silenciosamente.
 14. Anti-fraude: ataques fabricados, distância forjada, chefes inexistentes, múltiplos hits por frame e run_id adulterado não geram progresso.
 
 ## 10. Parâmetros ainda propostos / decisões para testes
 
-- Confirmação final da **quantidade 5** e distribuição `2 fáceis + 2 médios + 1 avançado`, com metas reais.
-- **Selo da Semana** por completar 5/5: proposta, não decisão do usuário; confirmar aparência, nome e requisito.
+- **Edição com cinco slots** já serve de base para a decisão 2/4/5; validar distribuição proposta `2 acessíveis + 2 intermediários + 1 avançado` e metas reais, sem mudar limiares confirmados.
+- **Decisão confirmada em v0.14:** três selos progressivos semanais por 2/5, 4/5 e 5/5; falta apenas finalizar aparência, nomenclatura e suas variantes reutilizáveis.
 - Janela de graça de 24 h após segunda UTC para finalizar run iniciada na semana e latência de verificação.
 - Catálogo mínimo inicial recomendado de **30 templates** (várias categorias) para comportar semanas e evitar repetição; projeto pode crescer sem alterar o gerador.
 - Política de limite/arquivamento de replays e tempo máximo de pausa de runs ranqueadas.
