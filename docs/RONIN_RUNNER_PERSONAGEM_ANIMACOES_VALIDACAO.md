@@ -1,9 +1,11 @@
-# Ronin Runner — Criador Modular, Animações, Telas e Validação (Game Design v0.15)
+# Ronin Runner — Criador Modular, Animações, Telas e Validação (Game Design v0.15, distribuição v0.16 confirmada)
 
 **Estado:** especificação ANTES de programar. A presença do Criador de Ronin completo e modular na primeira versão pública é **DECISÃO CONFIRMADA**; contagens de opções e valores de animação são **PROPOSTAS para validação**.  
-**Referências:** [Especificação geral](./RONIN_RUNNER_SPEC.md) · [Interface e Ronin ID](./RONIN_RUNNER_INTERFACE_PERSONAGEM_RONIN_ID.md) · [Física e combate](./RONIN_RUNNER_MOVIMENTACAO_COMBATE.md) · [Desafios semanais](./RONIN_RUNNER_DESAFIOS_SEMANAIS.md) · [Progressão](./RONIN_RUNNER_PROGRESSAO_MISSOES.md).
+**Referências:** [Especificação geral](./RONIN_RUNNER_SPEC.md) · [Interface e Ronin ID](./RONIN_RUNNER_INTERFACE_PERSONAGEM_RONIN_ID.md) · [Física e combate](./RONIN_RUNNER_MOVIMENTACAO_COMBATE.md) · [Desafios semanais](./RONIN_RUNNER_DESAFIOS_SEMANAIS.md) · [Progressão](./RONIN_RUNNER_PROGRESSAO_MISSOES.md) · [Contratos de API/persistência v0.16](./RONIN_RUNNER_CONTRATOS_API_PERSISTENCIA.md) · [Testes de lançamento v0.16](./RONIN_RUNNER_TESTES_LANCAMENTO.md).
 
 ## 1. Contrato funcional CONFIRMADO
+
+**DECISÃO v0.16 CONFIRMADA — distribuição de peças:** a aparência básica é livre (estilos e cores básicas de cabelo, rostos/olhos e detalhes básicos, tons de pele e visual-base), inclusive para visitantes. **Trajes especiais, máscaras e acessórios especiais, variações especiais da katana e efeitos raros** são desbloqueados pela progressão verificada, sem loja e sem vantagem competitiva. Não exigir missão para selecionar tom de pele, rosto ou cabelo básico. Itens cosméticos especiais podem incluir penteados de fantasia, mas não bloqueiam acesso à categoria de cabelo.
 
 1. **Criador completo e modular no lançamento público**, com personalização de **cabelo, rosto, tom de pele, roupas, acessórios e katana**, integrado ao perfil **Ronin ID** de visitante, e-mail/senha e Google.
 2. Aparência 100% **cosmética**; **mesmas hitboxes, corpo de colisão, impulso de salto, salto duplo base, velocidade, timing de ataque, 3 vidas sem cura e morte instantânea em abismos** para todas as combinações.
@@ -37,13 +39,23 @@ O corpo físico possui proporções competitivas e rig/pivôs canônicos. Altera
 
 ### 2.2 Itens iniciais versus itens conquistáveis
 
-- Pelo menos algumas variações de cabelo, rosto, pele e cor devem estar disponíveis **imediatamente**, sem recompensa exigida: o criador não pode ser um inventário vazio.
+- **CONFIRMADO v0.16:** todas as alternativas marcadas como **catálogo básico** de cabelo, rosto, tom de pele e cores ficam livres e equipáveis desde o primeiro acesso, inclusive como visitante. Não condicionar características básicas a missão, região, pagamento, ranking ou provedor de login. Quantidades finais de alternativas básicas ainda serão aprovadas por arte e testes.
 - Traje **Ronin Errante** disponível desde o começo; **Sombra da Névoa** (10 km) e **Corte Silencioso** (50 perfects) permanecem no plano anterior.
 - Quatro trajes adicionais (Peregrino do Vento, Viajante Escarlate, Guardião do Vale e Lenda Errante) ainda são **propostas**, não aprovação expressa do catálogo final.
-- Acessórios de início e cosméticos de missão podem ser obtidos por progresso validado; travas mostram condição e preview antes da posse.
+- Acessórios neutros e variações básicas de katana podem estar disponíveis no início; **cosméticos especiais** (máscaras, adornos raros, roupas especiais, visuais raros de katana e efeitos) são liberados por missões/conquistas verificadas, com preview e critério claros. Nenhum item especial concede dano, vida, alcance, invulnerabilidade, velocidade ou ranking.
 - Os 4 selos de chefes liberam **Traço da Aurora** (CONFIRMADO); não está sujeito a desafios semanais.
 - As variantes semanais de emblema (Bronze, Prata, Ouro) usam metadados da semana + motivo e moldura reutilizáveis, sem criação manual semanal.
 - Itens nunca alteram visão efetiva, classificação, colisão, física, status de dano, ataque ou ritmo da simulação.
+
+## 2.3 Metadados de catálogo e autorização v0.16
+
+- Cada peça do catálogo terá `part_id`, `slot`, `rig_version`, `is_basic_free`, `unlock_requirement_id?`, `status`, `locale_key` e manifesto de assets aprovados. `is_basic_free=true` é equipável por qualquer Ronin ID válido, sem esperar run.
+- Os atributos livres são acessíveis desde que o perfil visitante tenha sessão segura. Outros itens exigem `player_cosmetic_unlocks` confirmados após partida VERIFIED.
+- Mudança no perfil aceita só IDs autorizados e compatíveis, e controle de versão de aparência; modificação local de propriedade "free" não concede posse.
+- Inventário apresenta opções básicas sem cadeado; itens especiais mostram requisitos de conquista e estado pendente/verificado, sem cobrança e sem atributos superiores.
+- Testar todas as escolhas livres em primeiro acesso e a rejeição de itens especiais ainda bloqueados para visitante, login Google e e-mail.
+- Persistir `is_basic_free` no catálogo do servidor; não tomar decisões de gratuidade exclusivamente no frontend. A API envia critérios públicos e o servidor calcula posse/autorização.
+- Contratos formais: [v0.16](./RONIN_RUNNER_CONTRATOS_API_PERSISTENCIA.md); matriz E2E: [v0.16](./RONIN_RUNNER_TESTES_LANCAMENTO.md).
 
 ## 3. Contrato de arte e rig compartilhado
 
@@ -226,7 +238,7 @@ APIs candidatas: `GET /me/character`, `PATCH /me/character` (controle otimista),
 
 ## 9. Pendências para próximos documentos antes do código
 
-- Aprovação dos **números e catálogo mínimo** de opções, tom de pele, cabelos, olhos, acessórios e armas, sem desfazer o escopo completo aprovado.
+- **Resolvido:** aparência básica livre + especiais desbloqueáveis. **Pendente:** quantidade final e identidade artística das peças básicas gratuitas, quantidade de cosméticos especiais de estreia e quais missões específicas concedem cada peça, sem restringir escolhas básicas.
 - Escolha técnica entre **rig 2D articulado com camadas** versus **spritesheets compostos por pose** (ou híbrido), após teste de custo/qualidade; ambas preservam renderer desacoplado da física. A arquitetura deve permitir adaptar a implementação sem redesenhar a lógica de customização.
 - Definição final de tokens gráficos de UI, proporções de tela, tempos de transição, tipografia/licenças e contraste.
 - Revisão de política de moderação de apelidos, perfis públicos, dados e retenção.
