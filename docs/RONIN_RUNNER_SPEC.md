@@ -218,7 +218,7 @@ Camadas:
 - Um visitante consegue publicar uma pontuação válida com apelido sem cadastro.
 - Usuário cria conta por e-mail, confirma e-mail, entra, sai e redefine senha.
 - Usuário entra com Google e mantém a mesma identidade quando adequadamente vinculada.
-- Progresso/tra jes/regiões/recordes permanecem após logout/login e em outro dispositivo para contas vinculadas.
+- Progresso/trajes/regiões/recordes permanecem após logout/login e em outro dispositivo para contas vinculadas.
 - Jornada Completa e Expedição Regional não compartilham ranking injustamente.
 - Resultados falsificados, duplicados ou não verificáveis não geram classificação.
 - Mobile opera por gestos, tem fallback sem fullscreen e oferece retomada/pause coerentes.
