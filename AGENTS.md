@@ -43,6 +43,20 @@ Se um documento antigo parecer contradizer uma decisão confirmada mais recente 
 - Scripts e páginas de jogos precisam funcionar em PT-BR/EN; respeitar SEO e identificação do Ronin Play quando os contratos correspondentes estiverem fechados.
 - Não anunciar recurso como concluído sem evidência de teste e sem considerar os gates no documento de lançamento.
 
+## Baseline completo v0.18 — leia antes de tomar decisões de arquitetura
+
+Além dos documentos anteriores, o planejamento agora possui baseline de todas as lacunas G01–G15:
+- [Simulação determinística, partidas longas e rankings](docs/RONIN_RUNNER_CONTRATO_SIMULACAO_PARTIDAS_RANKING_v1.md);
+- [Identidade, dados, privacidade e APIs](docs/RONIN_RUNNER_CONTRATO_IDENTIDADE_DADOS_PRIVACIDADE.md);
+- [Arte, telas, conteúdo e 30 templates semanais](docs/RONIN_RUNNER_ARTES_TELAS_CATALOGO_CONTEUDO_v1.md);
+- [VPS, Ronin Play, operação e desempenho](docs/RONIN_RUNNER_OPERACAO_VPS_PORTAL_TESTES_v1.md);
+- [OpenAPI 3.1 PRELIMINAR](docs/openapi.ronin-runner.v1.yaml);
+- [Matriz de aceite G01–G15 e handoff](docs/RONIN_RUNNER_MATRIZ_ACEITE_E_EXECUCAO_v1.md).
+
+**Precedência:** escolha expressa do usuário > especificação principal > novos contratos baseline v0.18 > propostas numéricas antigas. Não reabrir decisões explícitas. `BASELINE` é padrão proposto, não aprovação expressa; `TUNABLE` depende de playtest/benchmark. OpenAPI é draft e não está implementada nem validada em CI.
+
+**Proibido iniciar a implementação até autorização explícita do usuário.** Durante o planejamento, editar somente documentação. Depois da autorização, o Codex usará a arquitetura completa e aplicará gates de testes para a versão pública integral. Uma implementação incremental de componentes é permitida; lançamento público parcial não é objetivo.
+
 ## Primeiro passo antes da implementação
 
 Fechar as lacunas arquiteturais G01–G05 e G12–G15 da auditoria; depois congelar catálogos/balanceamento G06–G11 de acordo com as categorias de parâmetros; documentar ADRs de políticas de pausa, replays longos e placares após patches. O usuário autorizou **planejamento**, não implementação, até novo pedido explícito.
