@@ -1,8 +1,9 @@
 # Ronin Runner — Guia de handoff para Codex e pendências de decisão (v0.16)
 
-**ESTADO DO PROJETO: PLANEJAMENTO. NÃO IMPLEMENTAR NESTA ETAPA.** Este guia prepara o futuro início de desenvolvimento com escopo total, sem criar código, issues artificiais ou arquitetura descartável.  
+**ESTADO DO PROJETO: PLANEJAMENTO. NÃO IMPLEMENTAR NESTA ETAPA.** Este guia prepara o futuro início de desenvolvimento com escopo total, sem criar código, issues artificiais ou arquitetura descartável. **Auditoria v0.17 de lacunas para fechamento:** [RONIN_RUNNER_AUDITORIA_ALINHAMENTO_CODEX.md](./RONIN_RUNNER_AUDITORIA_ALINHAMENTO_CODEX.md). **Entrada automática para Codex no repositório:** [AGENTS.md](../AGENTS.md).  
 **Leitura obrigatória, nesta ordem:**
 1. [Escopo consolidado](./RONIN_RUNNER_SPEC.md)
+1a. [Auditoria de lacunas/ordem de fechamento v0.17](./RONIN_RUNNER_AUDITORIA_ALINHAMENTO_CODEX.md)
 2. [Movimentação/combate](./RONIN_RUNNER_MOVIMENTACAO_COMBATE.md)
 3. [Inimigos/chefes/obstáculos](./RONIN_RUNNER_INIMIGOS_CHEFES_OBSTACULOS.md)
 4. [Chefes e recompensas](./RONIN_RUNNER_CHEFES_RECOMPENSAS.md)
@@ -28,6 +29,12 @@
 - Criador de Ronin **completo e modular**: cabelo, rosto, tom de pele, roupas, acessórios e katana. **Aparência básica LIVRE desde o começo**, inclusive visitante. **Cosméticos especiais DESBLOQUEÁVEIS** jogando. Sem buffs por item.
 - **PT-BR/EN** obrigatório e persistente em todas as telas, metas, e-mails e mensagens.
 - Assets próprios/licenciados, estilo artístico japonês sumi-e/aquarela; não copiar IP alheia.
+
+## 1.1 Auditoria e estado do repositório — v0.17
+
+A revisão atual verificou que o repositório contém **documentação e diretórios de preparação** (em `src/` e `public/`), mas **nenhum código do jogo**. A matriz de lacunas [G01–G15](./RONIN_RUNNER_AUDITORIA_ALINHAMENTO_CODEX.md) é a fila de especificações faltantes; não duplicar planejamento antigo, não transformar PROPOSTO em CONFIRMADO e não começar a programar neste turno. O arquivo [AGENTS.md](../AGENTS.md) é o ponto de entrada automático para o Codex.
+
+O pacote de handoff estará **pronto para executar** quando: G01–G05 e G12–G15 estiverem congelados em contratos/ADRs, G06–G11 tiverem inventários e parâmetros TUNABLE aceitos e G14 fornecer rastreabilidade de teste. A arquitetura final pode ser implementada por etapas, mas **a versão pública completa** mantém todas as funcionalidades já confirmadas.
 
 ## 2. Escolhas técnicas ainda PROPOSTAS — não assumir aprovação automática
 
