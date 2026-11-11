@@ -1,6 +1,6 @@
-# Ronin Runner — Guia de handoff para Codex e pendências de decisão (v0.16)
+# Ronin Runner — Handoff para Codex e início da implementação (v0.19)
 
-**ESTADO DO PROJETO: PLANEJAMENTO. NÃO IMPLEMENTAR NESTA ETAPA.** Este guia prepara o futuro início de desenvolvimento com escopo total, sem criar código, issues artificiais ou arquitetura descartável. **Auditoria v0.17 de lacunas para fechamento:** [RONIN_RUNNER_AUDITORIA_ALINHAMENTO_CODEX.md](./RONIN_RUNNER_AUDITORIA_ALINHAMENTO_CODEX.md). **Entrada automática para Codex no repositório:** [AGENTS.md](../AGENTS.md).  
+**ESTADO ATUAL: IMPLEMENTAÇÃO AUTORIZADA PELO USUÁRIO EM 11/11/2026.** O próximo passo é o Codex iniciar código e testes no repositório, em branch de desenvolvimento/PR, mantendo o escopo integral da versão pública. Deploy na VPS e alterações externas ainda exigem autorização específica. **Auditoria de baseline:** [RONIN_RUNNER_AUDITORIA_ALINHAMENTO_CODEX.md](./RONIN_RUNNER_AUDITORIA_ALINHAMENTO_CODEX.md). **Instruções ativas para Codex:** [AGENTS.md](../AGENTS.md).  
 **Leitura obrigatória, nesta ordem:**
 1. [Escopo consolidado](./RONIN_RUNNER_SPEC.md)
 1a. [Auditoria de lacunas/ordem de fechamento v0.17](./RONIN_RUNNER_AUDITORIA_ALINHAMENTO_CODEX.md)
@@ -32,15 +32,15 @@
 
 ## 1.1 Auditoria e estado do repositório — v0.17
 
-A revisão atual verificou que o repositório contém **documentação e diretórios de preparação** (em `src/` e `public/`), mas **nenhum código do jogo**. A matriz de lacunas [G01–G15](./RONIN_RUNNER_AUDITORIA_ALINHAMENTO_CODEX.md) é a fila de especificações faltantes; não duplicar planejamento antigo, não transformar PROPOSTO em CONFIRMADO e não começar a programar neste turno. O arquivo [AGENTS.md](../AGENTS.md) é o ponto de entrada automático para o Codex.
+A auditoria identificou o repositório com documentação e diretórios de preparação (em `src/` e `public/`) antes do início da implementação. A matriz [G01–G15](./RONIN_RUNNER_AUDITORIA_ALINHAMENTO_CODEX.md) e o baseline v0.18 já cobrem as áreas de design; **a autorização de desenvolvimento foi dada posteriormente**. O Codex deve converter os contratos em código testável, sem tratar números PROPOSTO/TUNABLE como fatos aprovados. O arquivo [AGENTS.md](../AGENTS.md) é a orientação de projeto.
 
 O pacote de handoff estará **pronto para executar** quando: G01–G05 e G12–G15 estiverem congelados em contratos/ADRs, G06–G11 tiverem inventários e parâmetros TUNABLE aceitos e G14 fornecer rastreabilidade de teste. A arquitetura final pode ser implementada por etapas, mas **a versão pública completa** mantém todas as funcionalidades já confirmadas.
 
 ## 1.2 Especificações consolidadas para handoff v0.18
 
-O conjunto G01–G15 agora tem cobertura de design com defaults: [simulação, pausas, replays e ranking](./RONIN_RUNNER_CONTRATO_SIMULACAO_PARTIDAS_RANKING_v1.md); [Ronin ID, dados, privacidade](./RONIN_RUNNER_CONTRATO_IDENTIDADE_DADOS_PRIVACIDADE.md); [catálogo visual, biomas, telas e desafios](./RONIN_RUNNER_ARTES_TELAS_CATALOGO_CONTEUDO_v1.md); [VPS, DNS sugerido, portal e operação](./RONIN_RUNNER_OPERACAO_VPS_PORTAL_TESTES_v1.md); [OpenAPI draft v1](./openapi.ronin-runner.v1.yaml) e [matriz de aceite/testes](./RONIN_RUNNER_MATRIZ_ACEITE_E_EXECUCAO_v1.md).
+O conjunto G01–G15 tem cobertura de design com baselines, sobre os quais o Codex está autorizado a iniciar código/testes: [simulação, pausas, replays e ranking](./RONIN_RUNNER_CONTRATO_SIMULACAO_PARTIDAS_RANKING_v1.md); [Ronin ID, dados, privacidade](./RONIN_RUNNER_CONTRATO_IDENTIDADE_DADOS_PRIVACIDADE.md); [catálogo visual, biomas, telas e desafios](./RONIN_RUNNER_ARTES_TELAS_CATALOGO_CONTEUDO_v1.md); [VPS, DNS sugerido, portal e operação](./RONIN_RUNNER_OPERACAO_VPS_PORTAL_TESTES_v1.md); [OpenAPI draft v1](./openapi.ronin-runner.v1.yaml) e [matriz de aceite/testes](./RONIN_RUNNER_MATRIZ_ACEITE_E_EXECUCAO_v1.md).
 
-**Não confundir design documentado com implementado ou validado**. Contratos ainda precisam de lint/formalização de migrations, medições da VPS, playtests, produção artística, testes reais e revisão G0. Valores de política e tempo são baseline de orientação, não decisões explícitas do usuário; usuário mantém autoridade. O projeto segue sem código do jogo. `AGENTS.md` foi atualizado com precedência e instrução de não programar.
+**Não confundir design documentado com implementado ou validado**. Contratos ainda precisam de lint/formalização de migrations, medições da VPS, playtests, produção artística, testes reais e revisão G0. Valores de política e tempo são baseline de orientação, não decisões explícitas do usuário. **Codex já pode iniciar implementação e testes; somente deploy/alterações de produção exigem nova autorização.**
 
 ## 2. Escolhas técnicas ainda PROPOSTAS — não assumir aprovação automática
 
@@ -56,7 +56,7 @@ O conjunto G01–G15 agora tem cobertura de design com defaults: [simulação, p
 
 **Aviso:** estes itens devem virar ADRs/decisões claras antes de congelar contratos de código, mas não justificam reconstruir design do zero.
 
-## 3. Sequência sugerida quando o usuário AUTORIZAR programar
+## 3. Sequência de implementação — AUTORIZADA pelo usuário
 
 1. Fechar ADRs pendentes, diagramas de estados, contratos OpenAPI 3.1, modelo ER e regras versionadas; preparar banco/ambiente de testes.
 2. Estruturar monorepo ou pacote compartilhado com módulos finais de domínio: core determinístico, gerador, cliente Phaser, web UI, API Fastify, worker verifier, catálogo visual, schemas e tests.
@@ -71,7 +71,7 @@ O conjunto G01–G15 agora tem cobertura de design com defaults: [simulação, p
 
 ## 4. Condições para iniciar Codex
 
-- Usuário expressamente autoriza programação.
+- **Cumprida em 11/11/2026:** usuário autorizou iniciar a programação no Codex.
 - Contratos propostos de v0.16 revisados para não haver discordância entre documentos.
 - Ambientes, limites e políticas de segurança documentados; jogos usam as mesmas rules_version, IDs e schemas.
 - Backlog completo do lançamento é dividido em tarefas pequenas com critérios de teste, porém nenhuma funcionalidade prevista passa a ser "futura" só porque sua etapa chega depois.
@@ -85,6 +85,6 @@ O conjunto G01–G15 agora tem cobertura de design com defaults: [simulação, p
 - Todo código de autenticação, conta e progresso valida player_id da sessão e autorização por recurso.
 - Toda concessão de missão/selo/traje vem de run VERIFIED, com transações e idempotência.
 - Números de performance só são considerados aprovados após medir a VPS e dispositivos; replay verificável é exigência P0.
-- Respeitar limite explícito de **não programar** no estado atual.
+- **Programação está autorizada.** Proteger produção, DNS, banco real e credenciais; código e testes devem nascer na arquitetura definitiva, com PRs e evidências.
 
-**Próxima revisão de planejamento:** G0 — decidir parâmetros numéricos, política de runs longas/pausas, catálogo mínimo do criador, retenção do replay, evolução do placar por rules_version e capacidade real da VPS. Só então iniciar desenvolvimento quando usuário pedir.
+**Próxima atividade no Codex:** consolidar ADRs dos baselines, validar o OpenAPI draft, planejar schema e testes, e **implementar a primeira fatia vertical executável** do motor determinístico na arquitetura final. Não reduzir a abrangência de nenhuma feature da versão pública. Não executar deploy em produção sem autorização explícita.
