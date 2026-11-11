@@ -2,8 +2,9 @@
 
 > **Detalhamento técnico do movimento, gestos e combate:** [Game Design v0.9](./RONIN_RUNNER_MOVIMENTACAO_COMBATE.md). PT-BR/EN obrigatórios em todas as telas. Valores físicos são parâmetros iniciais calibráveis; três vidas sem qualquer cura.
 > **Catálogo completo e regras de geração:** [Inimigos, chefes e obstáculos v0.10](./RONIN_RUNNER_INIMIGOS_CHEFES_OBSTACULOS.md). Salto duplo padrão para todos; quatro chefes no escopo de lançamento.
+> **Regras confirmadas de encontro, retirada e recompensas:** [Chefes e recompensas v0.11](./RONIN_RUNNER_CHEFES_RECOMPENSAS.md). Chefes que não forem derrotados recuam e a corrida continua, sem punição pela retirada.
 
-Versão: 0.10 — consolidada até game design v0.10 (planejamento pré-implementação)  
+Versão: 0.11 — consolidada até game design v0.11 (planejamento pré-implementação)  
 Status: **escopo funcional completo definido; parâmetros de balanceamento e decisões de UX sujeitos a playtest**  
 Repositório: `Kennedh/ronin-jogos`  
 Ecossistema futuro: `play.ronin.dev.br`
@@ -125,6 +126,17 @@ Velocidade aumenta inicialmente e chega a um teto; unidades físicas e conversã
 - Tela inicial, seleção de traje, missões, seleção de região, jogar, pausa, resultado, ranking, perfil/conta, acessibilidade/configurações.
 - Trilha original/licenciada, instrumentos japoneses como referência, variantes de clima vivo/corrompido e volume separado de música/efeitos.
 - Conteúdo em português brasileiro e inglês desde o início, preparado para novas traduções.
+
+## 7.1 Regra consolidada de chefes e recompensas (v0.11)
+
+- **Confirmado:** cada região terá um chefe com encontro finito no fim de seu percurso. O chefe será derrotado ou **recuará**, e o ronin vivo prosseguirá sempre sem bloquear passagem. O jogador pode apenas se esquivar; a vitória é opcional e premia habilidade.
+- **Confirmado:** o chefe que recua não aplica penalidade extra em vida, distância, score ou progressão. Ataques não evitados durante o encontro ainda causam 1 de dano conforme regras usuais.
+- **Confirmado:** nenhuma vitória, derrota, transição ou prêmio de chefe recupera corações ou protege contra abismos. O salto duplo e os gestos continuam padrão, sem comandos novos.
+- **Valores propostos para balanceamento:** Raiz Negra +300 pts, Guardião do Sino +450, Espírito da Nevasca +600, Senhor do Eclipse +900 por vitória verificada em instância legítima. Não contar morte de chefe como morte de inimigo comum; corte perfeito válido no boss conta uma vez na janela.
+- **Recompensas de primeira vitória propostas:** quatro selos de conquista, registrados uma vez por Ronin ID; conjunto de quatro selos libera um rastro de katana cosmético, enquanto uma Jornada Completa com quatro chefes derrotados desbloqueia emblema especial.
+- **Repetição:** cada chefe reaparece uma vez por região/ciclo em encontro versionado e verificável; pontos de vitória por instância, conquistas de primeira vitória não duplicadas. Expedições Regionais pontuam apenas em rankings de sua modalidade.
+- **Segurança:** servidor reconstitui replay/seed e valida derrota, retirada, ticks, acertos e bônus; não confiar em `boss_defeated` reportado pelo cliente.
+- **Detalhes de duração, janelas e recompensas:** [documento v0.11](./RONIN_RUNNER_CHEFES_RECOMPENSAS.md).
 
 ## 8. Trajes e missões
 
@@ -261,4 +273,4 @@ O sequenciamento serve à validação incremental, **não** reduz escopo nem dis
 - Google Identity: https://developers.google.com/identity/gsi/web/guides/verify-google-id-token
 - MDN Screen Orientation API: https://developer.mozilla.org/en-US/docs/Web/API/ScreenOrientation/lock
 
-**Últimas decisões registradas:** salto duplo para todos desde o começo; nove arquétipos propostos de inimigos e quatro chefes obrigatórios para o lançamento completo; combate de precisão, três vidas sem cura, ciclos infinitos, gestos mobile, PT-BR/EN, ranking global com visitante, cadastro e-mail/senha e login Google. Chefes que não forem derrotados recuam sem encerrar a corrida: proposta sujeita à confirmação final.
+**Últimas decisões CONFIRMADAS:** salto duplo para todos desde o começo; nove arquétipos propostos de inimigos e quatro chefes obrigatórios para o lançamento completo; combate de precisão, três vidas sem cura, ciclos infinitos, gestos mobile, PT-BR/EN, ranking global com visitante, cadastro e-mail/senha e login Google. **Chefes podem recuar sem encerrar a corrida**, e ninguém precisa derrotá-los para prosseguir. Recompensas e valores numéricos de chefes estão descritos na especificação v0.11; números são provisórios e sujeitos a testes.
