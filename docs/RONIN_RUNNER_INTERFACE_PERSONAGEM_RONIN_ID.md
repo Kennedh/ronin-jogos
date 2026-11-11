@@ -224,7 +224,7 @@ Propostas complementares: `GET /me/character`, `PATCH /me/character`, `GET /cosm
 ## 10. Próximas decisões a confirmar
 
 - **RESOLVIDO em v0.15:** Criador completo e modular de cabelo, rosto, tom de pele, roupas, acessórios e katana **obrigatório no primeiro lançamento público**. A regra de aparência sem impacto em hitboxes, física e ranking também está fechada.
-- **PENDENTE:** quantidade mínima de opções e presets, variações de penteados, cores, acessórios e opções visuais da katana; papel da faixa vermelha como marca visual permanente; avaliação de rig e clipping. O formato completo está documentado em [v0.15](./RONIN_RUNNER_PERSONAGEM_ANIMACOES_VALIDACAO.md).
+- **RESOLVIDO em v0.16:** variedade básica livre de cabelo/rosto/pele/cores, com especiais por conquista; incluindo visitantes. **PENDENTE:** quantidades exatas de opções e presets, conteúdo de trajes/acessórios especiais, papel da faixa vermelha como marca permanente e validação de rig/clipping. Catálogo em [v0.15–v0.16](./RONIN_RUNNER_PERSONAGEM_ANIMACOES_VALIDACAO.md).
 - Preservar 5 desafios/semana e 3 níveis (2/4/5): **níveis já confirmados**, quantidade 5 foi implícita na escolha e é coerente com a edição v0.13.
 - Políticas de moderação/alteração de apelido, apresentação pública do personagem (avatar e cosméticos visíveis).
 - Detalhamento visual de acessibilidade, telas vazias, design tokens, animações de menu e indicadores de carregamento.
