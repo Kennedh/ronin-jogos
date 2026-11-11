@@ -2,7 +2,7 @@
 
 **Status:** especificação de design anterior ao código. **Nenhuma regra é implementada neste documento.**  
 **Escopo:** primeira versão pública completa (desktop, mobile, ranking verificado, identidade persistente).  
-**Depende de:** [Especificação geral v0.8](./RONIN_RUNNER_SPEC.md).
+**Depende de:** [Especificação geral consolidada](./RONIN_RUNNER_SPEC.md) e [Catálogo de inimigos/chefes/obstáculos v0.10](./RONIN_RUNNER_INIMIGOS_CHEFES_OBSTACULOS.md).
 
 ## 0. Decisões herdadas e obrigatórias
 
@@ -69,12 +69,12 @@ Regras:
 | Impulso vertical do salto | -750 unidades/s | Aproximadamente 134 unidades de altura e 0,71 s de voo sobre mesmo nível |
 | Coyote time | 80 ms | Tolera apertar após deixar a borda, sem permitir salto já em queda profunda |
 | Jump buffer | 100 ms | Tolera comando pouco antes de tocar o chão |
-| Segundo salto | Permitido desde o começo | Mantém condições competitivas iguais para visitantes e cadastrados |
+| Segundo salto | **Obrigatório e disponível desde o começo para TODOS** | Mesmas condições competitivas para visitantes e cadastrados |
 | Impulso do salto duplo | -670 unidades/s | Levemente menor; substitui velocidade vertical por impulso configurado |
 | Limite | Um salto duplo por decolagem | Recarrega apenas após pouso real em piso seguro |
 | Salto segurado | Não necessário na V1 | Gesto mobile não depende de manter dedo pressionado |
 
-O salto duplo deve ser **habilidade base**, não desbloqueada por trajes ou distância: é parte do movimento competitivo e o mesmo para todos. Exigir segundo swipe vertical no ar no mobile ou segundo comando no desktop. Ao cair em um abismo, não permitir "salto de emergência" depois do estado de morte. Landing exige superfície segura e cruzamento correto das caixas de colisão.
+O salto duplo é **habilidade inicial confirmada para todos**, não desbloqueada por trajes, conta, missões ou distância: é parte do movimento competitivo e o mesmo para todos. Exigir segundo swipe vertical no ar no mobile ou segundo comando no desktop. Ao cair em um abismo, não permitir "salto de emergência" depois do estado de morte. Landing exige superfície segura e cruzamento correto das caixas de colisão.
 
 **Limites de geração:** o gerador deve calcular distância possível durante o voo considerando velocidade atual, buffers, margem de segurança e a possibilidade de o jogador optar por pulo simples ou duplo. Não criar abismos além do alcance de um input razoável nem obstáculos que precisem de movimentos mutuamente exclusivos no mesmo instante.
 
@@ -225,6 +225,6 @@ Parâmetros **iniciais e calibráveis** de reconhecimento:
 - Se combo perfeito termina com corte comum ou apenas com erro.
 - Frequência de inimigos e peso de score em sessões longas.
 - Limites de pausa em runs ranqueadas, sem prejudicar acessibilidade.
-- Chefe(s) no primeiro lançamento, localização textual final da narrativa.
+- **Quatro chefes obrigatórios no lançamento completo**, com padrões e escopo descritos no documento v0.10; revisar seus números finais de golpes/janelas e a localização textual da narrativa.
 
 > **Condição para desenvolvimento:** nenhuma das tabelas acima deve ser congelada sem teste empírico. O sistema de configurações de regras deve permitir ajuste **versionado**, com testes de regressão e rankings coerentes.
