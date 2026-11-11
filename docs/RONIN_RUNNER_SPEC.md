@@ -8,8 +8,9 @@
 > **Interface, criador visual e Ronin ID:** [Game Design v0.14, atualizado em v0.15](./RONIN_RUNNER_INTERFACE_PERSONAGEM_RONIN_ID.md). Define telas, fluxos de visitante/e-mail/Google, criador modular **confirmado**, recuperação, mesclagem segura e testes E2E.
 > **Criador completo, rig, animações, telas e critérios de aceite:** [Game Design v0.15, distribuição v0.16](./RONIN_RUNNER_PERSONAGEM_ANIMACOES_VALIDACAO.md). Personalização completa de cabelo, rosto, tom de pele, roupas, acessórios e katana é obrigatória no primeiro lançamento. **Aparência básica livre; cosméticos especiais conquistados jogando.**
 > **Contratos REST/DTOs/DB:** [v0.16](./RONIN_RUNNER_CONTRATOS_API_PERSISTENCIA.md). **Segurança e verificação de partidas:** [v0.16](./RONIN_RUNNER_SEGURANCA_PARTIDAS.md). **Testes e gates de lançamento:** [v0.16](./RONIN_RUNNER_TESTES_LANCAMENTO.md). **Preparação para Codex (sem programar):** [v0.16](./RONIN_RUNNER_PREPARACAO_CODEX.md).
+> **Auditoria do alinhamento para Codex (v0.17):** [15 lacunas e ordem de fechamento](./RONIN_RUNNER_AUDITORIA_ALINHAMENTO_CODEX.md). **Entrada do Codex:** [AGENTS.md](../AGENTS.md), com escopo confirmado e regra de não programar até autorização.
 
-Versão: 0.16 — consolidação de produto, contratos técnicos, segurança, persistência e QA (planejamento pré-implementação)  
+Versão: 0.17 — produto consolidado e auditoria das lacunas para handoff ao Codex (planejamento pré-implementação)  
 Status: **escopo funcional completo definido; parâmetros de balanceamento e decisões de UX sujeitos a playtest**  
 Repositório: `Kennedh/ronin-jogos`  
 Ecossistema futuro: `play.ronin.dev.br`
@@ -314,6 +315,9 @@ O sequenciamento serve à validação incremental, **não** reduz escopo nem dis
 
 ## 16. Pontos ainda em aberto para discussão antes de programar
 
+**Auditoria atualizada v0.17:** [matriz G01–G15](./RONIN_RUNNER_AUDITORIA_ALINHAMENTO_CODEX.md). Antes de iniciar a implementação, priorizar políticas de corridas infinitas/replay/pausa, regras de pontuação após patches, OpenAPI/DDL, autenticação/sessões, catálogo/arte, UI, VPS, privacidade e critérios de aceite. **Nenhuma dessas pendências desfaz decisões de produto confirmadas.**
+
+
 - Ajuste fino da janela de corte perfeito, velocidade, pulo, deslize, invulnerabilidade e balanceamento.
 - Ajustes de balanceamento de combo/concentração e golpe especial; **salto duplo inicial já confirmado como regra definitiva**.
 - Cadência/densidade e valores finais de inimigos e chefes; **os quatro chefes integram o escopo obrigatório da primeira versão pública**, conforme a especificação v0.10.
@@ -333,3 +337,5 @@ O sequenciamento serve à validação incremental, **não** reduz escopo nem dis
 - MDN Screen Orientation API: https://developer.mozilla.org/en-US/docs/Web/API/ScreenOrientation/lock
 
 **Últimas decisões CONFIRMADAS:** salto duplo desde o começo; quatro chefes da versão completa (nove arquétipos de inimigos propostos), três vidas sem cura, abismos fatais, ciclos infinitos, gestos mobile, localização PT-BR/EN, ranking global de visitantes e contas Google/e-mail, chefes que podem recuar sem encerrar corrida, Traço da Aurora por quatro selos, desafios semanais autogerados com Bronze 2/5, Prata 4/5 e Ouro 5/5. **Criador de Ronin completo e modular no primeiro lançamento** com cabelo, rosto, tom de pele, roupas, acessórios e katana: **a aparência básica é livre desde o início, inclusive para visitantes, e os cosméticos especiais são conquistados jogando**, sempre sem alterar física ou ranking. **v0.16 formaliza os contratos técnicos, segurança de partidas, persistência, testes, gates de release e handoff para Codex**; parâmetros numéricos, catálogos e políticas sinalizadas como propostas ainda exigem revisão. Nenhum código ou teste executado.
+
+**Auditoria v0.17 finalizou uma análise de lacunas e adicionou instruções [AGENTS.md](../AGENTS.md) para o Codex; o projeto NÃO está implementado nem com G0 inteiramente congelado.**
