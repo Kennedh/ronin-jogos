@@ -1,5 +1,7 @@
 # Ronin Runner — Auditoria de lacunas e plano de alinhamento para Codex (v0.17)
 
+> **Revisão v0.18:** os 15 tópicos G01–G15 receberam um **baseline técnico e contratos de saída**; consulte [matriz de aceite/handoff](./RONIN_RUNNER_MATRIZ_ACEITE_E_EXECUCAO_v1.md), [política de partidas/ranking](./RONIN_RUNNER_CONTRATO_SIMULACAO_PARTIDAS_RANKING_v1.md), [conta/dados](./RONIN_RUNNER_CONTRATO_IDENTIDADE_DADOS_PRIVACIDADE.md), [arte e 30 modelos semanais](./RONIN_RUNNER_ARTES_TELAS_CATALOGO_CONTEUDO_v1.md), [VPS/portal](./RONIN_RUNNER_OPERACAO_VPS_PORTAL_TESTES_v1.md) e [OpenAPI draft](./openapi.ronin-runner.v1.yaml). **Esta tabela v0.17 é histórico de lacunas, não retrato de funcionalidades ainda sem design; faltam validação real, algumas escolhas de parâmetros e aprovação do usuário para iniciar implementação.**
+
 **Estado:** auditoria de especificação, sem implementar código. Base: `main` do repositório `Kennedh/ronin-jogos`, com 12 documentos de design anteriores e somente pastas `src`/`public` com `.gitkeep` no momento da revisão.  
 **Objetivo:** distinguir regras confirmadas de números provisórios, identificar contradições reais e deixar um pacote que o Codex execute **somente quando o usuário autorizar programar**, mirando a **primeira versão pública completa**.
 
