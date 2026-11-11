@@ -4,8 +4,9 @@
 > **Catálogo completo e regras de geração:** [Inimigos, chefes e obstáculos v0.10](./RONIN_RUNNER_INIMIGOS_CHEFES_OBSTACULOS.md). Salto duplo padrão para todos; quatro chefes no escopo de lançamento.
 > **Regras confirmadas de encontro, retirada e recompensas:** [Chefes e recompensas v0.11](./RONIN_RUNNER_CHEFES_RECOMPENSAS.md). Chefes que não forem derrotados recuam e a corrida continua, sem punição pela retirada.
 > **Missões, conquistas e progressão permanente:** [Game Design v0.12](./RONIN_RUNNER_PROGRESSAO_MISSOES.md). **Traço da Aurora confirmado** como efeito permanente de katana pela coleção completa dos quatro selos. Catálogos e metas adicionais são propostas sujeitas a revisão.
+> **Desafios semanais autogerados na versão completa:** [Game Design v0.13](./RONIN_RUNNER_DESAFIOS_SEMANAIS.md). Publicação e validação automáticas, sem curadoria manual toda semana, mesmos desafios para visitantes e contas vinculadas.
 
-Versão: 0.12 — consolidada até game design v0.12 (planejamento pré-implementação)  
+Versão: 0.13 — consolidada até game design v0.13 (planejamento pré-implementação)  
 Status: **escopo funcional completo definido; parâmetros de balanceamento e decisões de UX sujeitos a playtest**  
 Repositório: `Kennedh/ronin-jogos`  
 Ecossistema futuro: `play.ronin.dev.br`
@@ -30,7 +31,7 @@ Não desenvolver um mini-MVP descartável. O lançamento público deve incluir:
 2. Combate de precisão, obstáculos gerados de forma validável, sistema de três vidas e abismos fatais.
 3. Visual 2D em pintura japonesa, dois ou mais estados artísticos (vivo/corrompido) por região, animações, som, HUD e telas.
 4. Controle por teclado e gestos touch, layout mobile horizontal, tela cheia quando possível e alternativa compatível.
-5. Distância, pontuação, concentração, missões, conquistas, três trajes iniciais e pontos de partida regionais desbloqueáveis.
+5. Distância, pontuação, concentração, missões permanentes, **desafios semanais autogerados**, conquistas, três trajes iniciais e pontos de partida regionais desbloqueáveis.
 6. Ronin ID: visitante persistente com apelido, criação de conta por e-mail e senha, login Google, vinculação e recuperação de conta.
 7. Persistência no backend, ranking mundial all-time e semanal, rankings regionais e validação antifraude.
 8. Internacionalização PT-BR/EN, políticas básicas de privacidade, acessibilidade e fluxos de erro/reconexão.
@@ -147,6 +148,16 @@ Trajes de lançamento:
 3. **Corte Silencioso** — 50 cortes perfeitos acumulados, roupas escuras e pinceladas brancas.
 
 Todos cosméticos e com colisões idênticas. **Traço da Aurora** confirmado como efeito de katana por reunir os quatro selos, sem alterar qualquer estatística. Progressão por três caminhos independentes (O Caminho, A Lâmina e O Espírito), com missões de partida, carreira, região e conquistas de chefes. A coleção proposta para a versão completa inclui mais trajes e metas de 3–250 km acumulados, centenas de ações e feitos de uma corrida, sujeitos a balanceamento. Missões **não concedem pontos extras ao ranking**. Recompensas emitidas e deduplicadas pelo servidor após validação. Catálogo detalhado e casos de teste: [v0.12](./RONIN_RUNNER_PROGRESSAO_MISSOES.md).
+
+## 8.1 Desafios semanais autônomos — CONFIRMADOS (v0.13)
+
+- **Obrigatórios na primeira versão pública completa**: seleção, publicação, acompanhamento e encerramento automáticos **sem seleção manual de missões pelo proprietário a cada semana**.
+- Diretor de Desafios determinístico escolhe modelos testados e versionados, metas e diversidade, valida completabilidade, limita repetições e possui fallback publicado por transação idempotente se cron falhar.
+- Mesma edição global para todos os Ronin IDs: visitantes com apelido, contas e-mail/senha e Google; sem login diário obrigatório, sem moeda, loja, loot box, cura, buffs ou pontos de ranking por cumprir desafio.
+- **Parâmetros PROPOSTOS:** cinco desafios simultâneos por semana, distribuídos em dois acessíveis, dois intermediários e um avançado; semana ISO segunda 00:00 UTC (exibir hora local corretamente); recompensa cosmética de Selo da Semana por conclusão do conjunto.
+- Persistência PostgreSQL, progresso incrementado por replays verificados e transações idempotentes; uso de assets de recompensa reutilizáveis para permitir muitos anos de edições sem demanda artística semanal.
+- O desafio não pode exigir região desbloqueada em tier acessível nem contradizer três vidas sem cura, salto duplo inicial e chefes que podem recuar.
+- **Detalhamento, dados, exemplos e casos de teste:** [v0.13](./RONIN_RUNNER_DESAFIOS_SEMANAIS.md).
 
 ## 9. Mobile, fullscreen e controles
 
@@ -274,4 +285,4 @@ O sequenciamento serve à validação incremental, **não** reduz escopo nem dis
 - Google Identity: https://developers.google.com/identity/gsi/web/guides/verify-google-id-token
 - MDN Screen Orientation API: https://developer.mozilla.org/en-US/docs/Web/API/ScreenOrientation/lock
 
-**Últimas decisões CONFIRMADAS:** salto duplo para todos desde o começo; nove arquétipos propostos de inimigos e quatro chefes obrigatórios para o lançamento completo; combate de precisão, três vidas sem cura, ciclos infinitos, gestos mobile, PT-BR/EN, ranking global com visitante, cadastro e-mail/senha e login Google. **Chefes podem recuar sem encerrar a corrida**, e ninguém precisa derrotá-los para prosseguir. **Reunir os quatro selos concede Traço da Aurora, efeito exclusivamente cosmético de katana.** Metas, trajes adicionais e valores numéricos continuam propostos para aprovação e testes. Documentos v0.11–v0.12 definem os detalhes.
+**Últimas decisões CONFIRMADAS:** salto duplo para todos desde o começo; nove arquétipos propostos de inimigos e quatro chefes obrigatórios para o lançamento completo; combate de precisão, três vidas sem cura, ciclos infinitos, gestos mobile, PT-BR/EN, ranking global com visitante, cadastro e-mail/senha e login Google. **Chefes podem recuar sem encerrar a corrida**. **Reunir os quatro selos concede Traço da Aurora, efeito exclusivamente cosmético de katana.** **Desafios semanais opcionais autogerados entram no lançamento completo, sem curadoria manual semanal.** Quantidade de desafios, metas, selos semanais e trajes adicionais ainda são propostas a validar. Documentos v0.11–v0.13 definem os detalhes.
