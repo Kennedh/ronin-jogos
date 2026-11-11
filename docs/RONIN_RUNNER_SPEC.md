@@ -6,9 +6,10 @@
 > **Missões, conquistas e progressão permanente:** [Game Design v0.12](./RONIN_RUNNER_PROGRESSAO_MISSOES.md). **Traço da Aurora confirmado** como efeito permanente de katana pela coleção completa dos quatro selos. Catálogos e metas adicionais são propostas sujeitas a revisão.
 > **Desafios semanais autogerados na versão completa:** [Game Design v0.13–v0.14](./RONIN_RUNNER_DESAFIOS_SEMANAIS.md). Publicação e validação automáticas, sem curadoria manual toda semana, mesmos desafios para visitantes e contas vinculadas. **Recompensas confirmadas:** selos Bronze (2/5), Prata (4/5) e Ouro (5/5).
 > **Interface, criador visual e Ronin ID:** [Game Design v0.14, atualizado em v0.15](./RONIN_RUNNER_INTERFACE_PERSONAGEM_RONIN_ID.md). Define telas, fluxos de visitante/e-mail/Google, criador modular **confirmado**, recuperação, mesclagem segura e testes E2E.
-> **Criador completo, rig, animações, telas e critérios de aceite:** [Game Design v0.15](./RONIN_RUNNER_PERSONAGEM_ANIMACOES_VALIDACAO.md). Personalização completa de cabelo, rosto, tom de pele, roupas, acessórios e katana é obrigatória no primeiro lançamento.
+> **Criador completo, rig, animações, telas e critérios de aceite:** [Game Design v0.15, distribuição v0.16](./RONIN_RUNNER_PERSONAGEM_ANIMACOES_VALIDACAO.md). Personalização completa de cabelo, rosto, tom de pele, roupas, acessórios e katana é obrigatória no primeiro lançamento. **Aparência básica livre; cosméticos especiais conquistados jogando.**
+> **Contratos REST/DTOs/DB:** [v0.16](./RONIN_RUNNER_CONTRATOS_API_PERSISTENCIA.md). **Segurança e verificação de partidas:** [v0.16](./RONIN_RUNNER_SEGURANCA_PARTIDAS.md). **Testes e gates de lançamento:** [v0.16](./RONIN_RUNNER_TESTES_LANCAMENTO.md). **Preparação para Codex (sem programar):** [v0.16](./RONIN_RUNNER_PREPARACAO_CODEX.md).
 
-Versão: 0.15 — consolidada até game design v0.15 (planejamento pré-implementação)  
+Versão: 0.16 — consolidação de produto, contratos técnicos, segurança, persistência e QA (planejamento pré-implementação)  
 Status: **escopo funcional completo definido; parâmetros de balanceamento e decisões de UX sujeitos a playtest**  
 Repositório: `Kennedh/ronin-jogos`  
 Ecossistema futuro: `play.ronin.dev.br`
@@ -194,10 +195,19 @@ Desktop: espaço/↑ pular, ↓/S deslizar, J atacar; configurações para alter
 - Corpo autoritativo/hitbox, alcance e timing da katana, vida, salto duplo, física, ritmo e resultados **não variam** por aparência; trajes, acessórios, katana e efeitos são cosméticos.
 - Avatar de perfil/leaderboard é representação sintética do equipamento do jogador, sem exigir upload de foto ou geração externa. Somente peças desbloqueadas podem ser equipadas; preview de bloqueadas pode ser mostrado.
 - Persistência integrada ao Ronin ID visitante/Google/e-mail, atualização fora de partida, controle de concorrência por `appearance_version` ou equivalente, fusão segura de contas e fallback visual sem apagar a personalização legítima.
-- Confirmado o catálogo de **categorias**; números exatos de cabelo, cor, rosto, tom, acessórios, trajes e skins de katana são **propostas de arte para aprovação**, sem reduzir a abrangência do criador.
+- **Distribuição de peças confirmada v0.16:** opções básicas de cabelo, rosto/olhos, tom de pele e cores disponíveis **livremente para todos desde o início**, inclusive visitantes; traje inicial e katana padrão livres. Trajes, acessórios e versões especiais de katana/efeitos são **desbloqueáveis pelo progresso verificado**, nunca por vantagem de ranking ou atributo. Números exatos de estilos/peças seguem propostas de arte para aprovação, sem reduzir a abrangência do criador.
 - Telas S00–S13 seguem a especificação de interface; modos e HUD são independentes de cosméticos. O criador deve permitir preview de animações relevantes e operar em desktop/mobile com menus responsivos.
 - Validação obrigatória por testes de slot, incompatibilidades de camadas, combinações pairwise, screenshots, paridade de física/replay, segurança da API, consistência de avatar/perfil, desempenho mobile, 4 regiões e múltiplos ciclos, PT-BR/EN e acessibilidade.
 - **Documento técnico e critérios detalhados:** [Criador, animações e validação v0.15](./RONIN_RUNNER_PERSONAGEM_ANIMACOES_VALIDACAO.md).
+
+## 9.3 Aparência básica livre, cosméticos especiais desbloqueáveis — DECISÃO CONFIRMADA v0.16
+
+- O Criador de Ronin completo existe **desde a primeira sessão**, sem obrigar Google ou e-mail.
+- **Gratuitas e livres:** opções básicas de cabelo, cores, rosto/olhos, tom de pele e detalhes faciais, traje Ronin Errante, katana padrão. As opções básicas devem formar um catálogo real de escolha e não dependem de conquistas.
+- **Por desempenho verificado:** trajes especiais, máscaras e acessórios raros, cabo/bainha especial, variantes cosméticas raras e efeitos de espada como Traço da Aurora (quatro selos de chefes). Nenhum cosmético muda vida, dano, hitbox, alcance, salto ou score.
+- O catálogo da API traz `is_basic_free` e `unlock_requirement_id`; o servidor valida toda solicitação de equipar, inclusive de visitante. Preview não equivale a posse.
+- Os mesmos slots e animações ficam disponíveis nos modos FULL/REGIONAL, login Google/e-mail/visitante, perfil público e ranking.
+- **Spec de catálogos e rig:** [Criador v0.16](./RONIN_RUNNER_PERSONAGEM_ANIMACOES_VALIDACAO.md). **Persistência/autorização:** [Contrato de dados v0.16](./RONIN_RUNNER_CONTRATOS_API_PERSISTENCIA.md).
 
 ## 10. Ronin ID — identidade compartilhada entre jogos
 
@@ -236,22 +246,24 @@ Rankings: (a) Jornada Completa all-time, (b) Jornada Completa semanal em UTC com
 - O servidor tem autoridade sobre saldos de progresso, desbloqueios, conquistas e rankings.
 - Não presumir segurança perfeita no cliente; simulações e anti-cheat reduzem, mas não eliminam fraude.
 
-## 12. Modelo lógico inicial (a detalhar)
+## 12. Modelo lógico inicial (detalhado em contrato v0.16)
 
 Entidades previstas: `players`, `auth_identities`, `password_credentials`, `sessions`, `email_verification_tokens`, `password_reset_tokens`, `player_profiles`, `runs`, `run_events/replays`, `leaderboard_entries` (ou projeção materializada), `player_progress`, `regions_unlocked`, `cosmetics`, `player_cosmetics`, `missions`, `player_missions`, `achievement_definitions`, `player_achievements`, `game_rules_versions`, `audit_events`.
 
 Definir chaves UUID/identificadores não adivinháveis, FKs, constraints únicas, índices por jogador, modo, região, período, pontuação e `run_id`. Históricos de partidas e regras/versionamento devem permitir auditar rankings mesmo após mudanças de balanceamento.
 
-## 13. API por domínio (contrato a fechar antes do código)
+## 13. API por domínio (contrato funcional proposto em v0.16)
 
 - `/auth/guest`, `/auth/register`, `/auth/verify-email`, `/auth/login`, `/auth/google`, `/auth/logout`, `/auth/password/forgot`, `/auth/password/reset`, `/auth/link`.
 - `/me`, `/me/profile`, `/me/progress`, `/me/cosmetics`, `/me/missions`, `/me/regions`, `/me/sessions`.
 - `/runs/start`, `/runs/finish`, `/runs/{id}` (somente autorizado), e pontos de ingestão/verificação de eventos se necessários.
 - `/leaderboards/global`, `/leaderboards/weekly`, `/leaderboards/regions/{region}`, `/leaderboards/me`.
 - `/health`, e endpoints internos protegidos para operação/moderação.
-Documentar OpenAPI, erros, autenticação, paginação, versões e limites antes da implementação.
+O detalhamento funcional de endpoints, erros, autenticação, paginação, DTOs, limites e autorização está descrito no [contrato v0.16](./RONIN_RUNNER_CONTRATOS_API_PERSISTENCIA.md). **Ainda é necessário congelar OpenAPI 3.1 formal e migrations DDL reais após revisão das pendências G0, antes de programar.**
 
 ## 14. Testes da arquitetura FINAL — obrigatórios desde a primeira etapa
+
+**Matriz de homologação, testes de propriedade/E2E/segurança/carga e gates de lançamento v0.16:** [Plano mestre de testes](./RONIN_RUNNER_TESTES_LANCAMENTO.md). **Validação de runs por replay e controle de abuso v0.16:** [Segurança de partidas](./RONIN_RUNNER_SEGURANCA_PARTIDAS.md). Nenhum teste descrito foi executado ainda; são critérios de aceite para a implementação futura.
 
 **Princípio:** criar e manter testes do produto final enquanto as funcionalidades são construídas. Não criar um `localStorage` provisório para depois trocar por PostgreSQL em produção, nem simulação de ranking local para substituir por backend posteriormente.
 
@@ -290,6 +302,16 @@ F. Polimento, carga/performance, compatibilidade, idiomas, privacidade, seguran�
 
 O sequenciamento serve à validação incremental, **não** reduz escopo nem dispensa testes integrados completos.
 
+## 15.1 Handoff técnico de pré-implementação — v0.16
+
+**A arquitetura funcional está documentada, mas não congelada para execução sem mais decisões**. O planejamento já descreve contratos e dados da versão final, o replay e as ameaças reais de anticheat, o test matrix e limites para a VPS. O documento [Preparação para Codex](./RONIN_RUNNER_PREPARACAO_CODEX.md) lista decisões de produto fechadas, itens técnicos/números em aberto e sequência futura **somente quando o usuário autorizar programar**.
+
+**Documentos centrais:**
+- [Contratos de API, esquema e persistência](./RONIN_RUNNER_CONTRATOS_API_PERSISTENCIA.md);
+- [Integridade de partidas, segurança e limitações reais do anticheat](./RONIN_RUNNER_SEGURANCA_PARTIDAS.md);
+- [Plano de homologação, testes E2E e gates de release](./RONIN_RUNNER_TESTES_LANCAMENTO.md);
+- [Handoff preparado para Codex](./RONIN_RUNNER_PREPARACAO_CODEX.md).
+
 ## 16. Pontos ainda em aberto para discussão antes de programar
 
 - Ajuste fino da janela de corte perfeito, velocidade, pulo, deslize, invulnerabilidade e balanceamento.
@@ -310,4 +332,4 @@ O sequenciamento serve à validação incremental, **não** reduz escopo nem dis
 - Google Identity: https://developers.google.com/identity/gsi/web/guides/verify-google-id-token
 - MDN Screen Orientation API: https://developer.mozilla.org/en-US/docs/Web/API/ScreenOrientation/lock
 
-**Últimas decisões CONFIRMADAS:** salto duplo para todos desde o começo; nove arquétipos propostos de inimigos e quatro chefes obrigatórios para o lançamento completo; combate de precisão, três vidas sem cura, ciclos infinitos, gestos mobile, PT-BR/EN, ranking global com visitante, cadastro e-mail/senha e login Google. **Chefes podem recuar sem encerrar a corrida.** **Reunir os quatro selos concede Traço da Aurora, efeito exclusivamente cosmético de katana.** **Desafios semanais opcionais autogerados na versão completa e três selos cosméticos progressivos Bronze 2/5, Prata 4/5, Ouro 5/5.** **Criador de Ronin COMPLETO e MODULAR obrigatório no primeiro lançamento**, com cabelo, rosto, tom de pele, roupas, acessórios e katana, aparência integrada ao Ronin ID sem afetar física e ranking. Documentos v0.14–v0.15 detalham telas, animações, rig e validação. Quantidade de opções e catálogos numéricos continuam propostos, sujeitos a aprovação e playtests.
+**Últimas decisões CONFIRMADAS:** salto duplo desde o começo; quatro chefes da versão completa (nove arquétipos de inimigos propostos), três vidas sem cura, abismos fatais, ciclos infinitos, gestos mobile, localização PT-BR/EN, ranking global de visitantes e contas Google/e-mail, chefes que podem recuar sem encerrar corrida, Traço da Aurora por quatro selos, desafios semanais autogerados com Bronze 2/5, Prata 4/5 e Ouro 5/5. **Criador de Ronin completo e modular no primeiro lançamento** com cabelo, rosto, tom de pele, roupas, acessórios e katana: **a aparência básica é livre desde o início, inclusive para visitantes, e os cosméticos especiais são conquistados jogando**, sempre sem alterar física ou ranking. **v0.16 formaliza os contratos técnicos, segurança de partidas, persistência, testes, gates de release e handoff para Codex**; parâmetros numéricos, catálogos e políticas sinalizadas como propostas ainda exigem revisão. Nenhum código ou teste executado.
