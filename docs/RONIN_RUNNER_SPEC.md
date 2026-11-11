@@ -1,4 +1,7 @@
 # Ronin Runner: Tinta e Aço — Especificação de Produto e Jogo
+
+> **Detalhamento técnico do movimento, gestos e combate:** [Game Design v0.9](./RONIN_RUNNER_MOVIMENTACAO_COMBATE.md). PT-BR/EN obrigatórios em todas as telas. Valores físicos são parâmetros iniciais calibráveis; três vidas sem qualquer cura.
+
 Versão: 0.8 — planejamento pré-implementação  
 Status: **escopo funcional completo definido; parâmetros de balanceamento e decisões de UX sujeitos a playtest**  
 Repositório: `Kennedh/ronin-jogos`  
