@@ -1,7 +1,7 @@
-# Ronin Runner — Interface, Criador de Ronin e Identidade (Game Design v0.14, Criador aprovado em v0.15)
+# Ronin Runner — Interface, Criador de Ronin e Identidade (Game Design v0.14, atualizado até v0.16)
 
 **Status:** especificação funcional e de UX, anterior à programação. Regras **CONFIRMADAS** vindas do histórico são mandatórias; propostas de layout, quantidade de opções e sequência de onboarding serão validadas antes de congelar design.  
-**Referências:** [Produto e regras gerais](./RONIN_RUNNER_SPEC.md) · [Movimentação e combate](./RONIN_RUNNER_MOVIMENTACAO_COMBATE.md) · [Progressão permanente](./RONIN_RUNNER_PROGRESSAO_MISSOES.md) · [Desafios semanais](./RONIN_RUNNER_DESAFIOS_SEMANAIS.md) · [Chefes e recompensa](./RONIN_RUNNER_CHEFES_RECOMPENSAS.md) · [Criador modular, rig, animações e validação v0.15](./RONIN_RUNNER_PERSONAGEM_ANIMACOES_VALIDACAO.md).
+**Referências:** [Produto e regras gerais](./RONIN_RUNNER_SPEC.md) · [Movimentação e combate](./RONIN_RUNNER_MOVIMENTACAO_COMBATE.md) · [Progressão permanente](./RONIN_RUNNER_PROGRESSAO_MISSOES.md) · [Desafios semanais](./RONIN_RUNNER_DESAFIOS_SEMANAIS.md) · [Chefes e recompensa](./RONIN_RUNNER_CHEFES_RECOMPENSAS.md) · [Criador modular, rig e validação v0.15–v0.16](./RONIN_RUNNER_PERSONAGEM_ANIMACOES_VALIDACAO.md) · [Contratos API/Persistência v0.16](./RONIN_RUNNER_CONTRATOS_API_PERSISTENCIA.md) · [Segurança v0.16](./RONIN_RUNNER_SEGURANCA_PARTIDAS.md) · [Testes v0.16](./RONIN_RUNNER_TESTES_LANCAMENTO.md).
 
 ## 1. Requisitos CONFIRMADOS
 
@@ -126,6 +126,15 @@ Validações:
 - Pré-visualização de itens bloqueados não concede posse: somente o servidor confirma e persiste equipamentos desbloqueados.
 - A aparência muda **somente fora da corrida**; atualizações concorrentes em dois dispositivos precisam de `appearance_version` ou política transacional equivalente.
 - Sem vantagem de ranking ou física em qualquer variação do avatar, inclusive se exibido em classificação mundial.
+
+### 5.4 Catálogo gratuito e desbloqueios especiais — confirmado v0.16
+
+- **Livre desde a primeira visita:** opções básicas suficientes para personalizar cabelo, cor do cabelo, tom de pele, rosto, olhos e detalhes faciais, visual inicial da katana e traje Ronin Errante. Quantidades finais são uma decisão artística, não um bloqueio funcional.
+- **Desbloqueável:** máscaras, chapéus e outros acessórios especiais, trajes especiais, personalizações raras da katana e efeitos, incluindo o Traço da Aurora por quatro selos de chefes. Elementos excepcionais de cabelo também podem ser cosméticos especiais, mas nunca impedir opções básicas livres.
+- Na UI, todos os itens básicos aparecem como `Disponível` sem botão de compra, e os raros mostram `Como desbloquear`; nenhuma característica básica de pele ou rosto exige missão/conta.
+- O catálogo e o servidor são fonte da propriedade `is_basic_free`; manipular respostas no navegador não pode conceder um item bloqueado.
+- Nenhuma escolha de visual aumenta chances de pontuar, combate, velocidade, alcance, salto duplo, vida ou invulnerabilidade.
+- Campos/restrições: [contratos v0.16](./RONIN_RUNNER_CONTRATOS_API_PERSISTENCIA.md); testes de comportamento e segurança: [v0.16](./RONIN_RUNNER_TESTES_LANCAMENTO.md).
 
 ## 6. Ronin ID — fluxos de autenticação
 
