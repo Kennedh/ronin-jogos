@@ -36,6 +36,12 @@ A revisão atual verificou que o repositório contém **documentação e diretó
 
 O pacote de handoff estará **pronto para executar** quando: G01–G05 e G12–G15 estiverem congelados em contratos/ADRs, G06–G11 tiverem inventários e parâmetros TUNABLE aceitos e G14 fornecer rastreabilidade de teste. A arquitetura final pode ser implementada por etapas, mas **a versão pública completa** mantém todas as funcionalidades já confirmadas.
 
+## 1.2 Especificações consolidadas para handoff v0.18
+
+O conjunto G01–G15 agora tem cobertura de design com defaults: [simulação, pausas, replays e ranking](./RONIN_RUNNER_CONTRATO_SIMULACAO_PARTIDAS_RANKING_v1.md); [Ronin ID, dados, privacidade](./RONIN_RUNNER_CONTRATO_IDENTIDADE_DADOS_PRIVACIDADE.md); [catálogo visual, biomas, telas e desafios](./RONIN_RUNNER_ARTES_TELAS_CATALOGO_CONTEUDO_v1.md); [VPS, DNS sugerido, portal e operação](./RONIN_RUNNER_OPERACAO_VPS_PORTAL_TESTES_v1.md); [OpenAPI draft v1](./openapi.ronin-runner.v1.yaml) e [matriz de aceite/testes](./RONIN_RUNNER_MATRIZ_ACEITE_E_EXECUCAO_v1.md).
+
+**Não confundir design documentado com implementado ou validado**. Contratos ainda precisam de lint/formalização de migrations, medições da VPS, playtests, produção artística, testes reais e revisão G0. Valores de política e tempo são baseline de orientação, não decisões explícitas do usuário; usuário mantém autoridade. O projeto segue sem código do jogo. `AGENTS.md` foi atualizado com precedência e instrução de não programar.
+
 ## 2. Escolhas técnicas ainda PROPOSTAS — não assumir aprovação automática
 
 - Quantidade de opções/peças iniciais do criador, arte final, estrutura 2D por rig ou spritesheets híbridos e paleta exata.
