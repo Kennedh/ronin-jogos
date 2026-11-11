@@ -1,8 +1,9 @@
 # Ronin Runner: Tinta e Aço — Especificação de Produto e Jogo
 
 > **Detalhamento técnico do movimento, gestos e combate:** [Game Design v0.9](./RONIN_RUNNER_MOVIMENTACAO_COMBATE.md). PT-BR/EN obrigatórios em todas as telas. Valores físicos são parâmetros iniciais calibráveis; três vidas sem qualquer cura.
+> **Catálogo completo e regras de geração:** [Inimigos, chefes e obstáculos v0.10](./RONIN_RUNNER_INIMIGOS_CHEFES_OBSTACULOS.md). Salto duplo padrão para todos; quatro chefes no escopo de lançamento.
 
-Versão: 0.8 — planejamento pré-implementação  
+Versão: 0.10 — consolidada até game design v0.10 (planejamento pré-implementação)  
 Status: **escopo funcional completo definido; parâmetros de balanceamento e decisões de UX sujeitos a playtest**  
 Repositório: `Kennedh/ronin-jogos`  
 Ecossistema futuro: `play.ronin.dev.br`
@@ -50,7 +51,7 @@ Não desenvolver um mini-MVP descartável. O lançamento público deve incluir:
 ## 4. Mecânicas de uma partida
 
 - Corrida lateral automática contínua; jogador controla salto, deslize e katana.
-- Salto duplo permitido quando desbloqueado/definido no balanceamento; se integrado ao lançamento, deve ser habilidade de mobilidade **igual para todos** nas mesmas regras competitivas.
+- **Salto duplo disponível a todos desde a primeira partida**, sem desbloqueios por missão, traje, conta ou distância. Permitido um salto adicional antes do pouso em chão seguro, com comandos iguais nas regras competitivas.
 - Ataque comum derrota inimigos básicos quando em alcance; **corte perfeito** premia timing preciso.
 - Ataque fora do alcance não causa acerto e gera breve recuperação, impedindo spam.
 - Sequências de cortes perfeitos aumentam combo e concentração; errar zera combo, mas não toda a concentração.
@@ -139,7 +140,7 @@ Todos cosméticos e com colisões idênticas. Progressão por missões de partid
 **Mobile em paisagem**, HUD adaptado à área segura (notches e barras do sistema). Sem botões de movimento durante a jogabilidade normal:
 - toque curto: atacar;
 - deslizar para cima: pular;
-- repetir deslize para cima no ar: salto duplo, se incluído;
+- repetir deslize para cima no ar: salto duplo obrigatório, disponível desde o início;
 - deslizar para baixo: deslizar;
 - botão discreto de pausa: pausar.
 
@@ -243,8 +244,8 @@ O sequenciamento serve à validação incremental, **não** reduz escopo nem dis
 ## 16. Pontos ainda em aberto para discussão antes de programar
 
 - Ajuste fino da janela de corte perfeito, velocidade, pulo, deslize, invulnerabilidade e balanceamento.
-- Regras definitivas de combo/concentração, golpe especial e salto duplo.
-- Cadência/densidade de inimigos e chefes (se devem integrar a primeira versão pública como recurso obrigatório).
+- Ajustes de balanceamento de combo/concentração e golpe especial; **salto duplo inicial já confirmado como regra definitiva**.
+- Cadência/densidade e valores finais de inimigos e chefes; **os quatro chefes integram o escopo obrigatório da primeira versão pública**, conforme a especificação v0.10.
 - Catálogo final de missões/efeitos/trajes e regras de desbloqueio.
 - UX de entrada, consentimento, apelidos e fluxo de vinculação de contas existentes.
 - Formato de replay/verificação e estratégia de anti-cheat compatível com a VPS.
@@ -260,4 +261,4 @@ O sequenciamento serve à validação incremental, **não** reduz escopo nem dis
 - Google Identity: https://developers.google.com/identity/gsi/web/guides/verify-google-id-token
 - MDN Screen Orientation API: https://developer.mozilla.org/en-US/docs/Web/API/ScreenOrientation/lock
 
-**Última decisão registrada:** sem qualquer recuperação de vidas; arquitetura e testes da versão completa desde o início; conta por e-mail/senha e login Google além de visitante, todos elegíveis ao ranking mundial conforme o modo da partida.
+**Últimas decisões registradas:** salto duplo para todos desde o começo; nove arquétipos propostos de inimigos e quatro chefes obrigatórios para o lançamento completo; combate de precisão, três vidas sem cura, ciclos infinitos, gestos mobile, PT-BR/EN, ranking global com visitante, cadastro e-mail/senha e login Google. Chefes que não forem derrotados recuam sem encerrar a corrida: proposta sujeita à confirmação final.
