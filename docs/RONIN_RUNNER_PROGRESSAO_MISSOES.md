@@ -1,7 +1,7 @@
-# Ronin Runner — Missões, conquistas, cosméticos e progressão permanente (Game Design v0.12, atualizado em v0.14)
+# Ronin Runner — Missões, conquistas, cosméticos e progressão permanente (Game Design v0.12, atualizado em v0.16)
 
 **Status:** design antes de implementar. Regras **CONFIRMADAS** permanecem obrigatórias; números e catálogos marcados **PROPOSTOS** precisam de aprovação e testes de balanceamento.  
-**Documentos:** [Visão e regras](./RONIN_RUNNER_SPEC.md) · [Controles e combate](./RONIN_RUNNER_MOVIMENTACAO_COMBATE.md) · [Inimigos, chefes e obstáculos](./RONIN_RUNNER_INIMIGOS_CHEFES_OBSTACULOS.md) · [Chefes e recompensas](./RONIN_RUNNER_CHEFES_RECOMPENSAS.md) · [Desafios Semanais Autogerados v0.13–v0.14](./RONIN_RUNNER_DESAFIOS_SEMANAIS.md) · [Interface, Criador de Ronin e ID v0.14](./RONIN_RUNNER_INTERFACE_PERSONAGEM_RONIN_ID.md).
+**Documentos:** [Visão e regras](./RONIN_RUNNER_SPEC.md) · [Controles e combate](./RONIN_RUNNER_MOVIMENTACAO_COMBATE.md) · [Inimigos, chefes e obstáculos](./RONIN_RUNNER_INIMIGOS_CHEFES_OBSTACULOS.md) · [Chefes e recompensas](./RONIN_RUNNER_CHEFES_RECOMPENSAS.md) · [Desafios Semanais Autogerados v0.13–v0.14](./RONIN_RUNNER_DESAFIOS_SEMANAIS.md) · [Interface, Criador de Ronin e ID v0.16](./RONIN_RUNNER_INTERFACE_PERSONAGEM_RONIN_ID.md) · [Criador modular v0.16](./RONIN_RUNNER_PERSONAGEM_ANIMACOES_VALIDACAO.md) · [Contratos e persistência v0.16](./RONIN_RUNNER_CONTRATOS_API_PERSISTENCIA.md).
 
 ## 1. Decisão definitiva desta revisão
 
@@ -112,6 +112,8 @@ A condição `A-B06` exige quatro chefes **derrotados em uma única corrida**, m
 
 ## 6. Catálogo de trajes e itens cosméticos
 
+**DECISÃO CONFIRMADA v0.16 — distribuição de peças:** todas as opções do **catálogo BÁSICO** de cabelo, rosto, tons de pele, cores e aparência inicial ficam livremente equipáveis desde o primeiro acesso, inclusive como visitante. Trajes especiais, máscaras, acessórios especiais, visuais especiais de katana e efeitos raros são **desbloqueáveis por missões/conquistas/chefes**, sem compra e sem vantagens de jogo. O criador completo mantém cabelo, rosto, tom de pele, roupas, acessórios e katana em sua interface desde o início. Os critérios de posse e equip são verificados pelo servidor (is_basic_free e player_cosmetic_unlocks).
+
 **Conjunto inicial confirmado do plano anterior:**
 1. `outfit.ronin_errante`: Ronin Errante — padrão, quimono desgastado e faixa carmesim.
 2. `outfit.sombra_nevoa`: Sombra da Névoa — 10 km acumulados.
@@ -207,7 +209,7 @@ Distância de mundo e velocidade ainda são **parâmetros de teste**, não tempo
 
 ## 13. Decisões ainda abertas (não implementar por suposição)
 
-- Aprovar ou ajustar os **quatro trajes adicionais propostos**; três trajes anteriores e Traço da Aurora já fazem parte do planejamento.
+- **Resolvido v0.16:** aparência básica (cabelo, rosto, tons e cores) livre desde o início, especiais conquistáveis. **Pendente:** aprovar ou ajustar os quatro trajes adicionais propostos; três trajes anteriores e Traço da Aurora já fazem parte do planejamento.
 - Aprovar seleção exata e metas dos 10 desafios de partida, 8 de carreira e 10 conquistas listadas (valores alvo são provisórios).
 - **Resolvido em v0.14:** desafios semanais autogerados, sem login diário, com **selos progressivos aos 2/4/5 desafios**. **Pendente:** arte/nomenclatura final dos níveis e metas por playtest; distribuição sugerida de dificuldades 2/2/1.
 - Confirmar se o jogador pode escolher somente um efeito de katana por vez; recomendação: um efeito equipável e um traje, ambos independentes.
