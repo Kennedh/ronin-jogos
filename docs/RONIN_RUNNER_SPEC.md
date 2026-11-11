@@ -3,8 +3,9 @@
 > **Detalhamento técnico do movimento, gestos e combate:** [Game Design v0.9](./RONIN_RUNNER_MOVIMENTACAO_COMBATE.md). PT-BR/EN obrigatórios em todas as telas. Valores físicos são parâmetros iniciais calibráveis; três vidas sem qualquer cura.
 > **Catálogo completo e regras de geração:** [Inimigos, chefes e obstáculos v0.10](./RONIN_RUNNER_INIMIGOS_CHEFES_OBSTACULOS.md). Salto duplo padrão para todos; quatro chefes no escopo de lançamento.
 > **Regras confirmadas de encontro, retirada e recompensas:** [Chefes e recompensas v0.11](./RONIN_RUNNER_CHEFES_RECOMPENSAS.md). Chefes que não forem derrotados recuam e a corrida continua, sem punição pela retirada.
+> **Missões, conquistas e progressão permanente:** [Game Design v0.12](./RONIN_RUNNER_PROGRESSAO_MISSOES.md). **Traço da Aurora confirmado** como efeito permanente de katana pela coleção completa dos quatro selos. Catálogos e metas adicionais são propostas sujeitas a revisão.
 
-Versão: 0.11 — consolidada até game design v0.11 (planejamento pré-implementação)  
+Versão: 0.12 — consolidada até game design v0.12 (planejamento pré-implementação)  
 Status: **escopo funcional completo definido; parâmetros de balanceamento e decisões de UX sujeitos a playtest**  
 Repositório: `Kennedh/ronin-jogos`  
 Ecossistema futuro: `play.ronin.dev.br`
@@ -133,10 +134,10 @@ Velocidade aumenta inicialmente e chega a um teto; unidades físicas e conversã
 - **Confirmado:** o chefe que recua não aplica penalidade extra em vida, distância, score ou progressão. Ataques não evitados durante o encontro ainda causam 1 de dano conforme regras usuais.
 - **Confirmado:** nenhuma vitória, derrota, transição ou prêmio de chefe recupera corações ou protege contra abismos. O salto duplo e os gestos continuam padrão, sem comandos novos.
 - **Valores propostos para balanceamento:** Raiz Negra +300 pts, Guardião do Sino +450, Espírito da Nevasca +600, Senhor do Eclipse +900 por vitória verificada em instância legítima. Não contar morte de chefe como morte de inimigo comum; corte perfeito válido no boss conta uma vez na janela.
-- **Recompensas de primeira vitória propostas:** quatro selos de conquista, registrados uma vez por Ronin ID; conjunto de quatro selos libera um rastro de katana cosmético, enquanto uma Jornada Completa com quatro chefes derrotados desbloqueia emblema especial.
+- **Recompensa CONFIRMADA:** cada primeira derrota de chefe válida concede seu selo permanente, registrado uma vez por Ronin ID. **Reunir os quatro selos concede o efeito cosmético de katana Traço da Aurora**, equipável independentemente do traje e sem alterar física, dano ou ranking. Os selos podem vir de partidas diferentes. A conquista de quatro chefes na mesma Jornada Completa concede um emblema separado.
 - **Repetição:** cada chefe reaparece uma vez por região/ciclo em encontro versionado e verificável; pontos de vitória por instância, conquistas de primeira vitória não duplicadas. Expedições Regionais pontuam apenas em rankings de sua modalidade.
 - **Segurança:** servidor reconstitui replay/seed e valida derrota, retirada, ticks, acertos e bônus; não confiar em `boss_defeated` reportado pelo cliente.
-- **Detalhes de duração, janelas e recompensas:** [documento v0.11](./RONIN_RUNNER_CHEFES_RECOMPENSAS.md).
+- **Detalhes de duração, janelas e recompensas:** [documento v0.11](./RONIN_RUNNER_CHEFES_RECOMPENSAS.md). **Missões, recompensas e persistência:** [documento v0.12](./RONIN_RUNNER_PROGRESSAO_MISSOES.md).
 
 ## 8. Trajes e missões
 
@@ -145,7 +146,7 @@ Trajes de lançamento:
 2. **Sombra da Névoa** — 10 km de distância acumulada, azul-escuro, máscara e capa de névoa.
 3. **Corte Silencioso** — 50 cortes perfeitos acumulados, roupas escuras e pinceladas brancas.
 
-Todos cosméticos e com colisões idênticas. Progressão por missões de partida, carreira e conquistas. Exemplos para validar: 500 m numa partida, derrotar 5 inimigos, 3 cortes perfeitos, 1.500 m sem dano, distância acumulada. Recompensas emitidas e deduplicadas pelo servidor após validação.
+Todos cosméticos e com colisões idênticas. **Traço da Aurora** confirmado como efeito de katana por reunir os quatro selos, sem alterar qualquer estatística. Progressão por três caminhos independentes (O Caminho, A Lâmina e O Espírito), com missões de partida, carreira, região e conquistas de chefes. A coleção proposta para a versão completa inclui mais trajes e metas de 3–250 km acumulados, centenas de ações e feitos de uma corrida, sujeitos a balanceamento. Missões **não concedem pontos extras ao ranking**. Recompensas emitidas e deduplicadas pelo servidor após validação. Catálogo detalhado e casos de teste: [v0.12](./RONIN_RUNNER_PROGRESSAO_MISSOES.md).
 
 ## 9. Mobile, fullscreen e controles
 
@@ -273,4 +274,4 @@ O sequenciamento serve à validação incremental, **não** reduz escopo nem dis
 - Google Identity: https://developers.google.com/identity/gsi/web/guides/verify-google-id-token
 - MDN Screen Orientation API: https://developer.mozilla.org/en-US/docs/Web/API/ScreenOrientation/lock
 
-**Últimas decisões CONFIRMADAS:** salto duplo para todos desde o começo; nove arquétipos propostos de inimigos e quatro chefes obrigatórios para o lançamento completo; combate de precisão, três vidas sem cura, ciclos infinitos, gestos mobile, PT-BR/EN, ranking global com visitante, cadastro e-mail/senha e login Google. **Chefes podem recuar sem encerrar a corrida**, e ninguém precisa derrotá-los para prosseguir. Recompensas e valores numéricos de chefes estão descritos na especificação v0.11; números são provisórios e sujeitos a testes.
+**Últimas decisões CONFIRMADAS:** salto duplo para todos desde o começo; nove arquétipos propostos de inimigos e quatro chefes obrigatórios para o lançamento completo; combate de precisão, três vidas sem cura, ciclos infinitos, gestos mobile, PT-BR/EN, ranking global com visitante, cadastro e-mail/senha e login Google. **Chefes podem recuar sem encerrar a corrida**, e ninguém precisa derrotá-los para prosseguir. **Reunir os quatro selos concede Traço da Aurora, efeito exclusivamente cosmético de katana.** Metas, trajes adicionais e valores numéricos continuam propostos para aprovação e testes. Documentos v0.11–v0.12 definem os detalhes.
