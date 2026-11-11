@@ -1,8 +1,12 @@
 # Instruções do projeto para Codex — Ronin Jogos / Ronin Runner
 
-## Estado e autorização
+## Estado e autorização — desenvolvimento liberado em 11/11/2026
 
-**O projeto está em fase de especificação. Não programar, gerar scaffolding, migrations, alterar infraestrutura ou publicar o jogo até receber uma instrução explícita do usuário para iniciar a implementação.** Pedidos de detalhamento/atualização de especificações autorizam apenas arquivos de documentação. Quando o usuário autorizar implementar, siga o plano de escopo completo abaixo, por etapas testáveis.
+**AUTORIZAÇÃO EXPRESSA:** o proprietário declarou que o planejamento terminou e que agora é hora de **iniciar o desenvolvimento no Codex**. Portanto, está **autorizado programar** a versão completa, criar estrutura do projeto, testes, migrations de desenvolvimento, core, API, UI e recursos definidos nesta documentação. **Não limitar a versão pública inicial a MVP**: trabalhar de forma incremental sobre arquitetura definitiva e só divulgar quando todos os sistemas definidos estiverem implementados e homologados.
+
+**Continua proibido sem autorização separada:** deploy na VPS/produção, mexer em DNS/Caddy existentes, criar contas externas pagas, usar credenciais de produção, apagar bancos, publicar dados reais, fazer mudanças irreversíveis ou divulgar o jogo como concluído. Antes de executar operações externas, mostrar plano e pedir autorização específica. Trabalhar em branch de desenvolvimento/PR, não alterar main de forma destrutiva.
+
+**Primeira tarefa do Codex:** ler as fontes abaixo, revisar brevemente inconsistências contratuais e então iniciar a implementação de fundação/contratos/core determinístico/CI conforme o roteiro, registrando decisões técnicas como ADRs. Não ficar preso apenas reescrevendo documentação: produzir código testável nesta fase.
 
 ## Fonte de verdade e ordem de leitura
 
@@ -55,8 +59,13 @@ Além dos documentos anteriores, o planejamento agora possui baseline de todas a
 
 **Precedência:** escolha expressa do usuário > especificação principal > novos contratos baseline v0.18 > propostas numéricas antigas. Não reabrir decisões explícitas. `BASELINE` é padrão proposto, não aprovação expressa; `TUNABLE` depende de playtest/benchmark. OpenAPI é draft e não está implementada nem validada em CI.
 
-**Proibido iniciar a implementação até autorização explícita do usuário.** Durante o planejamento, editar somente documentação. Depois da autorização, o Codex usará a arquitetura completa e aplicará gates de testes para a versão pública integral. Uma implementação incremental de componentes é permitida; lançamento público parcial não é objetivo.
+**A autorização para implementar FOI DADA em 11/11/2026.** O Codex pode escrever código e testes imediatamente em branch de trabalho, usando a arquitetura completa e os gates de qualidade. **O lançamento público e mudanças de infraestrutura ainda exigem aprovação específica.** `BASELINE/TUNABLE` podem ser ajustados com testes e ADRs, sem alterar decisões explícitas de produto.
 
-## Primeiro passo antes da implementação
+## Primeiro passo de desenvolvimento
 
-Fechar as lacunas arquiteturais G01–G05 e G12–G15 da auditoria; depois congelar catálogos/balanceamento G06–G11 de acordo com as categorias de parâmetros; documentar ADRs de políticas de pausa, replays longos e placares após patches. O usuário autorizou **planejamento**, não implementação, até novo pedido explícito.
+1. Abrir a [matriz v0.18](docs/RONIN_RUNNER_MATRIZ_ACEITE_E_EXECUCAO_v1.md) e os contratos, consolidar ADRs e pendências que impactem schemas; **sem reabrir decisões explícitas do produto**.
+2. Criar estrutura TypeScript e ambiente de desenvolvimento/staging local com core determinístico, testes e ferramenta de validação do OpenAPI draft; não conectar produção.
+3. Implementar no primeiro ciclo uma fatia vertical executável que use desde o princípio os **módulos definitivos**: cliente Phaser, core, contrato de run, API e replay/verificação, persistência real em Postgres de desenvolvimento. Continuar por etapas até completar quatro regiões, chefes, identidade, criador, semanas e ranking.
+4. Executar testes e criar PR com resumo, evidências, limitações e próximos itens; **não afirmar que o produto está completo** antes de passar todos os gates.
+
+**Política de divergência:** se um baseline técnico precisar de ajuste por impossibilidade/segurança, registrar ADR e alternativa sem inventar regras de produto. Pedir decisão somente sobre mudanças relevantes no produto ou serviços externos, não sobre detalhes banais de implementação.
