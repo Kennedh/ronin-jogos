@@ -1,7 +1,8 @@
-# Ronin Runner — Inimigos, chefes, obstáculos e diretor procedural (Game Design v0.10)
+# Ronin Runner — Inimigos, chefes, obstáculos e diretor procedural (Game Design v0.10, revisado após v0.11)
 
 **Estado:** proposta de game design detalhada para revisão ANTES de programar.  
-**Documento principal:** [Especificação geral](./RONIN_RUNNER_SPEC.md)  
+**Documento principal:** [Especificação geral](./RONIN_RUNNER_SPEC.md)
+**Regras definitivas de retirada e recompensas:** [Game Design de chefes v0.11](./RONIN_RUNNER_CHEFES_RECOMPENSAS.md). Este documento define os arquétipos e padrões; o v0.11 prevalece para o fluxo e as recompensas dos chefes.  
 **Física e controles:** [Movimentação e combate v0.9](./RONIN_RUNNER_MOVIMENTACAO_COMBATE.md)
 
 ## 1. Decisões confirmadas e escopo final
@@ -57,13 +58,13 @@ Cada arquétipo declara em dados versionados: região(s), ciclos habilitados, co
 
 Chefes serão **encontros em movimento**, sem parar o runner nem exigir novas teclas. Ocorrerão nas proximidades do **fim de cada região** (marcos exatos calibráveis), inclusive em ciclos posteriores, com versões mais corrompidas.
 
-**Modelo de encontro proposto:** aviso de aproximação → entrada do chefe na cena → conjunto finito de ataques telegráficos e janelas de contra-ataque → derrota OU retirada do chefe → corrida segue para a região seguinte sem corte abrupto.
+**Modelo CONFIRMADO:** aviso de aproximação → entrada do chefe na cena → conjunto finito de ataques telegráficos e janelas de contra-ataque → derrota OU retirada do chefe → corrida segue para a região seguinte sem corte abrupto. **A retirada é regra definitiva, não uma opção futura.**
 
 **Regras importantes:**
 - Cada chefe possui hitbox grande, mas somente **zonas vulneráveis abertas por sinais claros** podem receber corte. Não exigir exclusivamente cortes perfeitos para vencer: corte normal válido também conta; corte perfeito recebe bônus.
 - Nenhum chefe aplica dano automaticamente por estar visível na tela; só hitboxes de ataques com telegraph, colisão legível e duração definida causam dano.
 - Os ataques não podem coincidir com abismo fatal e outro obstáculo impossível; diretor reserva a faixa da fase do chefe para padrões validados.
-- **Derrotar o chefe não é requisito para atravessar a região:** se o encontro terminar sem derrota, o chefe recua e a corrida continua. Isso evita bloquear o endless runner, mas derrota rende pontos, conquista e progresso de missão, não vida.
+- **REGRA CONFIRMADA: derrotar o chefe NÃO é requisito para atravessar a região.** Se o encontro terminar sem derrota, o chefe recua e a corrida continua, sem penalidade de pontos, distância ou vida pela retirada. O personagem ainda pode receber dano dos ataques comuns caso não desvie. Derrota rende pontos, conquistas, selos e progresso de missão, nunca vida. O chefe também pode ser evitado sem atacar.
 - Cada encontro tem sequência e quantidade máxima de oportunidades válidas, definidas pela seed; gerar dados idempotentes por instância do chefe para evitar matar/pontuar duas vezes.
 - Tentativa sem acertos não provoca morte automática. O jogador ainda pode morrer normalmente por ataques não evitados ou por perder todas as vidas.
 - Transições nunca restauram corações. A vitória **não** cura nem zera as vidas perdidas.
@@ -160,10 +161,10 @@ Ciclos IV+ ampliam o **catálogo de combinações**, não os limites físicos de
 
 ## 7. Eventos e pontuação de chefe
 
-Manter proposta de pontuação base `10×metros + 30×inimigos derrotados + 100×cortes perfeitos`; chefes podem conceder **bônus fixo por derrota, por encontro identificável**, com valor a balancear. Uma instância de chefe gera no máximo uma recompensa e precisa ser validada no servidor.
+Manter proposta de pontuação base `10×metros + 30×inimigos comuns derrotados + 100×cortes perfeitos`; chefes concedem **bônus fixo por derrota, por encontro identificável**, com valores provisórios por tipo **+300, +450, +600 e +900 pontos** (ver v0.11), e sem contabilizar boss kill como inimigo comum. Uma instância de chefe gera no máximo uma recompensa de vitória e precisa ser validada no servidor.
 
 - A derrota do chefe aumenta `bosses_defeated`, missão e eventual desbloqueio cosmético (jamais vida).
-- Se o chefe recua, marca `boss_escaped`; não recebe bônus de derrota e a corrida segue.
+- Se o chefe recua, marca `boss_retreat`; não recebe bônus de derrota, não recebe penalidade, mantém pontos/distância/concentração e a corrida segue.
 - A mesma seed/região/ciclo apresenta o mesmo encontro a todos em uma versão de regras.
 - Jornadas e expedições usam rankings separados; comparar somente scores submetidos e verificados dentro das respectivas regras.
 - O sistema não pode aceitar "matei chefe X" vindo do navegador sem conferir replay/eventos.
@@ -203,8 +204,8 @@ Manter proposta de pontuação base `10×metros + 30×inimigos derrotados + 100�
 
 ## 11. Questões restantes (não são bloqueio para documentar, mas requerem decisão antes do código)
 
-- Confirmar **regra de chefes que recuam sem derrota**, em vez de bloquear continuação da corrida (recomendada neste documento).
-- Fixar duração/quantidade de janelas por chefe e bônus de pontos, com testes de sessões longas.
+- **Decisão já confirmada:** chefes recuam sem derrota após o encontro, sem bloquear a corrida, conforme documento v0.11.
+- Validar duração/quantidade de janelas por chefe e bônus propostos (+300/+450/+600/+900), com testes de sessões longas. Ajustar apenas mediante regras versionadas.
 - Refinar alcance da katana aérea, áreas de colisão de chefes e condições de corte perfeito.
 - Definir política de atualização de `rules_version` e preservação de rankings após balanceamento.
 - Fechar arte final, paleta e animações com protótipos visuais originais, mas sem substituir sistemas de gameplay.
