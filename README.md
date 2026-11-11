@@ -2,11 +2,11 @@
 
 Plataforma de jogos gratuitos para navegador, desenvolvida com tecnologias web.
 
-## Ronin Runner — estado: planejamento pré-implementação
+## Ronin Runner — desenvolvimento autorizado; implementação ainda não iniciada
 
-O Ronin Runner está em **fase de especificação**, com primeira versão pública planejada como **versão completa** (sem mini-MVP descartável). **Nenhum código do jogo foi implementado ainda.**
+O Ronin Runner concluiu a fase de especificação de baseline (v0.18). **O proprietário autorizou em 11/11/2026 o início da implementação com Codex**. A primeira versão pública deverá ser **completa** (sem mini-MVP descartável), com desenvolvimento incremental sobre a arquitetura definitiva. Esta atualização não significa que o Codex já tenha executado tarefas ou que o jogo esteja implementado.
 
-**Revisão de planejamento v0.18:** todas as 15 áreas G01–G15 têm um baseline documentado. Leia a [matriz final de aceite e execução](docs/RONIN_RUNNER_MATRIZ_ACEITE_E_EXECUCAO_v1.md). Os números TUNABLE ainda exigem testes e a implementação continua não autorizada.
+**Revisão de planejamento v0.18:** todas as 15 áreas G01–G15 têm um baseline documentado. Leia a [matriz final de aceite e execução](docs/RONIN_RUNNER_MATRIZ_ACEITE_E_EXECUCAO_v1.md). Os números TUNABLE ainda exigem testes; **programação em branch de desenvolvimento e testes estão autorizados**, mas deploy em produção/DNS/credenciais ainda precisam de aprovação separada.
 
 ### Contratos complementares v0.18
 
@@ -29,6 +29,6 @@ O Ronin Runner está em **fase de especificação**, com primeira versão públi
 
 As especificações de física, inimigos, chefes, missões, desafios semanais e Criador de Ronin estão vinculadas na [especificação geral](docs/RONIN_RUNNER_SPEC.md).
 
-**Para uso com Codex:** ler `AGENTS.md` e as especificações antes de propor mudanças. Até que haja **autorização explícita para programar**, trabalhar somente nos documentos e no alinhamento de decisões; não criar código, infraestrutura ou alterações de produção.
+**Para uso com Codex:** ler `AGENTS.md` e as especificações antes de começar. **Está autorizado iniciar código, testes e migrations locais/de desenvolvimento**, seguindo as ADRs, arquitetura completa, branch própria e PRs. **Não fazer deploy em produção, alterar DNS/Caddy existentes ou executar ações irreversíveis sem aprovação separada.**
 
 **Regras centrais já confirmadas:** quatro regiões e ciclos infinitos, três vidas sem cura, abismo fatal, salto duplo inicial, chefes que podem recuar, controles mobile por gestos, pt-BR/en, Ronin ID com visitante/e-mail/Google, Criador completo de aparência básica livre e cosméticos especiais desbloqueáveis, desafios semanais autogerados com selos 2/4/5, Traço da Aurora pelos quatro selos dos chefes, rankings validados no servidor.
