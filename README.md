@@ -6,6 +6,17 @@ Plataforma de jogos gratuitos para navegador, desenvolvida com tecnologias web.
 
 O Ronin Runner está em **fase de especificação**, com primeira versão pública planejada como **versão completa** (sem mini-MVP descartável). **Nenhum código do jogo foi implementado ainda.**
 
+**Revisão de planejamento v0.18:** todas as 15 áreas G01–G15 têm um baseline documentado. Leia a [matriz final de aceite e execução](docs/RONIN_RUNNER_MATRIZ_ACEITE_E_EXECUCAO_v1.md). Os números TUNABLE ainda exigem testes e a implementação continua não autorizada.
+
+### Contratos complementares v0.18
+
+- [Simulação, runs longas, pausa e ranking](docs/RONIN_RUNNER_CONTRATO_SIMULACAO_PARTIDAS_RANKING_v1.md)
+- [Conta, esquema lógico e privacidade](docs/RONIN_RUNNER_CONTRATO_IDENTIDADE_DADOS_PRIVACIDADE.md)
+- [Catálogo visual, telas, chefes e 30 desafios semanais](docs/RONIN_RUNNER_ARTES_TELAS_CATALOGO_CONTEUDO_v1.md)
+- [Operação da VPS, Ronin Play e QA](docs/RONIN_RUNNER_OPERACAO_VPS_PORTAL_TESTES_v1.md)
+- [OpenAPI 3.1 preliminar](docs/openapi.ronin-runner.v1.yaml)
+- [Matriz de testes, gates e roteiro para Codex](docs/RONIN_RUNNER_MATRIZ_ACEITE_E_EXECUCAO_v1.md)
+
 ### Por onde começar a leitura
 
 1. [Especificação geral do Ronin Runner](docs/RONIN_RUNNER_SPEC.md)
