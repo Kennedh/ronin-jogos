@@ -2,39 +2,40 @@
 
 ## Estado atual
 
-Parte1B concluída localmente em17/11/2026, branch feat/runner-foundation-1b, sobre3b6e405 (1A). Plano e domínio/caminho confirmados pelo proprietário: play.ronin.dev.br/roninrunner; idiomas /roninrunner/pt-br e /roninrunner/en. A1A está no PR2 ainda aberto; PR1B deve ter como base essa branch para revisão incremental. Não mesclar nem fechar Issue1 automaticamente; faltam1C/1D.
+Parte 1C implementada em 17/11/2026, branch `feat/runner-foundation-1c`, base `dc98057`/PR #3 (1B). PR #2 (1A) e #3 ainda abertos; a revisão 1C deve ter base na branch 1B, sem merge automático e sem fechar Issue #1. Domínio/caminho confirmados: play.ronin.dev.br/roninrunner; idiomas /roninrunner/pt-br e /roninrunner/en. Nenhum deploy/DNS/VPS autorizado por esta etapa.
 
-## Implementado na1B
+## Implementado na 1C
 
-- Core puro60Hz, fixed-point com resíduos inteiros, overflow protegido, score decimal,3HP sem cura, salto duplo/coyote/buffer, slide e ataque, iFrame e abismo fatal.
-- PRNGxoshiro128** e streams separados; manifests imutáveis e vinculados à simulação; fixtures de geometrias autoritativas. Diretor/mundo completo/chefes não implementados.
-- Codec identity rr-input-v1, JSON canônico estrito/SHA256, parser de duplicatas/limites, cursor de partes/controls, fechamento estrutural e playback no mesmo core.
-- PostgreSQL nativo real de desenvolvimento/QA, migrations001/002 com ledger/checksumLF/lock/transação, FK/UNIQUE/constraints; dev local persistente via npm run db:dev.
-- Clock fracionário e paridade Node/Chromium em30/60/120cadências; CI expandida para instalar Chromium em Windows/Linux.
+- Guest real/sessão opaca de 90 dias, cookie HTTPS __Host- host-only, digest no DB, CSRF/Origin/Host e autorização por dono antes do parser. Mensagens PT-BR/EN via message_key/catálogo.
+- start com Idempotency-Key e ticket imutável; seed de servidor, hashes/versões/manifests históricos, quotas serializadas e região persistida. Guest começa com BAMBOO desbloqueado.
+- Upload identity/gzip limitado antes/depois de expandir; headers/hash/codec conferidos e segmentos imutáveis fora de ordem. Primeiro finish e prazos imutáveis; AWAITING_SEGMENTS→PENDING só após completude estrutural.
+- Fila real em Postgres: SKIP LOCKED, lease/heartbeat/generation, retry/backoff e dead letter; replay fora do HTTP/transação longa. Worker derivando resultado pelo core e curso primitivo autoritativo.
+- Commit atômico idempotente de run VERIFIED/outcome/outbox; QUIT não ranqueia. Projeções de carreira/recompensas/ranking continuam na parte 7.
+- Migration 003 incremental, sem editar 001/002; CLI de API/worker local, somente cluster sintético do projeto. Triggers para manifests/tickets/partes aceitas.
 
-Decisões completas em [ADR005](docs/adr/ADR-005-FUNDACAO-1B.md). ADR001–004 e specs v0.18 continuam fontes; parâmetros físicos pre-release são TUNABLE com versão, não regras silenciosamente alteráveis numa run ativa.
+Detalhes/políticas/limitações: [ADR006](docs/adr/ADR-006-FUNDACAO-1C.md). ADR001–005 e specs v0.18 preservados. O curso primitivo não substitui o diretor/quatro regiões/chefes das partes 3/4. Replays íntegros não provam origem humana.
 
 ## Testes e evidências
 
-Local Windows/Node24.14.0: npm run verify aprovado,33unitários/integração+2navegador,zero falhas/skips, contratos/typecheck/lint/formato/build. DB server_version18.6, loopback apenas, cluster efêmero limpo. npm run db:dev -- --check (equivalente node scripts/dev-db.ts --check) validou duas inicializações sucessivas sem recriar schema; cluster dev foi parado e dados fictícios preservados.
+Suíte 1C: 23 cenários de integração + teste pai em Postgres real. Inclui API HTTP real e worker em processo Node separado, 101 segmentos/controles, mortes reais HP_ZERO/ABYSS, morte inventada, idempotência/IDOR/CSRF, gzip hostil, quotas/rate durável, versão antiga, fronteiras 72h/24h/semana, concorrência/fencing/cancelamento/dead letter e rollback de outcome/outbox com falha injetada. Nenhum caso usa banco mock, skip ou dados de usuários.
 
-Navegador Chrome157.0.8103.78,600estados iguais nas três cadências e Node, trace0481dd7bcf1f468aca5e64a1013903cc631e4a3aad91377fbc7016a8d47733cc. Isso não mede FPS em hardware mobile. Vetor de codec independente e curso300inimigos/12000ticks aprovados. CI Linux passou no primeiro push. Falha Windows identificou recusa de postgres.exe sob runneradmin; adaptador local passou a iniciar/parar via pg_ctl, com privilégio reduzido e shutdown gracioso. Teste adicional recusa segundo start e confirma que o banco permanece ativo. CI do commit final deve ser consultada após push; local não implica resultado remoto.
+`npm ci` e `npm run verify` aprovados localmente: 57 testes unitários/integração (33 preservados +24 da suíte 1C) e 2 de navegador, zero falhas/skips, contratos/typecheck/lint/formato/build aprovados. Evidência final: artifacts/phase-1c-verify-final.log. Após o prefixo HTTPS __Host- o gate completo foi repetido e passou; CI do commit final deve ser consultada separadamente. A CI final da 1B passou em Windows e Linux no commit dc98057. Chrome/Node continuam comparados em 600 estados e cadências 30/60/120. Isso não mede FPS em dispositivos reais.
 
-Logs privados: artifacts/phase-1b-verify.log,phase-1b-db.log,phase-1b-browser.log e phase-1b-runtime-audit.json. Runtime audit0; picomatch de desenvolvimento permanece pendente conformeADR004. NativePostgres18.6 só dev/QA; revisar versão de produção antes de deploy.
+Auditoria de runtime nesta execução: zero vulnerabilidades reportadas (artifacts/phase-1c-runtime-audit.json). O comando dev-db --check também atualizou o cluster sintético existente para 003 e o encerrou. Aviso picomatch em ferramentas dev permanece pendente (ADR004). PostgreSQL18.6 empacotado só para dev/QA; patch/runtime público será revisto antes de deploy. Logs/dados sintéticos ficam ignorados em artifacts; cluster QA é parado e removido depois do teste.
 
-## Próxima parte autorizável:1C
+## Próxima parte autorizável: 1D
 
-1. Ler AGENTS, ADR001–005 e contratos/estados v0.18; conferir branch/PR2 e PR1B atuais antes de integrar.
-2. Guest real/sessãoCSRF, APIstart/segments/finish/status com autorização por dono e limites; prefixo /api/v1. Sem score cliente como autoridade.
-3. Persistência das partes fora de ordem e conflitos por índice/hash. Gzip somente com limite antes/depois de descompressão; codec identity já funciona.
-4. Registro imutável de regras/seed, checksum ligando Ticket/DB/engine; regras antigas suportadas. Verificar corpo/versões, idade/ticks e fim real por replay, não só assertFinish.
-5. Jobs com lease/generation/heartbeat/fencing, retry e commit atômico idempotente de outcome/outbox. Testar queda/stale/cancelamento e concessão única; projeções completas de progresso/ranking na7.
-6. Testes API/DB reais e regressão completa. Issue1 continua aberta até cena Phaser/gestos/resultado da1D.
+1. Ler AGENTS, ADR001–006, PROGRESS e contratos; conferir PRs/branches antes de integrar. Não iniciar sem solicitação do proprietário.
+2. Primeira corrida Phaser/BAMBOO ligada ao core, manifest/seed do ticket e endpoints reais; render e cosméticos sem alterar física.
+3. Teclado/gestos, responsividade/orientação/fullscreen fallback e pausa com tick congelado/countdown; controle de frame longo conforme ADR005.
+4. Cliente HTTP mesma origem via proxy local explícito, bootstrap/CSRF, idempotência e envio de segmentos; mostrar quotas/prazos/tolerância e erros PT-BR/EN. Não aceitar score local como confirmado.
+5. Tela de resultado/status aguardando worker, QUIT sem ranking, end_reason autoritativo; testar jogar→morrer→VERIFIED e recusa de rede/fullscreen. Retomada offline avançada/checkpoints/retention é endurecimento da parte 8.
+6. Antes do público, validators standalone/CSP sem unsafe-eval apenas por Ajv. Publicação da versão inicial completa só após todas as fases e homologação; a Issue #1 só fecha após 1A–1D integradas.
 
-## Limitações explícitas
+## Limites explícitos
 
-Sem HTTP de partidas, worker executando jobs, ranking público, concentração/especial, diretor procedural, quatro regiões/chefes, creator, authGoogle/SMTP, progressão e semanais completos. Shell local ainda informa que o jogo não é jogável. Sem VPS/DNS/Caddy/credenciais de produção tocados. Gate de fundação não aprova publicação; verify:release completo será criado antes da promoção pública.
+Não há ainda cena Phaser jogável, quatro regiões/chefes, concentração/especial, Creator/arte final, conta Google/e-mail/SMTP, ranking público, recompensas ou semanas completas. Há resultado privado da própria run validada, sem simular concessões futuras. Expiração/limpeza de storage, métricas/carga, checkpoints, moderação, backups e operação pública têm etapas próprias. Não há alteração dos outros sites, da VPS/DNS/Caddy ou de coleta/anúncios.
 
 ## Comandos
 
-npm ci; npm run verify; npm run db:dev; npm run dev; npm run dev:api. Teste dirigido: node --test tests/core.test.ts ou tests/database.test.ts; npm run test:browser. Sem Chrome local: npx playwright install chromium. Na CI Linux, instalação inclui --with-deps. Dados privados de QA não vão ao Git. Nenhum passo inicia1C automaticamente.
+`npm ci`; `npm run verify`; `npm run db:dev`; em outros terminais `npm run dev:api`, `npm run dev:verifier`, `npm run dev`. `npm run dev:verifier -- --once` processa um job. `node scripts/dev-db.ts --check` inicia/migra/encerra o cluster sintético. API local 127.0.0.1:3001; shell 127.0.0.1:5173 ainda sem jogo. Proxy/cliente são integração da 1D. Testes dirigidos: `node --test tests/run-runtime.test.ts` ou `npm run test:browser`. Sem Chrome local: `npx playwright install chromium`. Windows usa pg_ctl para privilégios reduzidos e shutdown gracioso; Linux mantém launcher nativo.

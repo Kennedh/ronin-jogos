@@ -5,6 +5,8 @@
   "type": "module",
   "exports": "./src/index.ts",
   "dependencies": {
-    "pg": "8.23.1"
+    "pg": "8.23.1",
+    "@ronin/contracts": "0.1.0",
+    "@ronin/content": "0.1.0"
   }
 }

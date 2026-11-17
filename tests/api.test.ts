@@ -13,7 +13,7 @@ test("real Fastify liveness matches the generated contract, without claiming DB 
       url: "/api/v1/runs/start",
       payload: { mode: "FULL" },
     });
-    assert.equal(run.statusCode, 404); // No fake run endpoint before persistence exists.
+    assert.equal(run.statusCode, 404); // Liveness-only mode cannot issue a run without a configured DB.
   } finally {
     await app.close();
   }

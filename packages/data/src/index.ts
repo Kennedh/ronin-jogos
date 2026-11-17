@@ -9,3 +9,18 @@ export interface VerificationLease {
 
 export { migrate, migrationFiles, checksum } from "./migrate.ts";
 export type { Migration } from "./migrate.ts";
+
+export {
+  Fault,
+  transaction,
+  serverTime,
+  DEFAULT_POLICY,
+  resourcePolicy,
+} from "./runtime.ts";
+export type { Clock, ResourcePolicy } from "./runtime.ts";
+export { Sessions, rateLimit } from "./sessions.ts";
+export type { Session } from "./sessions.ts";
+export { Runs, wallTime } from "./runs.ts";
+export type { RunRow } from "./runs.ts";
+export { VerificationQueue, LeaseLost, weekWindow } from "./queue.ts";
+export type { VerifiedResult } from "./queue.ts";

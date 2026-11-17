@@ -1,11 +1,9 @@
 openapi: 3.1.0
 info:
   title: Ronin Runner API - contrato preliminar de design
-  version: 0.19.0-foundation-draft
-  description: |
-    Contrato de especificacao, nao implementacao. Prefixo /api/v1.
-    Produto fechado; limites indicados como baseline devem ser aferidos antes do deploy.
-    Nunca aceitar score, vida, posicao ou eventos de kill declarados pelo cliente como verdade.
+  version: 0.20.0-foundation-draft
+  description: |-
+    API de fundação em desenvolvimento. Guest e runs implementados na1C; conta/Google/ranking/weekly permanecem contratos futuros. Prefixo /api/v1. Score somente após replay verificado; implantação não autorizada.
 servers:
   - url: https://play.ronin.dev.br/api/v1
     description: Origem confirmada; implantação ainda não autorizada
@@ -39,14 +37,88 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PlayerSummary"
+          headers:
+            X-CSRF-Token:
+              description: Token sincronizado à sessão, para X-CSRF-Token nas mutações autenticadas. Cookie rr_sid é
+                HttpOnly/host-only.
+              schema:
+                type: string
+                pattern: ^[A-Za-z0-9_-]{43}$
         "201":
           description: Identidade visitante criada
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/PlayerSummary"
+          headers:
+            X-CSRF-Token:
+              description: Token sincronizado à sessão, para X-CSRF-Token nas mutações autenticadas. Cookie rr_sid é
+                HttpOnly/host-only.
+              schema:
+                type: string
+                pattern: ^[A-Za-z0-9_-]{43}$
         "429":
           $ref: "#/components/responses/RateLimited"
+        "400":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "409":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "413":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "415":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "422":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "503":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GuestRequest"
   /auth/register:
     post:
       operationId: post_auth_register
@@ -667,6 +739,68 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "429":
           $ref: "#/components/responses/RateLimited"
+        "200":
+          description: Retry idêntico devolve o ticket original sem criar outra tentativa
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RunTicket"
+        "400":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "409":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "413":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "415":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "422":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "503":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            pattern: ^[A-Za-z0-9_-]{16,100}$
   /runs/{run_id}/segments/{index}:
     put:
       operationId: put_runs_run_id_segments_index
@@ -681,6 +815,7 @@ paths:
           schema:
             type: integer
             minimum: 0
+            maximum: 9007199254740991
         - name: X-Start-Tick
           in: header
           required: true
@@ -692,7 +827,7 @@ paths:
           required: true
           schema:
             type: integer
-            minimum: 1
+            minimum: 0
         - name: X-Segment-Hash
           in: header
           required: true
@@ -703,6 +838,15 @@ paths:
           in: header
           required: false
           schema: *a1
+        - $ref: "#/components/parameters/CsrfToken"
+        - name: Content-Encoding
+          in: header
+          required: false
+          schema:
+            type: string
+            enum:
+              - identity
+              - gzip
       requestBody:
         required: true
         content:
@@ -727,6 +871,54 @@ paths:
           $ref: "#/components/responses/Conflict"
         "413":
           $ref: "#/components/responses/PayloadTooLarge"
+        "400":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "415":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "422":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "429":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "503":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
       description: Codec rr-input-v1 conforme ADR-002; headers devem coincidir com o envelope. Hash da representação
         canônica descomprimida, não dos bytes gzip. Limites aplicados em streaming antes/depois da
         descompressão.
@@ -738,6 +930,7 @@ paths:
       summary: Finalizar e pedir verificacao server-side
       parameters:
         - $ref: "#/components/parameters/RunId"
+        - $ref: "#/components/parameters/CsrfToken"
       requestBody:
         required: true
         content:
@@ -756,6 +949,54 @@ paths:
           $ref: "#/components/responses/Conflict"
         "422":
           $ref: "#/components/responses/InvalidState"
+        "400":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "413":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "415":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "429":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "503":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
       description: Primeiro finish fixa final_tick/hash/motivo até expires_at. Retry idêntico não renova prazo.
         Partes faltantes podem chegar até upload_deadline; PENDING apenas após completude. Atraso do worker
         não altera elegibilidade semanal.
@@ -778,6 +1019,54 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "400":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "409":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "413":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "415":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "422":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "429":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "503":
+          description: Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
   /leaderboards/{kind}:
     get:
       operationId: get_leaderboards_kind
@@ -997,7 +1286,7 @@ components:
     roninSession:
       type: apiKey
       in: cookie
-      name: rr_sid
+      name: __Host-rr_sid
       description: Cookie opaco host-only Secure HttpOnly SameSite com CSRF separado nas mutacoes
   parameters:
     RunId:
@@ -1007,6 +1296,13 @@ components:
       schema:
         type: string
         format: uuid
+    CsrfToken:
+      name: X-CSRF-Token
+      in: header
+      required: true
+      schema:
+        type: string
+        pattern: ^[A-Za-z0-9_-]{43}$
   schemas:
     RunMode:
       type: string
@@ -1248,6 +1544,19 @@ components:
           type:
             - boolean
             - "null"
+        expires_at:
+          type: string
+          format: date-time
+        upload_deadline:
+          type:
+            - string
+            - "null"
+          format: date-time
+        submitted_complete_at:
+          type:
+            - string
+            - "null"
+          format: date-time
       additionalProperties: false
       allOf:
         - if:
@@ -1489,12 +1798,47 @@ components:
         upload_grace_seconds:
           type: integer
           const: 86400
+        max_run_encoded_bytes:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+          description: Política imutável de transporte/recursos por tentativa; baseline inicial 134217728, não limite de
+            distância/fase.
+        max_player_encoded_bytes:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+          description: Política imutável de transporte/recursos por tentativa; baseline inicial 536870912, não limite de
+            distância/fase.
+        max_segments_per_run:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+          description: Política imutável de transporte/recursos por tentativa; baseline inicial 10000, não limite de
+            distância/fase.
+        max_active_runs:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+          description: Política imutável de transporte/recursos por tentativa; baseline inicial 3, não limite de
+            distância/fase.
+        wall_time_tolerance_ticks:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+          description: Política imutável de transporte/recursos por tentativa; baseline inicial 120, não limite de
+            distância/fase.
       required:
         - segment_ticks
         - max_encoded_bytes
         - max_decoded_bytes
         - max_actions_per_tick
         - upload_grace_seconds
+        - max_run_encoded_bytes
+        - max_player_encoded_bytes
+        - max_segments_per_run
+        - max_active_runs
+        - wall_time_tolerance_ticks
       additionalProperties: false
     FinishRequest:
       type: object
@@ -1581,6 +1925,10 @@ components:
         - actions
         - controls
       additionalProperties: false
+    GuestRequest:
+      type: object
+      additionalProperties: false
+      description: Primeiro acesso não exige apelido; idioma vem da primeira preferência Accept-Language.
   responses:
     BadRequest:
       description: Corpo ou formato invalido

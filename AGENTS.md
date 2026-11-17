@@ -79,3 +79,7 @@ Na fundação usar npm ci e npm run verify. Contratos são gerados do OpenAPI pe
 ## Atualização — parte1B
 
 O proprietário autorizou expressamente iniciar1B. Core, codec e migrations de desenvolvimento estão implementados nesta branch; consultar PROGRESS.md/ADR005. `npm run verify` requer PostgreSQL nativo de QA (launcher devDependency) e Chromium, sem skips por falta de dependências. Parte1C/1D seguem separadas e Issue1 permanece aberta. Produção/DNS continuam fora do escopo.
+
+## Atualização — parte 1C
+
+O proprietário autorizou iniciar 1C. Implementação e testes estão em `feat/runner-foundation-1c`, sobre o PR #3 ainda aberto. Consulte ADR006 e PROGRESS.md. A API local exige `db:dev`; o worker executa separado por `dev:verifier`. Gate obrigatório: `npm ci` e `npm run verify`, com Postgres real, fluxo HTTP/processo verificador e Chromium. Não fechar Issue #1 nem iniciar 1D automaticamente; faltam cena Phaser/gestos/resultado e todas as etapas do escopo público. Produção/DNS e serviços existentes seguem fora do escopo.

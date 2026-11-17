@@ -2,9 +2,9 @@
 
 Plataforma de jogos gratuitos para navegador, desenvolvida com tecnologias web.
 
-## Ronin Runner — fundação1B implementada em desenvolvimento
+## Ronin Runner — fundação 1C implementada em desenvolvimento
 
-O Ronin Runner concluiu a fase de especificação de baseline (v0.18). **O proprietário autorizou em 11/11/2026 o início da implementação com Codex**. A primeira versão pública deverá ser **completa** (sem mini-MVP descartável), com desenvolvimento incremental sobre a arquitetura definitiva. Esta atualização não significa que o Codex já tenha executado tarefas ou que o jogo esteja implementado.
+O Ronin Runner concluiu a fase de especificação de baseline (v0.18). **O proprietário autorizou em 11/11/2026 o início da implementação com Codex**. A primeira versão pública deverá ser **completa** (sem mini-MVP descartável), com desenvolvimento incremental sobre a arquitetura definitiva. As partes 1A–1C têm implementação e testes; a integração jogável com Phaser é a próxima parte 1D.
 
 **Revisão de planejamento v0.18:** todas as 15 áreas G01–G15 têm um baseline documentado. Leia a [matriz final de aceite e execução](docs/RONIN_RUNNER_MATRIZ_ACEITE_E_EXECUCAO_v1.md). Os números TUNABLE ainda exigem testes; **programação em branch de desenvolvimento e testes estão autorizados**, mas deploy em produção/DNS/credenciais ainda precisam de aprovação separada.
 
@@ -37,7 +37,7 @@ As especificações de física, inimigos, chefes, missões, desafios semanais e 
 
 [Análise, ajustes e plano para aceite](docs/REVISAO_E_PLANO_EXECUCAO.md). Plano aceito em17/11/2026, com início da parte1A. A Issue #1 será entregue pelas partes 1A–1D, com o escopo público completo preservado.
 
-## Desenvolvimento local — fundação1A
+## Desenvolvimento local — fundação 1C
 
 Domínio/caminho confirmados: **https://play.ronin.dev.br/roninrunner**. Portal em /; versões do jogo em /roninrunner/pt-br e /roninrunner/en. Nenhum DNS/deploy foi executado.
 
@@ -47,13 +47,15 @@ Node24LTS (versão de referência em .nvmrc), npm11. No checkout:
 npm ci
 npm run verify
 npm run dev
-# Em outro terminal, se desejar testar a API de liveness:
+# Em terminais separados, para os endpoints de partidas e o verificador:
+npm run db:dev
 npm run dev:api
+npm run dev:verifier
 ```
 
 Shell local: http://127.0.0.1:5173/roninrunner; API: http://127.0.0.1:3001/api/v1/health. O shell informa que o jogo ainda não está jogável. Health só comprova processo respondendo; não comprova banco, fila ou verificação. Não há backend falso de pontuação.
 
-Depois de editar OpenAPI: npm run contracts:generate e npm run verify. Tipos e schemas gerados são versionados, e o gate recusa divergência. Postgres/core/codec estão disponíveis na1B; run/verifier em1C; corrida Phaser em1D. Issue1 permanece aberta até integrar todas essas partes.
+Depois de editar OpenAPI: npm run contracts:generate e npm run verify. Tipos e schemas gerados são versionados, e o gate recusa divergência. Postgres/core/codec estão disponíveis desde 1B; API de runs e worker persistente desde 1C; corrida Phaser em 1D. Issue1 permanece aberta até integrar todas essas partes.
 
 Decisões: [ADRs](docs/adr/ADR-001-WORKSPACE-E-ROTAS.md). Estado e comandos: [PROGRESS.md](PROGRESS.md). Há uma pendência de segurança em ferramenta de desenvolvimento registrada no ADR004; nenhuma aprovação de release pública decorre desta fundação.
 
@@ -63,4 +65,16 @@ Decisões: [ADRs](docs/adr/ADR-001-WORKSPACE-E-ROTAS.md). Estado e comandos: [PR
 
 Para banco local persistente: `npm run db:dev`. Apenas127.0.0.1:15432; credenciais fictícias em `.env.example`, dados em `artifacts/dev-postgres`. Ctrl+C encerra o processo e preserva os dados. Não usar esse launcher/credenciais para produção. `node scripts/dev-db.ts --check` inicia, migra e encerra para diagnóstico. Não requer Docker, serviço permanente nem acesso à VPS.
 
-Implementação/limites e regras exatas: [ADR005](docs/adr/ADR-005-FUNDACAO-1B.md). Core e playback são puros; JSON/hash não são prova de humano, e ainda não existe servidor que aceite pontuações públicas. A integração de partidas por HTTP e fila/verificação persistente é a próxima parte1C.
+Implementação/limites e regras exatas: [ADR005](docs/adr/ADR-005-FUNDACAO-1B.md). Core e playback são puros; JSON/hash não são prova de humano, e ainda não existe servidor que aceite pontuações públicas. A integração de partidas por HTTP e verificação persistente está implementada na 1C.
+
+## Parte 1C — sessões, API e verificador
+
+A API e o worker usam o cluster sintético `ronin_dev` em `127.0.0.1:15432`, iniciado por `db:dev`; os comandos de desenvolvimento recusam outro DATABASE_URL. Não criam conexão externa nem iniciam o banco implicitamente. `dev:verifier -- --once` processa no máximo um job e encerra; sem `--once`, aguarda novos jobs e devolve o trabalho pendente ao receber Ctrl+C.
+
+A origem local da API é `http://127.0.0.1:3001`; `PORTAL_ORIGIN` configura a origem exata do navegador quando o proxy local for integrado na 1D. Em HTTP, apenas loopback é aceito. A origem HTTPS exige chave de rate limit fornecida pelo integrador, fora do Git. Esses comandos não são configuração de produção.
+
+Fluxo executável: `POST /api/v1/auth/guest` com `{}` → cookie HttpOnly e header `X-CSRF-Token` → `POST /api/v1/runs/start` com `Idempotency-Key` → `PUT /api/v1/runs/{id}/segments/{index}` em identity/gzip → `POST /api/v1/runs/{id}/finish` → consultar `GET /api/v1/runs/{id}`. Mutações exigem `Origin` exata e token CSRF sincronizado à sessão. O upload usa o codec e headers do OpenAPI; ACK significa persistido, e não pontuação aceita.
+
+O verificador reexecuta comandos e comprova HP_ZERO, ABYSS ou QUIT no core. Somente VERIFIED expõe score ao dono da run; QUIT não ranqueia. Outcome/outbox são transacionais, com lease/heartbeat/generation para concorrência e retry. Não há ainda projeção pública de ranking, recompensas ou conta e-mail/Google. O curso primitivo versionado permite integração real da fundação, mas não substitui o diretor completo/quatro regiões/chefes das partes 3/4.
+
+Detalhes, limites, testes e operação: [ADR006](docs/adr/ADR-006-FUNDACAO-1C.md). O gate de fundação continua `npm run verify`; o gate de lançamento público completo pertence às etapas finais.
