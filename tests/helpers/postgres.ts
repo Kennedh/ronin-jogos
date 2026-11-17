@@ -20,6 +20,15 @@ export async function testPostgres() {
     server.close((e) => (e ? reject(e) : resolve())),
   );
   const password = randomBytes(24).toString("hex");
+  // The launcher rejects with undefined when postgres exits before readiness.
+  // Preserve bounded native diagnostics without ever exposing the random password.
+  let diagnostic = "";
+  let phase = "initialise";
+  const record = (message: unknown) => {
+    diagnostic = (
+      diagnostic + String(message).replaceAll(password, "[redacted]")
+    ).slice(-16384);
+  };
   const pg = new EmbeddedPostgres({
     databaseDir: dir,
     user: "ronin_test",
@@ -37,8 +46,8 @@ export async function testPostgres() {
       "shared_buffers=16MB",
     ],
     initdbFlags: ["--encoding=UTF8", "--locale=C"],
-    onLog: () => {},
-    onError: () => {},
+    onLog: record,
+    onError: record,
   });
   let pool: Pool | undefined;
   let started = false;
@@ -52,6 +61,7 @@ export async function testPostgres() {
   }
   try {
     await pg.initialise();
+    phase = "start";
     await pg.start();
     started = true;
     pool = new Pool({
@@ -63,10 +73,11 @@ export async function testPostgres() {
       max: 4,
       connectionTimeoutMillis: 10000,
     });
+    phase = "connect";
     await pool.query("SELECT 1");
     return { pool, close, port };
   } catch (e) {
     await close();
-    throw e;
+    throw new Error(`qa_postgres_${phase}_failed: ${diagnostic}`, { cause: e });
   }
 }
