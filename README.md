@@ -2,9 +2,9 @@
 
 Plataforma de jogos gratuitos para navegador, desenvolvida com tecnologias web.
 
-## Ronin Runner — fundação 1C implementada em desenvolvimento
+## Ronin Runner — fundação 1D jogável em desenvolvimento
 
-O Ronin Runner concluiu a fase de especificação de baseline (v0.18). **O proprietário autorizou em 11/11/2026 o início da implementação com Codex**. A primeira versão pública deverá ser **completa** (sem mini-MVP descartável), com desenvolvimento incremental sobre a arquitetura definitiva. As partes 1A–1C têm implementação e testes; a integração jogável com Phaser é a próxima parte 1D.
+O Ronin Runner concluiu a fase de especificação de baseline (v0.18). **O proprietário autorizou em 11/11/2026 o início da implementação com Codex**. A primeira versão pública deverá ser **completa** (sem mini-MVP descartável), com desenvolvimento incremental sobre a arquitetura definitiva. As partes 1A–1D têm implementação e testes: a primeira corrida Bambu já liga Phaser, teclado/gestos e resultado à API e ao verificador reais. Isso é uma fundação interna, ainda sem o escopo completo nem homologação pública.
 
 **Revisão de planejamento v0.18:** todas as 15 áreas G01–G15 têm um baseline documentado. Leia a [matriz final de aceite e execução](docs/RONIN_RUNNER_MATRIZ_ACEITE_E_EXECUCAO_v1.md). Os números TUNABLE ainda exigem testes; **programação em branch de desenvolvimento e testes estão autorizados**, mas deploy em produção/DNS/credenciais ainda precisam de aprovação separada.
 
@@ -37,7 +37,7 @@ As especificações de física, inimigos, chefes, missões, desafios semanais e 
 
 [Análise, ajustes e plano para aceite](docs/REVISAO_E_PLANO_EXECUCAO.md). Plano aceito em17/11/2026, com início da parte1A. A Issue #1 será entregue pelas partes 1A–1D, com o escopo público completo preservado.
 
-## Desenvolvimento local — fundação 1C
+## Desenvolvimento local — fundação 1D
 
 Domínio/caminho confirmados: **https://play.ronin.dev.br/roninrunner**. Portal em /; versões do jogo em /roninrunner/pt-br e /roninrunner/en. Nenhum DNS/deploy foi executado.
 
@@ -46,16 +46,21 @@ Node24LTS (versão de referência em .nvmrc), npm11. No checkout:
 ```sh
 npm ci
 npm run verify
-npm run dev
-# Em terminais separados, para os endpoints de partidas e o verificador:
+# Mantenha o banco aberto; aguarde a mensagem de pronto:
 npm run db:dev
+# Em outros três terminais, no mesmo checkout:
 npm run dev:api
 npm run dev:verifier
+npm run dev
 ```
 
-Shell local: http://127.0.0.1:5173/roninrunner; API: http://127.0.0.1:3001/api/v1/health. O shell informa que o jogo ainda não está jogável. Health só comprova processo respondendo; não comprova banco, fila ou verificação. Não há backend falso de pontuação.
+Abra http://127.0.0.1:5173/roninrunner/pt-br ou /roninrunner/en; hub em /. Use **127.0.0.1**, sem alternar com localhost: o proxy /api preserva Host e a API valida a origem exata 127.0.0.1:5173. Porta da API: 3001; health em http://127.0.0.1:3001/api/v1/health só comprova processo respondendo. Jogar → morrer ou encerrar → resultado confirmado exige banco, API e worker disponíveis.
 
-Depois de editar OpenAPI: npm run contracts:generate e npm run verify. Tipos e schemas gerados são versionados, e o gate recusa divergência. Postgres/core/codec estão disponíveis desde 1B; API de runs e worker persistente desde 1C; corrida Phaser em 1D. Issue1 permanece aberta até integrar todas essas partes.
+Teclado: Espaço/↑ salta, S/↓ desliza, J ataca, Esc pausa/retoma com contagem. No toque: deslizar para cima/baixo e tocar para atacar; botões alternativos nas preferências. Paisagem é recomendada; fullscreen recusado mantém fallback. Pausa oculta a cena e congela o core. Cada run começa com três vidas, sem cura. O resultado local só aparece como confirmado após VERIFIED no servidor; QUIT não ranqueia. Leia os limites e prazos em “Antes de começar”. Dados ainda não enviados vivem em memória: não fechar/recarregar a página durante a run ou envio. Retomada offline durável pertence à parte 8.
+
+O build é requisito dos testes de navegador (`npm run build` antes de `npm run test:browser`); `npm run verify` já respeita essa ordem. `vite preview` usa 4173 e requer PORTAL_ORIGIN compatível na API; os comandos acima usam a origem padrão 5173.
+
+Depois de editar OpenAPI: npm run contracts:generate e npm run verify. Tipos, schemas e validadores standalone gerados são versionados, e o gate recusa divergência. Postgres/core/codec estão disponíveis desde 1B; API de runs e worker persistente desde 1C; corrida Phaser/gestos/resultado desde 1D. Issue1 permanece aberta até revisar e integrar todas essas partes.
 
 Decisões: [ADRs](docs/adr/ADR-001-WORKSPACE-E-ROTAS.md). Estado e comandos: [PROGRESS.md](PROGRESS.md). Há uma pendência de segurança em ferramenta de desenvolvimento registrada no ADR004; nenhuma aprovação de release pública decorre desta fundação.
 
@@ -71,10 +76,16 @@ Implementação/limites e regras exatas: [ADR005](docs/adr/ADR-005-FUNDACAO-1B.m
 
 A API e o worker usam o cluster sintético `ronin_dev` em `127.0.0.1:15432`, iniciado por `db:dev`; os comandos de desenvolvimento recusam outro DATABASE_URL. Não criam conexão externa nem iniciam o banco implicitamente. `dev:verifier -- --once` processa no máximo um job e encerra; sem `--once`, aguarda novos jobs e devolve o trabalho pendente ao receber Ctrl+C.
 
-A origem local da API é `http://127.0.0.1:3001`; `PORTAL_ORIGIN` configura a origem exata do navegador quando o proxy local for integrado na 1D. Em HTTP, apenas loopback é aceito. A origem HTTPS exige chave de rate limit fornecida pelo integrador, fora do Git. Esses comandos não são configuração de produção.
+A API escuta `http://127.0.0.1:3001`; `PORTAL_ORIGIN` configura a origem exata do navegador (padrão `http://127.0.0.1:5173`, via proxy local implementado na 1D). Em HTTP, apenas loopback é aceito. A origem HTTPS exige chave de rate limit fornecida pelo integrador, fora do Git. Esses comandos não são configuração de produção.
 
-Fluxo executável: `POST /api/v1/auth/guest` com `{}` → cookie HttpOnly e header `X-CSRF-Token` → `POST /api/v1/runs/start` com `Idempotency-Key` → `PUT /api/v1/runs/{id}/segments/{index}` em identity/gzip → `POST /api/v1/runs/{id}/finish` → consultar `GET /api/v1/runs/{id}`. Mutações exigem `Origin` exata e token CSRF sincronizado à sessão. O upload usa o codec e headers do OpenAPI; ACK significa persistido, e não pontuação aceita.
+Fluxo executável: `POST /api/v1/auth/guest` com `{}` → cookie HttpOnly e header `X-CSRF-Token` → `POST /api/v1/runs/start` com `Idempotency-Key` → `GET /api/v1/runs/{id}/manifest` → `PUT /api/v1/runs/{id}/segments/{index}` em identity/gzip → `POST /api/v1/runs/{id}/finish` → consultar `GET /api/v1/runs/{id}`. Mutações exigem `Origin` exata e token CSRF sincronizado à sessão. O upload usa o codec e headers do OpenAPI; ACK significa persistido, e não pontuação aceita.
 
 O verificador reexecuta comandos e comprova HP_ZERO, ABYSS ou QUIT no core. Somente VERIFIED expõe score ao dono da run; QUIT não ranqueia. Outcome/outbox são transacionais, com lease/heartbeat/generation para concorrência e retry. Não há ainda projeção pública de ranking, recompensas ou conta e-mail/Google. O curso primitivo versionado permite integração real da fundação, mas não substitui o diretor completo/quatro regiões/chefes das partes 3/4.
 
 Detalhes, limites, testes e operação: [ADR006](docs/adr/ADR-006-FUNDACAO-1C.md). O gate de fundação continua `npm run verify`; o gate de lançamento público completo pertence às etapas finais.
+
+## Parte 1D — primeira corrida integrada
+
+Cena Bambu em Canvas2D/Phaser 4 com arte vetorial original, adaptador do mesmo core do verificador, manifest histórico validado pelo hash do ticket, inputs segmentados e envio com ACK. UI PT-BR/EN inclui menu, controles, preferências, pausa opaca, contagem, confirmação de saída e estados de envio/verificação/recusa/rede. O hub carrega Phaser somente ao entrar no jogo. Contratos usam validadores standalone; o build funciona com CSP sem unsafe-eval.
+
+A regressão usa bundle de produção, Chromium desktop/mobile emulado, PostgreSQL real e API/worker reais. Não substitui aparelhos físicos nem aprova a arte final. Veja decisões, evidências, orçamento do bundle e pendências no [ADR007](docs/adr/ADR-007-FUNDACAO-1D.md) e [PROGRESS.md](PROGRESS.md). As próximas partes preservam combate completo, quatro regiões/chefes, criador/identidade, ranking e semanais antes de qualquer lançamento.

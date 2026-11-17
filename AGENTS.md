@@ -83,3 +83,7 @@ O proprietário autorizou expressamente iniciar1B. Core, codec e migrations de d
 ## Atualização — parte 1C
 
 O proprietário autorizou iniciar 1C. Implementação e testes estão em `feat/runner-foundation-1c`, sobre o PR #3 ainda aberto. Consulte ADR006 e PROGRESS.md. A API local exige `db:dev`; o worker executa separado por `dev:verifier`. Gate obrigatório: `npm ci` e `npm run verify`, com Postgres real, fluxo HTTP/processo verificador e Chromium. Não fechar Issue #1 nem iniciar 1D automaticamente; faltam cena Phaser/gestos/resultado e todas as etapas do escopo público. Produção/DNS e serviços existentes seguem fora do escopo.
+
+## Atualização — parte 1D
+
+O proprietário autorizou iniciar 1D. A corrida Phaser/teclado/gestos, cliente real, pausa e resultado verificado estão implementados em `feat/runner-foundation-1d`, sobre `bd24224`/PR #4 (1C). Consulte ADR007 e PROGRESS.md antes de continuar. O gate agora constrói o bundle antes dos testes de navegador, que usam esse artefato com CSP e PostgreSQL/API/worker reais. Rodar `npm ci` e `npm run verify`; gerar validators por `contracts:generate`, nunca editar generated à mão. Usar a origem única 127.0.0.1:5173 no desenvolvimento, com proxy que preserva Host. A parte 2 depende de novo pedido. Issue #1 permanece aberta até revisão e integração de 1A–1D; não fazer merge automático. Dispositivos físicos, arte/combate completos e todos os gates públicos seguem pendentes. Produção, DNS, VPS e serviços existentes continuam fora do escopo.

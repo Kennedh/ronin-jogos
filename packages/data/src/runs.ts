@@ -246,6 +246,19 @@ export class Runs {
       result.rejection_code = run.rejection_code ?? "REPLAY_INVALID";
     return result;
   }
+  async getManifest(playerId: string, runId: string) {
+    const row = (
+      await this.pool.query<{ rules_hash: string; manifest: RunnerManifest }>(
+        "SELECT r.rules_hash,v.manifest FROM runs r JOIN rules_versions v ON v.manifest_hash=r.rules_hash WHERE r.id=$1 AND r.player_id=$2",
+        [runId, playerId],
+      )
+    ).rows[0];
+    if (!row) throw new Fault(404, "RUN_NOT_FOUND");
+    return {
+      manifest_hash: row.rules_hash,
+      manifest: await loadManifest(row.manifest, row.rules_hash),
+    };
+  }
   async status(playerId: string, runId: string) {
     return transaction(this.pool, async (db) => {
       const run = await this.lock(db, playerId, runId);

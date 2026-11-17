@@ -358,5 +358,16 @@ export function createApi(options?: ApiOptions) {
         await runs.status(session(request).playerId, request.params.run_id),
       ),
   );
+  api.get<{ Params: { run_id: string } }>(
+    "/api/v1/runs/:run_id/manifest",
+    async (request) =>
+      checked(
+        "RunManifest",
+        await runs.getManifest(
+          session(request).playerId,
+          request.params.run_id,
+        ),
+      ),
+  );
   return api;
 }
