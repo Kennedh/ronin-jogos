@@ -618,6 +618,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/runs/{run_id}/manifest": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Manifest imutável da própria tentativa, ligado ao hash do ticket */
+    get: operations["get_run_manifest"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -860,6 +877,47 @@ export interface components {
     };
     /** @description Primeiro acesso não exige apelido; idioma vem da primeira preferência Accept-Language. */
     GuestRequest: Record<string, never>;
+    PhysicsRules: {
+      version: string;
+      /** @constant */
+      tickRate: 60;
+      scale: number;
+      unitsPerMeter: number;
+      speed: number;
+      speedCeiling: number;
+      gravity: number;
+      jump: number;
+      doubleJump: number;
+      coyoteTicks: number;
+      jumpBufferTicks: number;
+      slideTicks: number;
+      slideRecoveryTicks: number;
+      attackWindup: number;
+      attackActive: number;
+      attackRecovery: number;
+      perfectTicks: number;
+      hurtTicks: number;
+      bodyWidth: number;
+      bodyHeight: number;
+      slideWidth: number;
+      slideHeight: number;
+      swordReach: number;
+      fatalY: number;
+    };
+    RunnerManifest: {
+      rules_major: number;
+      rules_patch: number;
+      generator_version: string;
+      scoring_version: string;
+      /** @constant */
+      replay_protocol_version: "rr-input-v1";
+      assets_manifest_version: string;
+      physics: components["schemas"]["PhysicsRules"];
+    };
+    RunManifest: {
+      manifest_hash: string;
+      manifest: components["schemas"]["RunnerManifest"];
+    };
   };
   responses: {
     /** @description Corpo ou formato invalido */
@@ -2285,6 +2343,73 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["Health"];
+        };
+      };
+    };
+  };
+  get_run_manifest: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: components["parameters"]["RunId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Regras públicas da run, não a configuração atual */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RunManifest"];
+        };
+      };
+      /** @description Sessão necessária */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Origem/host inválido */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Run não encontrada para este dono */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Limite temporário de consultas */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Serviço indisponível */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
         };
       };
     };

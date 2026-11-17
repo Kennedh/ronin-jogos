@@ -23,7 +23,7 @@
     "format": "prettier --write apps packages scripts tests package.json tsconfig.json eslint.config.mjs .github/workflows/ci.yml",
     "test": "node --test tests/*.test.ts",
     "build": "npm run build --workspace=@ronin/portal",
-    "verify": "npm run contracts:check && npm run typecheck && npm run lint && npm run format:check && npm test && npm run test:browser && npm run build",
+    "verify": "npm run contracts:check && npm run typecheck && npm run lint && npm run format:check && npm test && npm run build && npm run test:browser",
     "test:browser": "node --test tests/browser/*.test.ts",
     "db:dev": "node scripts/dev-db.ts",
     "dev:verifier": "node apps/verifier/src/main.ts"
@@ -40,6 +40,9 @@
     "prettier": "3.10.1",
     "typescript": "5.9.3",
     "typescript-eslint": "8.73.0",
-    "yaml": "2.9.1"
+    "yaml": "2.9.1",
+    "rolldown": "1.2.19",
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1"
   }
 }

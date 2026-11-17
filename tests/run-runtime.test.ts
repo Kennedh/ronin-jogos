@@ -1258,6 +1258,51 @@ test(
           }
         },
       );
+
+      await t.test(
+        "1D: manifest endpoint preserves the historical ticket binding and enforces its owner",
+        async () => {
+          await reset();
+          const h = harness(db.pool, clock);
+          try {
+            const client = await h.guest(),
+              other = await h.guest(),
+              old = {
+                ...FOUNDATION_MANIFEST,
+                rules_patch: 1,
+                physics: { ...FOUNDATION_MANIFEST.physics, gravity: 2000000 },
+              };
+            const started = await new Runs(
+                db.pool,
+                clock,
+                undefined,
+                old,
+              ).start(client.playerId, { mode: "FULL" }, randomUUID()),
+              id = started.ticket.run_id;
+            const response = await h.api.inject({
+              url: `/api/v1/runs/${id}/manifest`,
+              headers: h.headers(client),
+            });
+            assert.equal(response.statusCode, 200, response.body);
+            assert.equal(
+              response.json().manifest_hash,
+              started.ticket.versions.rules_manifest_hash,
+            );
+            assert.equal(response.json().manifest.physics.gravity, 2000000);
+            assert.equal(
+              (
+                await h.api.inject({
+                  url: `/api/v1/runs/${id}/manifest`,
+                  headers: h.headers(other),
+                })
+              ).statusCode,
+              404,
+            );
+          } finally {
+            await h.api.close();
+          }
+        },
+      );
     } finally {
       await db.close();
     }

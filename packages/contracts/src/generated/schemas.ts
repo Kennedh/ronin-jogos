@@ -775,4 +775,210 @@ export const definitions = {
     description:
       "Primeiro acesso não exige apelido; idioma vem da primeira preferência Accept-Language.",
   },
+  PhysicsRules: {
+    type: "object",
+    required: [
+      "version",
+      "tickRate",
+      "scale",
+      "unitsPerMeter",
+      "speed",
+      "speedCeiling",
+      "gravity",
+      "jump",
+      "doubleJump",
+      "coyoteTicks",
+      "jumpBufferTicks",
+      "slideTicks",
+      "slideRecoveryTicks",
+      "attackWindup",
+      "attackActive",
+      "attackRecovery",
+      "perfectTicks",
+      "hurtTicks",
+      "bodyWidth",
+      "bodyHeight",
+      "slideWidth",
+      "slideHeight",
+      "swordReach",
+      "fatalY",
+    ],
+    additionalProperties: false,
+    properties: {
+      version: {
+        type: "string",
+        pattern: "^[a-zA-Z0-9._-]{1,100}$",
+      },
+      tickRate: {
+        type: "integer",
+        const: 60,
+      },
+      scale: {
+        type: "integer",
+        minimum: 1,
+        maximum: 9007199254740991,
+      },
+      unitsPerMeter: {
+        type: "integer",
+        minimum: 1,
+        maximum: 9007199254740991,
+      },
+      speed: {
+        type: "integer",
+        minimum: 1,
+        maximum: 9007199254740991,
+      },
+      speedCeiling: {
+        type: "integer",
+        minimum: 1,
+        maximum: 9007199254740991,
+      },
+      gravity: {
+        type: "integer",
+        minimum: 1,
+        maximum: 9007199254740991,
+      },
+      jump: {
+        type: "integer",
+        minimum: -9007199254740991,
+        maximum: -1,
+      },
+      doubleJump: {
+        type: "integer",
+        minimum: -9007199254740991,
+        maximum: -1,
+      },
+      coyoteTicks: {
+        type: "integer",
+        minimum: 1,
+        maximum: 9007199254740991,
+      },
+      jumpBufferTicks: {
+        type: "integer",
+        minimum: 1,
+        maximum: 9007199254740991,
+      },
+      slideTicks: {
+        type: "integer",
+        minimum: 1,
+        maximum: 9007199254740991,
+      },
+      slideRecoveryTicks: {
+        type: "integer",
+        minimum: 1,
+        maximum: 9007199254740991,
+      },
+      attackWindup: {
+        type: "integer",
+        minimum: 1,
+        maximum: 9007199254740991,
+      },
+      attackActive: {
+        type: "integer",
+        minimum: 1,
+        maximum: 9007199254740991,
+      },
+      attackRecovery: {
+        type: "integer",
+        minimum: 1,
+        maximum: 9007199254740991,
+      },
+      perfectTicks: {
+        type: "integer",
+        minimum: 1,
+        maximum: 9007199254740991,
+      },
+      hurtTicks: {
+        type: "integer",
+        minimum: 1,
+        maximum: 9007199254740991,
+      },
+      bodyWidth: {
+        type: "integer",
+        minimum: 1,
+        maximum: 9007199254740991,
+      },
+      bodyHeight: {
+        type: "integer",
+        minimum: 1,
+        maximum: 9007199254740991,
+      },
+      slideWidth: {
+        type: "integer",
+        minimum: 1,
+        maximum: 9007199254740991,
+      },
+      slideHeight: {
+        type: "integer",
+        minimum: 1,
+        maximum: 9007199254740991,
+      },
+      swordReach: {
+        type: "integer",
+        minimum: 1,
+        maximum: 9007199254740991,
+      },
+      fatalY: {
+        type: "integer",
+        minimum: 1,
+        maximum: 9007199254740991,
+      },
+    },
+  },
+  RunnerManifest: {
+    type: "object",
+    required: [
+      "rules_major",
+      "rules_patch",
+      "generator_version",
+      "scoring_version",
+      "replay_protocol_version",
+      "assets_manifest_version",
+      "physics",
+    ],
+    additionalProperties: false,
+    properties: {
+      rules_major: {
+        type: "integer",
+        minimum: 1,
+      },
+      rules_patch: {
+        type: "integer",
+        minimum: 0,
+      },
+      generator_version: {
+        type: "string",
+        minLength: 1,
+      },
+      scoring_version: {
+        type: "string",
+        minLength: 1,
+      },
+      replay_protocol_version: {
+        type: "string",
+        const: "rr-input-v1",
+      },
+      assets_manifest_version: {
+        type: "string",
+        minLength: 1,
+      },
+      physics: {
+        $ref: "#/$defs/PhysicsRules",
+      },
+    },
+  },
+  RunManifest: {
+    type: "object",
+    required: ["manifest_hash", "manifest"],
+    additionalProperties: false,
+    properties: {
+      manifest_hash: {
+        type: "string",
+        pattern: "^[a-f0-9]{64}$",
+      },
+      manifest: {
+        $ref: "#/$defs/RunnerManifest",
+      },
+    },
+  },
 } as const;

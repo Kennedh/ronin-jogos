@@ -4,6 +4,14 @@ export const SIMULATION_STEP_MS = 1000 / TICK_RATE;
 export interface RendererLifecycle {
   destroy(): void;
 }
-/** Scene implementation and mounting belong to 1D, after the core exists. */
+/** Phaser renderer is a browser-only subpath; core/client remain usable in Node. */
 
 export { FixedClock } from "./clock.ts";
+
+export { RunnerApi, ClientError } from "./api.ts";
+export type { RunTicket, RunStatus } from "./api.ts";
+export { RunSession } from "./session.ts";
+export type { SessionPhase, PauseReason } from "./session.ts";
+export { Recorder } from "./recorder.ts";
+export { Gestures } from "./gestures.ts";
+export { Submission } from "./submission.ts";

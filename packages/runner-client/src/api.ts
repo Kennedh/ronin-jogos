@@ -1,0 +1,177 @@
+import { validate } from "@ronin/contracts";
+import type { components, SchemaName } from "@ronin/contracts";
+import type { ReplaySegment, FinishRequest } from "@ronin/contracts/replay";
+import { loadManifest } from "@ronin/content/runner-manifest";
+export type RunTicket = components["schemas"]["RunTicket"];
+export type RunStatus = components["schemas"]["RunStatus"];
+export class ClientError extends Error {
+  readonly code: string;
+  readonly status: number;
+  readonly retryAfter: number;
+  constructor(code: string, status = 0, retryAfter = 0) {
+    super(code);
+    this.code = code;
+    this.status = status;
+    this.retryAfter = retryAfter;
+  }
+}
+/** Same-origin only. Cookie is HttpOnly; CSRF and identity remain in memory. */
+export class RunnerApi {
+  private csrf = "";
+  playerId = "";
+  readonly fetcher: typeof fetch;
+  constructor(fetcher: typeof fetch = globalThis.fetch.bind(globalThis)) {
+    this.fetcher = fetcher;
+  }
+  private async request(
+    path: string,
+    method: string,
+    schema: SchemaName,
+    body?: BodyInit,
+    headers: Record<string, string> = {},
+  ) {
+    const abort = new AbortController(),
+      timeout = setTimeout(() => abort.abort(), 15000);
+    try {
+      const response = await this.fetcher("/api/v1" + path, {
+        method,
+        credentials: "same-origin",
+        cache: "no-store",
+        signal: abort.signal,
+        headers: {
+          ...(method !== "GET" ? { "x-csrf-token": this.csrf } : {}),
+          ...headers,
+        },
+        ...(body === undefined ? {} : { body }),
+      });
+      if (!response.ok) {
+        let code = "SERVICE_UNAVAILABLE";
+        try {
+          const error = (await response.json()) as {
+            error?: { code?: unknown };
+          };
+          if (typeof error.error?.code === "string") code = error.error.code;
+        } catch {
+          /* Generic failure, never display response HTML. */
+        }
+        throw new ClientError(
+          code,
+          response.status,
+          Math.min(
+            300,
+            Math.max(0, Number(response.headers.get("retry-after")) || 0),
+          ),
+        );
+      }
+      const value: unknown = await response.json();
+      if (!validate(schema, value))
+        throw new ClientError("INVALID_SERVER_RESPONSE");
+      const csrf = response.headers.get("x-csrf-token");
+      if (csrf) this.csrf = csrf;
+      return value;
+    } catch (error) {
+      if (error instanceof ClientError) throw error;
+      throw new ClientError("NETWORK_UNAVAILABLE");
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+  async guest() {
+    const value = (await this.request(
+      "/auth/guest",
+      "POST",
+      "PlayerSummary",
+      "{}",
+      { "content-type": "application/json" },
+    )) as components["schemas"]["PlayerSummary"];
+    if (this.playerId && this.playerId !== value.player_id)
+      throw new ClientError("SESSION_CHANGED", 401);
+    this.playerId = value.player_id;
+    return value;
+  }
+  async start(key: string, mode: "FULL" | "REGIONAL" = "FULL") {
+    const ticket = (await this.request(
+      "/runs/start",
+      "POST",
+      "RunTicket",
+      JSON.stringify(
+        mode === "FULL" ? { mode } : { mode, region_id: "BAMBOO" },
+      ),
+      { "content-type": "application/json", "idempotency-key": key },
+    )) as RunTicket;
+    if (ticket.mode !== mode || ticket.starting_region_id !== "BAMBOO")
+      throw new ClientError("RULES_MISMATCH");
+    return ticket;
+  }
+  async manifest(ticket: RunTicket) {
+    const value = (await this.request(
+      `/runs/${ticket.run_id}/manifest`,
+      "GET",
+      "RunManifest",
+    )) as components["schemas"]["RunManifest"];
+    if (value.manifest_hash !== ticket.versions.rules_manifest_hash)
+      throw new ClientError("RULES_MISMATCH");
+    const manifest = await loadManifest(
+      value.manifest,
+      value.manifest_hash,
+    ).catch(() => {
+      throw new ClientError("RULES_MISMATCH");
+    });
+    for (const key of [
+      "rules_major",
+      "rules_patch",
+      "generator_version",
+      "scoring_version",
+      "replay_protocol_version",
+      "assets_manifest_version",
+    ] as const)
+      if (manifest[key] !== ticket.versions[key])
+        throw new ClientError("RULES_MISMATCH");
+    return manifest;
+  }
+  async upload(segment: ReplaySegment, hash: string, bytes: Uint8Array) {
+    const ack = await this.request(
+      `/runs/${segment.run_id}/segments/${segment.index}`,
+      "PUT",
+      "SegmentAck",
+      new Blob([Uint8Array.from(bytes)], { type: "application/octet-stream" }),
+      {
+        "content-type": "application/octet-stream",
+        "x-start-tick": String(segment.start_tick),
+        "x-end-tick": String(segment.end_tick),
+        "x-segment-hash": hash,
+        ...(segment.previous_hash
+          ? { "x-previous-segment-hash": segment.previous_hash }
+          : {}),
+      },
+    );
+    const value = ack as components["schemas"]["SegmentAck"];
+    if (
+      value.run_id !== segment.run_id ||
+      value.index !== segment.index ||
+      value.segment_hash !== hash
+    )
+      throw new ClientError("INVALID_SERVER_RESPONSE");
+    return value;
+  }
+  async finish(id: string, finish: FinishRequest) {
+    const value = (await this.request(
+      `/runs/${id}/finish`,
+      "POST",
+      "RunStatus",
+      JSON.stringify(finish),
+      { "content-type": "application/json" },
+    )) as RunStatus;
+    if (value.run_id !== id) throw new ClientError("INVALID_SERVER_RESPONSE");
+    return value;
+  }
+  async status(id: string) {
+    const value = (await this.request(
+      `/runs/${id}`,
+      "GET",
+      "RunStatus",
+    )) as RunStatus;
+    if (value.run_id !== id) throw new ClientError("INVALID_SERVER_RESPONSE");
+    return value;
+  }
+}

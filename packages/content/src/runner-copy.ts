@@ -1,0 +1,258 @@
+import type { Locale } from "./index.ts";
+const en = {
+  loadingGame: "Loading the game…",
+  licenses: "Licenses",
+  brand: "RONIN PLAY",
+  back: "All games",
+  ronin: "Ronin ecosystem",
+  development: "DEVELOPMENT BUILD",
+  eyebrow: "A path through the bamboo",
+  title: "Ronin Runner",
+  subtitle: "Keep moving. Find your moment.",
+  description:
+    "Run through a bamboo forest, clear the gaps and time your katana. Three lives. No healing. Every result replayed by the server.",
+  enter: "Open Ronin Runner",
+  play: "Start run",
+  loading: "Preparing your run…",
+  ready: "Ready when you are",
+  mode: "Run mode",
+  full: "Full Journey",
+  regional: "Bamboo Expedition",
+  modeHelp:
+    "Both routes start in Bamboo in this development build. Regional results stay separate.",
+  controls: "How to play",
+  jump: "Jump / double jump",
+  slide: "Slide",
+  attack: "Katana",
+  keyboard: "Space / ↑ jump · S / ↓ slide · J katana · Esc pause",
+  touch:
+    "Swipe up to jump, down to slide. Tap for the katana. Swipe again in the air for a double jump.",
+  lives: "Lives",
+  distance: "Distance",
+  score: "Local estimate",
+  provisional: "Not verified",
+  bamboo: "Bamboo Forest",
+  pause: "Pause",
+  paused: "Take a breath.",
+  pauseHint: "The world and your competitive time are frozen.",
+  resume: "Continue · 3–2–1",
+  quit: "End this run",
+  confirmQuit: "End the run?",
+  quitHint:
+    "A verified voluntary exit does not qualify for a leaderboard. Your replay will still be checked.",
+  confirm: "End and send replay",
+  cancel: "Keep this run",
+  countdown: "Get ready",
+  continuePortrait: "Play in this orientation",
+  rotate: "Landscape recommended",
+  rotateHint:
+    "Rotate your screen for a larger view, or continue here. The rules and visible world stay the same.",
+  settings: "Your setup",
+  alternate: "Show action buttons",
+  reduced: "Reduce motion and flashes",
+  fullscreen: "Request fullscreen when starting",
+  fullscreenFallback:
+    "Fullscreen or orientation lock was unavailable. You can keep playing in this view.",
+  orientationPause: "Screen orientation changed. Your run is paused.",
+  focusPause: "Focus was lost. Your run is paused.",
+  framePause: "A long frame was detected. Your run is paused safely.",
+  bufferPause:
+    "The replay buffer is nearly full. Retry sending before continuing, or end and send this run.",
+  finishTitle: "A pause in the journey.",
+  resultTitle: "Your run",
+  sending: "Sending your replay…",
+  pending: "Replay received. Awaiting verification.",
+  pendingHint:
+    "Your score is not confirmed yet. Only the server can validate the result.",
+  verified: "Verified by the server",
+  verifiedHint:
+    "Your result matches the recorded commands and the rules of this run.",
+  quitVerified: "Voluntary exit verified · not eligible for ranking",
+  rejected: "Run could not be verified",
+  expired: "Submission deadline expired",
+  abandoned: "Run closed",
+  unranked: "No ranking credit",
+  reasonHp: "All three lives were lost.",
+  reasonAbyss: "You fell into a gap.",
+  reasonQuit: "You chose to end this run.",
+  newRun: "New run",
+  retry: "Retry sending",
+  reconnect: "Reconnect this session",
+  network:
+    "Connection interrupted. Your replay is kept in this tab. Reconnect and retry; no score has been confirmed.",
+  sessionError:
+    "This run belongs to the original visitor. Reconnect that same identity to send it; do not clear your site data.",
+  rulesError:
+    "These rules could not be loaded safely. Refresh before starting a new run.",
+  bufferError:
+    "The replay could not be prepared safely. No result was confirmed.",
+  renderError:
+    "The game could not start in this browser. Refresh and try again.",
+  policyTitle: "Before you start",
+  policy:
+    "Server window: 72 hours to finish, then 24 hours for missing uploads. Replay: 256 KiB per part, 128 MiB per run, 512 MiB stored per visitor, 10,000 parts, up to 3 open runs. Active time is checked at 60 Hz with a 2-second tolerance.",
+  memory:
+    "This build keeps unsent commands in this tab, with an 8 MiB buffer. Keep it open until sending is confirmed. Recovery after closing the browser comes in a later stage.",
+  privacy:
+    "No account required to begin. Your visitor identity uses a protected cookie. Clearing it can make your progress inaccessible.",
+  scope:
+    "This is the playable foundation. Final art, four regions, bosses, customization and public leaderboards are still in development.",
+  awaiting: "Waiting for a connection",
+  linked: "Replay sent securely",
+  status: "Run status",
+  stageLabel:
+    "Ronin Runner game area. Keyboard: Space to jump, J to attack, S to slide, Escape to pause.",
+  footer: "Independent games. One Ronin ecosystem.",
+  localStats: "Estimated on this device",
+  confirmedStats: "Confirmed result",
+  noFake:
+    "Progress and rewards appear only after their server systems are implemented.",
+  exitHint: "Unsent replay remains in this tab.",
+  startRetry: "Retry starting",
+  serverWindow: "Upload until",
+  homeTitle: "Small worlds. Real challenges.",
+  homeDescription:
+    "Original browser games from the Ronin ecosystem. Start with a run through the bamboo.",
+  gameTag: "REACTION · ENDLESS RUNNER",
+  field:
+    "Same horizontal field of view on every screen. Vertical framing adapts.",
+  retryWait: "Wait before retrying",
+  deadTitle: "The path ends here.",
+  inkLabel: "BAMBOO / 01",
+  shieldLabel: "World hidden while paused",
+  gameReady: "Game ready",
+  running: "Running",
+  offlineStart:
+    "The start could not be confirmed. Reconnect and retry; the same request will be reused.",
+};
+const pt: Record<keyof typeof en, string> = {
+  loadingGame: "Carregando o jogo…",
+  licenses: "Licenças",
+  brand: "RONIN PLAY",
+  back: "Todos os jogos",
+  ronin: "Ecossistema Ronin",
+  development: "VERSÃO EM DESENVOLVIMENTO",
+  eyebrow: "Um caminho entre os bambus",
+  title: "Ronin Runner",
+  subtitle: "Siga em frente. Encontre o instante.",
+  description:
+    "Corra pela floresta de bambu, salte os vãos e acerte o tempo da katana. Três vidas. Nenhuma cura. Cada resultado refeito pelo servidor.",
+  enter: "Abrir Ronin Runner",
+  play: "Iniciar corrida",
+  loading: "Preparando sua corrida…",
+  ready: "No seu tempo",
+  mode: "Modo de corrida",
+  full: "Jornada Completa",
+  regional: "Expedição Bambu",
+  modeHelp:
+    "Os dois modos começam no Bambu nesta versão de desenvolvimento. Resultados regionais ficam separados.",
+  controls: "Como jogar",
+  jump: "Salto / salto duplo",
+  slide: "Deslizar",
+  attack: "Katana",
+  keyboard: "Espaço / ↑ saltar · S / ↓ deslizar · J katana · Esc pausar",
+  touch:
+    "Deslize para cima para saltar, para baixo para deslizar. Toque para usar a katana. Repita o gesto para cima no ar para o salto duplo.",
+  lives: "Vidas",
+  distance: "Distância",
+  score: "Estimativa local",
+  provisional: "Não verificado",
+  bamboo: "Floresta de Bambu",
+  pause: "Pausar",
+  paused: "Respire um instante.",
+  pauseHint: "O mundo e seu tempo competitivo estão parados.",
+  resume: "Continuar · 3–2–1",
+  quit: "Encerrar esta corrida",
+  confirmQuit: "Encerrar a corrida?",
+  quitHint:
+    "Uma saída voluntária verificada não participa do ranking. Seu replay ainda será conferido.",
+  confirm: "Encerrar e enviar replay",
+  cancel: "Manter esta corrida",
+  countdown: "Prepare-se",
+  continuePortrait: "Jogar nesta orientação",
+  rotate: "Paisagem recomendada",
+  rotateHint:
+    "Gire a tela para uma visão maior ou continue por aqui. As regras e o mundo visível são os mesmos.",
+  settings: "Seu jeito de jogar",
+  alternate: "Mostrar botões de ação",
+  reduced: "Reduzir movimento e flashes",
+  fullscreen: "Pedir tela cheia ao iniciar",
+  fullscreenFallback:
+    "Tela cheia ou bloqueio de orientação indisponível. Você pode continuar nesta visualização.",
+  orientationPause: "A orientação mudou. Sua corrida está pausada.",
+  focusPause: "O foco foi perdido. Sua corrida está pausada.",
+  framePause:
+    "Um quadro demorado foi detectado. Sua corrida foi pausada com segurança.",
+  bufferPause:
+    "O buffer do replay está quase cheio. Tente enviar antes de continuar ou encerre e envie esta corrida.",
+  finishTitle: "Uma pausa na jornada.",
+  resultTitle: "Sua corrida",
+  sending: "Enviando seu replay…",
+  pending: "Replay recebido. Aguardando verificação.",
+  pendingHint:
+    "Sua pontuação ainda não está confirmada. Só o servidor pode validar o resultado.",
+  verified: "Verificado pelo servidor",
+  verifiedHint:
+    "Seu resultado corresponde aos comandos registrados e às regras desta corrida.",
+  quitVerified: "Saída voluntária verificada · sem ranking",
+  rejected: "Não foi possível verificar a corrida",
+  expired: "O prazo de envio expirou",
+  abandoned: "Corrida encerrada",
+  unranked: "Sem crédito de ranking",
+  reasonHp: "As três vidas foram perdidas.",
+  reasonAbyss: "Você caiu em um vão.",
+  reasonQuit: "Você escolheu encerrar esta corrida.",
+  newRun: "Nova corrida",
+  retry: "Tentar enviar novamente",
+  reconnect: "Reconectar esta sessão",
+  network:
+    "A conexão foi interrompida. Seu replay está nesta aba. Reconecte e tente enviar; nenhuma pontuação foi confirmada.",
+  sessionError:
+    "Esta corrida pertence ao visitante original. Reconecte essa mesma identidade para enviar; não limpe os dados do site.",
+  rulesError:
+    "Não foi possível carregar estas regras com segurança. Atualize antes de iniciar outra corrida.",
+  bufferError:
+    "Não foi possível preparar o replay com segurança. Nenhum resultado foi confirmado.",
+  renderError:
+    "O jogo não conseguiu iniciar neste navegador. Atualize e tente novamente.",
+  policyTitle: "Antes de começar",
+  policy:
+    "Janela do servidor: 72 horas para encerrar e mais 24 horas para partes pendentes. Replay: 256 KiB por parte, 128 MiB por corrida, 512 MiB armazenados por visitante, 10.000 partes e até 3 corridas abertas. Tempo ativo conferido a 60 Hz com tolerância de 2 segundos.",
+  memory:
+    "Esta versão mantém comandos não enviados nesta aba, com buffer de 8 MiB. Mantenha-a aberta até confirmar o envio. A recuperação após fechar o navegador virá em uma próxima etapa.",
+  privacy:
+    "Você pode começar sem cadastro. Sua identidade de visitante usa um cookie protegido. Apagá-lo pode tornar seu progresso inacessível.",
+  scope:
+    "Esta é a fundação jogável. Arte final, quatro regiões, chefes, personalização e rankings públicos seguem em desenvolvimento.",
+  awaiting: "Aguardando uma conexão",
+  linked: "Replay enviado com segurança",
+  status: "Estado da corrida",
+  stageLabel:
+    "Área do jogo Ronin Runner. Teclado: Espaço para saltar, J para atacar, S para deslizar, Escape para pausar.",
+  footer: "Jogos independentes. Um ecossistema Ronin.",
+  localStats: "Estimativa neste dispositivo",
+  confirmedStats: "Resultado confirmado",
+  noFake:
+    "Progresso e recompensas aparecerão após a implementação de seus sistemas no servidor.",
+  exitHint: "O replay não enviado continua nesta aba.",
+  startRetry: "Tentar iniciar novamente",
+  serverWindow: "Enviar até",
+  homeTitle: "Pequenos mundos. Desafios reais.",
+  homeDescription:
+    "Jogos autorais no navegador, do ecossistema Ronin. Comece por uma corrida entre os bambus.",
+  gameTag: "REAÇÃO · CORRIDA INFINITA",
+  field:
+    "Mesmo campo horizontal em todas as telas. O enquadramento vertical se adapta.",
+  retryWait: "Aguarde antes de tentar novamente",
+  deadTitle: "O caminho termina aqui.",
+  inkLabel: "BAMBU / 01",
+  shieldLabel: "Mundo oculto durante a pausa",
+  gameReady: "Jogo pronto",
+  running: "Correndo",
+  offlineStart:
+    "Não foi possível confirmar o início. Reconecte e tente novamente; o mesmo pedido será reutilizado.",
+};
+export type RunnerTextKey = keyof typeof en;
+export function runnerCopy(locale: Locale) {
+  return locale === "pt-BR" ? pt : en;
+}

@@ -6,7 +6,7 @@ if (!Number.isInteger(port) || port < 1024 || port > 65535)
   throw new Error("invalid_port");
 const api = createApi({
   pool,
-  origin: process.env["PORTAL_ORIGIN"] ?? `http://127.0.0.1:${port}`,
+  origin: process.env["PORTAL_ORIGIN"] ?? "http://127.0.0.1:5173",
 });
 api.addHook("onClose", async () => {
   await pool.end();

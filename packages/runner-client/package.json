@@ -3,10 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "exports": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./scene": "./src/scene.ts"
+  },
   "dependencies": {
     "@ronin/runner-core": "0.1.0",
-    "phaser": "4.2.1"
+    "phaser": "4.2.1",
+    "@ronin/contracts": "0.1.0",
+    "@ronin/content": "0.1.0"
   },
   "devDependencies": {}
 }
