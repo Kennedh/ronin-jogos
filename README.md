@@ -2,7 +2,7 @@
 
 Plataforma de jogos gratuitos para navegador, desenvolvida com tecnologias web.
 
-## Ronin Runner — fundação1A em desenvolvimento
+## Ronin Runner — fundação1B implementada em desenvolvimento
 
 O Ronin Runner concluiu a fase de especificação de baseline (v0.18). **O proprietário autorizou em 11/11/2026 o início da implementação com Codex**. A primeira versão pública deverá ser **completa** (sem mini-MVP descartável), com desenvolvimento incremental sobre a arquitetura definitiva. Esta atualização não significa que o Codex já tenha executado tarefas ou que o jogo esteja implementado.
 
@@ -53,6 +53,14 @@ npm run dev:api
 
 Shell local: http://127.0.0.1:5173/roninrunner; API: http://127.0.0.1:3001/api/v1/health. O shell informa que o jogo ainda não está jogável. Health só comprova processo respondendo; não comprova banco, fila ou verificação. Não há backend falso de pontuação.
 
-Depois de editar OpenAPI: npm run contracts:generate e npm run verify. Tipos e schemas gerados são versionados, e o gate recusa divergência. Implementações de Postgres/core chegam em1B; run/verifier em1C; corrida Phaser em1D. Issue1 permanece aberta até integrar todas essas partes.
+Depois de editar OpenAPI: npm run contracts:generate e npm run verify. Tipos e schemas gerados são versionados, e o gate recusa divergência. Postgres/core/codec estão disponíveis na1B; run/verifier em1C; corrida Phaser em1D. Issue1 permanece aberta até integrar todas essas partes.
 
 Decisões: [ADRs](docs/adr/ADR-001-WORKSPACE-E-ROTAS.md). Estado e comandos: [PROGRESS.md](PROGRESS.md). Há uma pendência de segurança em ferramenta de desenvolvimento registrada no ADR004; nenhuma aprovação de release pública decorre desta fundação.
+
+## Parte1B — motor, replay e banco de desenvolvimento
+
+`npm run verify` agora executa Postgres real efêmero, testes do motor/codec e Chromium real. Primeiro instale Node/npm e as dependências com `npm ci`; se não houver Chrome local, `npx playwright install chromium` (Linux pode precisar de `--with-deps`). Nenhum teste é omitido por falta de banco/browser.
+
+Para banco local persistente: `npm run db:dev`. Apenas127.0.0.1:15432; credenciais fictícias em `.env.example`, dados em `artifacts/dev-postgres`. Ctrl+C encerra o processo e preserva os dados. Não usar esse launcher/credenciais para produção. `node scripts/dev-db.ts --check` inicia, migra e encerra para diagnóstico. Não requer Docker, serviço permanente nem acesso à VPS.
+
+Implementação/limites e regras exatas: [ADR005](docs/adr/ADR-005-FUNDACAO-1B.md). Core e playback são puros; JSON/hash não são prova de humano, e ainda não existe servidor que aceite pontuações públicas. A integração de partidas por HTTP e fila/verificação persistente é a próxima parte1C.

@@ -1,0 +1,316 @@
+import { add, assertTick, divideStep, nextTick } from "./math.ts";
+import { RULES_V1, compileRules, rulesIdentity } from "./rules.ts";
+import type { Rules } from "./rules.ts";
+import { createRandom } from "./rng.ts";
+import type { RandomState } from "./rng.ts";
+import { supported, overlap } from "./world.ts";
+import type { World } from "./world.ts";
+export type Action = "JUMP" | "SLIDE" | "ATTACK";
+export type EndReason = "HP_ZERO" | "ABYSS" | "QUIT";
+export interface SimState {
+  rulesVersion: string;
+  rulesIdentity: string;
+  tick: number;
+  distance: number;
+  y: number;
+  vy: number;
+  yRemainder: number;
+  xRemainder: number;
+  gravityRemainder: number;
+  hp: number;
+  grounded: boolean;
+  jumps: number;
+  lastGroundedTick: number;
+  jumpBufferUntil: number;
+  slideBufferUntil: number;
+  slideUntil: number;
+  slideRecoveryUntil: number;
+  attackAge: number;
+  invulnerableUntil: number;
+  kills: number;
+  perfects: number;
+  score: string;
+  status: "RUNNING" | "PAUSED" | "DEAD" | "QUIT";
+  endReason: EndReason | null;
+  resolved: { id: string; end: number }[];
+  rngWorld: RandomState;
+  rngEnemies: RandomState;
+}
+export interface SimEvent {
+  tick: number;
+  type:
+    | "JUMP"
+    | "DOUBLE_JUMP"
+    | "LAND"
+    | "SLIDE"
+    | "ATTACK"
+    | "HIT"
+    | "PERFECT"
+    | "DAMAGE"
+    | "DEATH";
+  entity?: string;
+}
+export function createState(seed: string, rules: Rules = RULES_V1): SimState {
+  const manifest = compileRules(rules);
+  return {
+    rulesVersion: manifest.version,
+    rulesIdentity: rulesIdentity(manifest),
+    tick: 0,
+    distance: 0,
+    y: 0,
+    vy: 0,
+    yRemainder: 0,
+    xRemainder: 0,
+    gravityRemainder: 0,
+    hp: 3,
+    grounded: true,
+    jumps: 0,
+    lastGroundedTick: 0,
+    jumpBufferUntil: 0,
+    slideBufferUntil: 0,
+    slideUntil: 0,
+    slideRecoveryUntil: 0,
+    attackAge: -1,
+    invulnerableUntil: 0,
+    kills: 0,
+    perfects: 0,
+    score: "0",
+    status: "RUNNING",
+    endReason: null,
+    resolved: [],
+    rngWorld: createRandom(seed, "world"),
+    rngEnemies: createRandom(seed, "enemies"),
+  };
+}
+export function control(
+  state: SimState,
+  action: "PAUSE" | "RESUME" | "QUIT",
+): SimState {
+  if (action === "PAUSE" && state.status === "RUNNING")
+    return { ...state, status: "PAUSED" };
+  if (action === "RESUME" && state.status === "PAUSED")
+    return { ...state, status: "RUNNING" };
+  if (
+    action === "QUIT" &&
+    (state.status === "PAUSED" || state.status === "RUNNING")
+  )
+    return { ...state, status: "QUIT", endReason: "QUIT" };
+  throw new RangeError("invalid_control_transition");
+}
+export function step(
+  previous: SimState,
+  actions: readonly Action[],
+  world: World,
+  rules: Rules = RULES_V1,
+): { state: SimState; events: SimEvent[] } {
+  if (
+    previous.rulesVersion !== rules.version ||
+    previous.rulesIdentity !== rulesIdentity(rules)
+  )
+    throw new RangeError("rules_version_mismatch");
+  if (previous.status !== "RUNNING") {
+    if (actions.length) throw new RangeError("input_after_stop");
+    return { state: previous, events: [] };
+  }
+  const r = rules;
+  const tick = assertTick(previous.tick);
+  nextTick(tick);
+  if (
+    actions.length > 2 ||
+    new Set(actions).size !== actions.length ||
+    actions.some((a) => !["JUMP", "SLIDE", "ATTACK"].includes(a))
+  )
+    throw new RangeError("invalid_actions");
+  const s = {
+    ...previous,
+    resolved: previous.resolved.filter(
+      (e) => e.end >= previous.distance - r.bodyWidth,
+    ),
+  };
+  const events: SimEvent[] = [];
+  const event = (type: SimEvent["type"], entity?: string) =>
+    events.push(entity === undefined ? { tick, type } : { tick, type, entity });
+  if (s.attackAge >= r.attackWindup + r.attackActive + r.attackRecovery)
+    s.attackAge = -1;
+  if (s.grounded) {
+    s.lastGroundedTick = tick;
+    s.jumps = 0;
+  }
+  if (actions.includes("JUMP"))
+    s.jumpBufferUntil = add(tick, r.jumpBufferTicks);
+  if (actions.includes("SLIDE"))
+    s.slideBufferUntil = add(tick, r.jumpBufferTicks);
+  let sliding = tick < s.slideUntil;
+  if (!sliding && tick < s.jumpBufferUntil && s.jumps < 2) {
+    const first =
+      s.grounded ||
+      (s.jumps === 0 && tick - s.lastGroundedTick < r.coyoteTicks);
+    s.vy = first ? r.jump : r.doubleJump;
+    s.jumps = first ? 1 : 2;
+    s.grounded = false;
+    s.yRemainder = 0;
+    s.gravityRemainder = 0;
+    s.jumpBufferUntil = 0;
+    event(first ? "JUMP" : "DOUBLE_JUMP");
+  }
+  if (
+    !sliding &&
+    s.grounded &&
+    tick < s.slideBufferUntil &&
+    tick >= s.slideRecoveryUntil &&
+    s.attackAge < 0
+  ) {
+    s.slideUntil = add(tick, r.slideTicks);
+    s.slideRecoveryUntil = add(s.slideUntil, r.slideRecoveryTicks);
+    s.slideBufferUntil = 0;
+    sliding = true;
+    event("SLIDE");
+  }
+  if (actions.includes("ATTACK") && !sliding && s.attackAge < 0) {
+    s.attackAge = 0;
+    event("ATTACK");
+  }
+  const [dx, xrem] = divideStep(r.speed, s.xRemainder);
+  s.distance = add(s.distance, dx);
+  s.xRemainder = xrem;
+  const oldY = s.y;
+  if (!s.grounded || !supported(world, s.distance)) {
+    s.grounded = false;
+    const [dv, grem] = divideStep(r.gravity, s.gravityRemainder);
+    s.gravityRemainder = grem;
+    s.vy = add(s.vy, dv);
+    const [dy, yrem] = divideStep(s.vy, s.yRemainder);
+    s.y = add(s.y, dy);
+    s.yRemainder = yrem;
+    if (oldY <= 0 && s.y >= 0 && s.vy >= 0 && supported(world, s.distance)) {
+      s.y = 0;
+      s.vy = 0;
+      s.yRemainder = 0;
+      s.gravityRemainder = 0;
+      s.grounded = true;
+      s.jumps = 0;
+      s.lastGroundedTick = tick;
+      event("LAND");
+      if (tick < s.jumpBufferUntil && tick >= s.slideUntil) {
+        s.vy = r.jump;
+        s.jumps = 1;
+        s.grounded = false;
+        s.jumpBufferUntil = 0;
+        event("JUMP");
+      }
+    }
+  }
+  if (!sliding && s.grounded) {
+    const stand = {
+      left: s.distance - r.bodyWidth / 2,
+      right: add(s.distance, r.bodyWidth / 2),
+      top: s.y - r.bodyHeight,
+      bottom: s.y,
+    };
+    const low = { ...stand, top: s.y - r.slideHeight };
+    if (
+      previous.slideUntil === tick &&
+      world.entities.some(
+        (e) =>
+          e.kind === "OBSTACLE" &&
+          overlap(stand, {
+            left: e.x,
+            right: add(e.x, e.width),
+            top: e.top,
+            bottom: e.bottom,
+          }) &&
+          !overlap(low, {
+            left: e.x,
+            right: add(e.x, e.width),
+            top: e.top,
+            bottom: e.bottom,
+          }),
+      )
+    ) {
+      sliding = true;
+      s.slideUntil = add(tick, 1);
+      s.slideRecoveryUntil = add(s.slideUntil, r.slideRecoveryTicks);
+    }
+  }
+  const width = sliding ? r.slideWidth : r.bodyWidth,
+    height = sliding ? r.slideHeight : r.bodyHeight;
+  const body = {
+    left: s.distance - width / 2,
+    right: add(s.distance, width / 2),
+    top: s.y - height,
+    bottom: s.y,
+  };
+  // Falling below the recoverable ledge line wins over all damage/attack awards.
+  if (s.y >= r.fatalY) {
+    s.hp = 0;
+    s.status = "DEAD";
+    s.endReason = "ABYSS";
+    event("DEATH");
+  }
+  if (s.status === "RUNNING") {
+    const sword = {
+      left: body.right,
+      right: add(body.right, r.swordReach),
+      top: s.y - r.bodyHeight,
+      bottom: s.y,
+    };
+    if (
+      s.attackAge >= r.attackWindup &&
+      s.attackAge < r.attackWindup + r.attackActive
+    ) {
+      for (const e of world.entities) {
+        if (e.kind !== "ENEMY" || s.resolved.some((v) => v.id === e.id))
+          continue;
+        if (
+          overlap(sword, {
+            left: e.x,
+            right: add(e.x, e.width),
+            top: e.top,
+            bottom: e.bottom,
+          })
+        ) {
+          s.resolved.push({ id: e.id, end: add(e.x, e.width) });
+          s.kills = add(s.kills, 1);
+          event("HIT", e.id);
+          if (
+            e.idealTick !== undefined &&
+            Math.abs(tick - e.idealTick) <= r.perfectTicks
+          ) {
+            s.perfects = add(s.perfects, 1);
+            event("PERFECT", e.id);
+          }
+        }
+      }
+    }
+    if (tick >= s.invulnerableUntil) {
+      const hit = world.entities.find(
+        (e) =>
+          !s.resolved.some((v) => v.id === e.id) &&
+          overlap(body, {
+            left: e.x,
+            right: add(e.x, e.width),
+            top: e.top,
+            bottom: e.bottom,
+          }),
+      );
+      if (hit) {
+        s.hp -= 1;
+        s.invulnerableUntil = add(tick, r.hurtTicks);
+        event("DAMAGE", hit.id);
+        if (s.hp === 0) {
+          s.status = "DEAD";
+          s.endReason = "HP_ZERO";
+          event("DEATH");
+        }
+      }
+    }
+  }
+  s.score = (
+    (BigInt(s.distance) / BigInt(r.scale * r.unitsPerMeter)) * 10n +
+    BigInt(s.kills) * 30n +
+    BigInt(s.perfects) * 100n
+  ).toString();
+  if (s.attackAge >= 0) s.attackAge += 1;
+  s.tick = nextTick(tick);
+  return { state: s, events };
+}
