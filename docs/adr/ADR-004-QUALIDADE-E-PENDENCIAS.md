@@ -1,0 +1,11 @@
+# ADR-004 — Validação incremental e riscos de dependência
+
+Parte1A estabelece npm run verify: lint OpenAPI/refs, geração imutável de DTO/schema, typecheck, lint, formato, testes reais de contratos/API e build do shell. Esse gate NÃO é aprovação de jogo, física, Postgres ou publicação. Não criar verify:release retornando sucesso enquanto faltam esses testes; ele será implementado com snapshots/hash, regressão completa, staging e todas as verificações do produto antes de publicação.
+
+CI preparada para Windows/Linux com npm ci e mesmo lockfile. Execução remota só pode ser declarada após consultar resultado real; passar local não é CI verde. Testes de integração Postgres serão adicionados em1B com banco efêmero e migrations reais, não mock permanente. Comparação de browser/Node e cenários de física só quando existirem funcionalidades correspondentes; skips não substituem testes ausentes.
+
+Auditoria inicial: runtime sem vulnerabilidades reportadas; picomatch4.0.7 (última versão consultada) tem GHSA-fc5q-39xc-vjpf, severidade alta, propagada por Vite e typescript-eslint. Fonte: https://github.com/advisories/GHSA-fc5q-39xc-vjpf. Sem solução compatible declarada no snapshot consultado. Não fazer audit fix --force que retorna ferramentas antigas sem revisão. Desenvolvimento somente loopback, configurações/globs controlados, CI sem segredos; reavaliar atualização antes de staging/publicação. Risco não deve ser tratado como corrigido. Auditoria é foto temporal, não prova ausência universal de vulnerabilidades.
+
+OpenAPI ainda é draft: contratos iniciais de run/replay são fechados para implementar1B/1C; fluxos de conta/Google/e-mail ainda têm provas genéricas e DTOs a detalhar em5A/5B. Não usá-los em produção. Aviso de licença de API não será removido inventando licença do proprietário. Descrições de erro ausentes e componentes de replay ainda não usados são backlog explícito; lint sem erro não significa cobertura funcional total.
+
+Princípios da skill de validação Ronin preservados: conferir efeito real, proteger dados, capturas e regressão, e promover artefato exato. Shell local noindex, sem métricas/Google/Ads, sem upload nem ranking fake. O portal não inicializa Phaser antes de existir cena; o pacote está instalado e adaptador será conectado na1D. Nenhum serviço existente recebe mudanças nesta parte.

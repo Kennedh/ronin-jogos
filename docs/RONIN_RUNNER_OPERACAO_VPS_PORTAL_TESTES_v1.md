@@ -5,7 +5,7 @@
 
 ## 1. Domínios e integração com o site
 
-**BASELINE de destino:** hospedar portal `https://play.ronin.dev.br` e o jogo nas rotas `/pt-br/ronin-runner` e `/en/ronin-runner`. A página `/` detecta o idioma do navegador e oferece seletor; links internos, `hreflang`, canonical, sitemap e meta título/descrição próprios para ambos idiomas. A rota de login e API fica no MESMO ORIGIN `https://play.ronin.dev.br/api/v1` com Caddy reverse proxy. Domain/paths são **propostos**, a confirmar DNS e arquitetura existente sem alterar produção.
+**BASELINE de destino:** hospedar portal `https://play.ronin.dev.br` e o jogo nas rotas `/roninrunner/pt-br` e `/roninrunner/en`. A página `/` detecta o idioma do navegador e oferece seletor; links internos, `hreflang`, canonical, sitemap e meta título/descrição próprios para ambos idiomas. A rota de login e API fica no MESMO ORIGIN `https://play.ronin.dev.br/api/v1` com Caddy reverse proxy. Domain/paths são **propostos**, a confirmar DNS e arquitetura existente sem alterar produção.
 
 - Site `ronin.dev.br` linka para o portal, sem compartilhamento frágil de cookies entre todo `.ronin.dev.br`.
 - `arquivos.ronin.dev.br` permanece aplicação independente, sem incorporar acesso a Ronin ID sem pedido explícito.

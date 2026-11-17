@@ -1,6 +1,6 @@
 # Ronin Runner — Matriz de aceite, baselines e execução futura pelo Codex (v0.18)
 
-> Revisão de 17/11/2026: autorização histórica em AGENTS.md/Issue #1. O pedido atual é analisar, estruturar e apresentar para aceite antes do código. Restrições antigas de autorização neste documento são históricas; requisitos de produto permanecem. Veja [revisão e plano por etapas](./REVISAO_E_PLANO_EXECUCAO.md).
+> Revisão de 17/11/2026: autorização histórica em AGENTS.md/Issue #1. O plano foi aceito em17/11/2026 e a parte1A está em execução; progresso em PROGRESS.md. Restrições antigas de autorização neste documento são históricas; requisitos de produto permanecem. Veja [revisão e plano por etapas](./REVISAO_E_PLANO_EXECUCAO.md).
 
 **Uso:** documento de referência para revisão final G0 e futura programação, com autorização histórica em AGENTS.md/Issue #1; implementação subordinada ao aceite atual. Contratos detalhados: [motor/partidas/ranking](./RONIN_RUNNER_CONTRATO_SIMULACAO_PARTIDAS_RANKING_v1.md), [conta/dados/privacidade](./RONIN_RUNNER_CONTRATO_IDENTIDADE_DADOS_PRIVACIDADE.md), [arte/telas/catálogos](./RONIN_RUNNER_ARTES_TELAS_CATALOGO_CONTEUDO_v1.md), [VPS/portal/testes](./RONIN_RUNNER_OPERACAO_VPS_PORTAL_TESTES_v1.md), [OpenAPI v1](./openapi.ronin-runner.v1.yaml).
 

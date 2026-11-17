@@ -2,7 +2,7 @@
 
 Data: 17/11/2026. Base analisada: main 103dd878b4881426bc62d3b7df4ac81e7e12ea11, AGENTS.md, README, todos os 19 documentos de docs/ (incluindo OpenAPI) e Issue #1. Estado observado: documentação e diretórios com .gitkeep, sem aplicação, package.json, lockfile, migrations, CI ou assets finais.
 
-**Escopo desta entrega:** revisão documental e divisão do trabalho. Implementação aguarda aceite do proprietário conforme pedido atual. Autorizações antigas dentro da documentação/Issue #1 não substituem esse pedido. Não foi realizada operação na VPS, DNS, serviços existentes, credenciais ou integrações Google.
+**Escopo da revisão original:** análise e divisão do trabalho. **Atualização17/11/2026:** plano aceito; parte1A autorizada e domínio/caminho confirmados em play.ronin.dev.br/roninrunner. Autorizações antigas dentro da documentação/Issue #1 não substituem esse pedido. Não foi realizada operação na VPS, DNS, serviços existentes, credenciais ou integrações Google.
 
 ## 1. Conclusão de viabilidade
 
@@ -14,7 +14,7 @@ Manter quatro regiões/chefes, ciclos infinitos, três vidas sem cura, abismos f
 
 ## 2. Portal e identidade
 
-Recomendação para aceite: **play.ronin.dev.br**, marca Ronin Play, jogo em /pt-br/ronin-runner e /en/ronin-runner. Play comunica melhor um catálogo com gêneros variados e coincide com o baseline existente. Dojo é uma boa identidade temática para treinamento/conquistas, mas não exige segundo host nem uma nova funcionalidade nesta versão. Nome continua proposto até aceite; sem DNS nesta fase.
+Recomendação para aceite: **play.ronin.dev.br**, marca Ronin Play, jogo em /roninrunner/pt-br e /roninrunner/en. Play comunica melhor um catálogo com gêneros variados e coincide com o baseline existente. Dojo é uma boa identidade temática para treinamento/conquistas, mas não exige segundo host nem uma nova funcionalidade nesta versão. Domínio e caminho confirmados pelo proprietário; DNS continua fora desta etapa.
 
 Portal com catálogo inicial de um jogo, páginas públicas HTML indexáveis, carregamento do Phaser só ao entrar no jogo, seletor PT/EN, links para Ronin e Arquivos. Sem cards falsos de jogos futuros. Identidade compartilhável pelos títulos dentro da mesma origem; cookies host-only. Não transformar a autenticação operacional de GSC/GA/AdSense em login dos jogadores. Google Identity e e-mail transacional terão configuração e testes próprios.
 
@@ -111,7 +111,7 @@ Antes de deploy autorizado: homologação com rede/processos/DB separados, dados
 
 ## 8. O que necessita do proprietário
 
-Agora: aceitar o plano e escolher/reafirmar play ou dojo. O aceite pode adotar as políticas propostas de prazo/semana/abandono da seção3 como baseline a formalizar na1A; qualquer ressalva será registrada antes de implementar DTOs afetados.
+Cumprido: plano aceito e domínio play com caminho /roninrunner confirmados; execução por partes iniciada. O aceite pode adotar as políticas propostas de prazo/semana/abandono da seção3 como baseline a formalizar na1A; qualquer ressalva será registrada antes de implementar DTOs afetados.
 
 Durante o projeto: aprovar amostras estéticas/catálogos propostos, fornecer acesso de teste a integrações quando necessário e participar do playtest/dispositivos. Antes de publicar: transporte de e-mail, origens Google, políticas/retenção, capacidade e autorização específica de infra. Não pedir senhas/tokens em chat.
 
@@ -127,3 +127,5 @@ Revisão de viabilidade e contrato não executa física, Postgres ou teste de jo
 ### Verificações executadas nesta revisão
 
 Redocly CLI (configuração recommended padrão): antes1erro/57avisos; depois0erros/21avisos, exit0. Corrigida descrição malformada e adicionados operationIds únicos. Avisos remanescentes: metadados de licença ainda não escolhida, descrições de tags e respostas4xx ausentes. Não foram ocultados por ignore/config relaxada. O lint não comprova completude dos fluxos ou segurança dos DTOs; lacunas da seção3 permanecem. Links relativos Markdown conferidos em AGENTS/README/docs sem destino ausente; git diff --check aprovado. Sem testes de jogo porque ainda não existe aplicação executável nesta base.
+
+Execução da parte1A: [PROGRESS.md](../PROGRESS.md); decisões em docs/adr/.

@@ -1,6 +1,6 @@
 # Ronin Runner: Tinta e Aço — Especificação de Produto e Jogo
 
-> Revisão de 17/11/2026: autorização histórica em AGENTS.md/Issue #1. O pedido atual é analisar, estruturar e apresentar para aceite antes do código. Restrições antigas de autorização neste documento são históricas; requisitos de produto permanecem. Veja [revisão e plano por etapas](./REVISAO_E_PLANO_EXECUCAO.md).
+> Revisão de 17/11/2026: autorização histórica em AGENTS.md/Issue #1. O plano foi aceito em17/11/2026 e a parte1A está em execução; progresso em PROGRESS.md. Restrições antigas de autorização neste documento são históricas; requisitos de produto permanecem. Veja [revisão e plano por etapas](./REVISAO_E_PLANO_EXECUCAO.md).
 
 > **Baseline de planejamento v0.18 (G01–G15):** [matriz de aceite e execução](./RONIN_RUNNER_MATRIZ_ACEITE_E_EXECUCAO_v1.md) · [simulação, partidas longas e ranking](./RONIN_RUNNER_CONTRATO_SIMULACAO_PARTIDAS_RANKING_v1.md) · [identidade, dados e privacidade](./RONIN_RUNNER_CONTRATO_IDENTIDADE_DADOS_PRIVACIDADE.md) · [arte, telas e conteúdo](./RONIN_RUNNER_ARTES_TELAS_CATALOGO_CONTEUDO_v1.md) · [VPS, portal e testes](./RONIN_RUNNER_OPERACAO_VPS_PORTAL_TESTES_v1.md) · [OpenAPI 3.1 inicial](./openapi.ronin-runner.v1.yaml). **Valores BASELINE/TUNABLE prevalecem sobre propostas antigas, mas não substituem decisões explícitas do usuário. Nenhum código foi escrito.**
 

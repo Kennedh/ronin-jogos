@@ -1,6 +1,6 @@
 # Ronin Runner — Handoff para Codex e início da implementação (v0.19)
 
-> Revisão de 17/11/2026: autorização histórica em AGENTS.md/Issue #1. O pedido atual é analisar, estruturar e apresentar para aceite antes do código. Restrições antigas de autorização neste documento são históricas; requisitos de produto permanecem. Veja [revisão e plano por etapas](./REVISAO_E_PLANO_EXECUCAO.md).
+> Revisão de 17/11/2026: autorização histórica em AGENTS.md/Issue #1. O plano foi aceito em17/11/2026 e a parte1A está em execução; progresso em PROGRESS.md. Restrições antigas de autorização neste documento são históricas; requisitos de produto permanecem. Veja [revisão e plano por etapas](./REVISAO_E_PLANO_EXECUCAO.md).
 
 **ESTADO ATUAL: IMPLEMENTAÇÃO AUTORIZADA PELO USUÁRIO EM 11/11/2026.** O próximo passo é o Codex iniciar código e testes no repositório, em branch de desenvolvimento/PR, mantendo o escopo integral da versão pública. Deploy na VPS e alterações externas ainda exigem autorização específica. **Auditoria de baseline:** [RONIN_RUNNER_AUDITORIA_ALINHAMENTO_CODEX.md](./RONIN_RUNNER_AUDITORIA_ALINHAMENTO_CODEX.md). **Instruções ativas para Codex:** [AGENTS.md](../AGENTS.md).  
 **Leitura obrigatória, nesta ordem:**
