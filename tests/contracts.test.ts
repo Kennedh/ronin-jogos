@@ -43,6 +43,11 @@ test("run ticket binds seed, immutable versions and explicit resource/transport 
       max_decoded_bytes: 1048576,
       max_actions_per_tick: 2,
       upload_grace_seconds: 86400,
+      max_run_encoded_bytes: 134217728,
+      max_player_encoded_bytes: 536870912,
+      max_segments_per_run: 10000,
+      max_active_runs: 3,
+      wall_time_tolerance_ticks: 120,
     },
   };
   assert.equal(validate("RunTicket", ticket), true);

@@ -5,7 +5,11 @@
   "type": "module",
   "exports": "./src/index.ts",
   "dependencies": {
-    "@ronin/contracts": "0.1.0"
+    "@ronin/contracts": "0.1.0",
+    "@ronin/data": "0.1.0",
+    "@ronin/content": "0.1.0",
+    "@ronin/runner-core": "0.1.0",
+    "pg": "8.23.1"
   },
   "devDependencies": {}
 }

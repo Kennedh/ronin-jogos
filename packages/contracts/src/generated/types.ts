@@ -725,6 +725,12 @@ export interface components {
       /** @enum {string|null} */
       end_reason?: "HP_ZERO" | "ABYSS" | "QUIT" | null;
       ranked?: boolean | null;
+      /** Format: date-time */
+      expires_at?: string;
+      /** Format: date-time */
+      upload_deadline?: string | null;
+      /** Format: date-time */
+      submitted_complete_at?: string | null;
     } & (unknown & unknown);
     LeaderboardEntry: {
       rank: number;
@@ -811,6 +817,16 @@ export interface components {
       max_actions_per_tick: 2;
       /** @constant */
       upload_grace_seconds: 86400;
+      /** @description Política imutável de transporte/recursos por tentativa; baseline inicial 134217728, não limite de distância/fase. */
+      max_run_encoded_bytes: number;
+      /** @description Política imutável de transporte/recursos por tentativa; baseline inicial 536870912, não limite de distância/fase. */
+      max_player_encoded_bytes: number;
+      /** @description Política imutável de transporte/recursos por tentativa; baseline inicial 10000, não limite de distância/fase. */
+      max_segments_per_run: number;
+      /** @description Política imutável de transporte/recursos por tentativa; baseline inicial 3, não limite de distância/fase. */
+      max_active_runs: number;
+      /** @description Política imutável de transporte/recursos por tentativa; baseline inicial 120, não limite de distância/fase. */
+      wall_time_tolerance_ticks: number;
     };
     FinishRequest: {
       final_segment_index: number;
@@ -842,6 +858,8 @@ export interface components {
       actions: components["schemas"]["ReplayAction"][];
       controls: components["schemas"]["ReplayControl"][];
     };
+    /** @description Primeiro acesso não exige apelido; idioma vem da primeira preferência Accept-Language. */
+    GuestRequest: Record<string, never>;
   };
   responses: {
     /** @description Corpo ou formato invalido */
@@ -920,6 +938,7 @@ export interface components {
   };
   parameters: {
     RunId: string;
+    CsrfToken: string;
   };
   requestBodies: never;
   headers: never;
@@ -934,11 +953,17 @@ export interface operations {
       path?: never;
       cookie?: never;
     };
-    requestBody?: never;
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["GuestRequest"];
+      };
+    };
     responses: {
       /** @description Sessao de visitante restaurada */
       200: {
         headers: {
+          /** @description Token sincronizado à sessão, para X-CSRF-Token nas mutações autenticadas. Cookie rr_sid é HttpOnly/host-only. */
+          "X-CSRF-Token"?: string;
           [name: string]: unknown;
         };
         content: {
@@ -948,13 +973,96 @@ export interface operations {
       /** @description Identidade visitante criada */
       201: {
         headers: {
+          /** @description Token sincronizado à sessão, para X-CSRF-Token nas mutações autenticadas. Cookie rr_sid é HttpOnly/host-only. */
+          "X-CSRF-Token"?: string;
           [name: string]: unknown;
         };
         content: {
           "application/json": components["schemas"]["PlayerSummary"];
         };
       };
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
       429: components["responses"]["RateLimited"];
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
     };
   };
   post_auth_register: {
@@ -1565,7 +1673,10 @@ export interface operations {
   post_runs_start: {
     parameters: {
       query?: never;
-      header?: never;
+      header: {
+        "X-CSRF-Token": components["parameters"]["CsrfToken"];
+        "Idempotency-Key": string;
+      };
       path?: never;
       cookie?: never;
     };
@@ -1575,6 +1686,15 @@ export interface operations {
       };
     };
     responses: {
+      /** @description Retry idêntico devolve o ticket original sem criar outra tentativa */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RunTicket"];
+        };
+      };
       /** @description Tentativa autorizada, seed e versoes do servidor */
       201: {
         headers: {
@@ -1584,8 +1704,80 @@ export interface operations {
           "application/json": components["schemas"]["RunTicket"];
         };
       };
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
       403: components["responses"]["Forbidden"];
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
       429: components["responses"]["RateLimited"];
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
     };
   };
   put_runs_run_id_segments_index: {
@@ -1596,6 +1788,8 @@ export interface operations {
         "X-End-Tick": number;
         "X-Segment-Hash": string;
         "X-Previous-Segment-Hash"?: string;
+        "X-CSRF-Token": components["parameters"]["CsrfToken"];
+        "Content-Encoding"?: "identity" | "gzip";
       };
       path: {
         run_id: components["parameters"]["RunId"];
@@ -1627,14 +1821,88 @@ export interface operations {
           "application/json": components["schemas"]["SegmentAck"];
         };
       };
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
       409: components["responses"]["Conflict"];
       413: components["responses"]["PayloadTooLarge"];
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
     };
   };
   post_runs_run_id_finish: {
     parameters: {
       query?: never;
-      header?: never;
+      header: {
+        "X-CSRF-Token": components["parameters"]["CsrfToken"];
+      };
       path: {
         run_id: components["parameters"]["RunId"];
       };
@@ -1655,8 +1923,80 @@ export interface operations {
           "application/json": components["schemas"]["RunStatus"];
         };
       };
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
       409: components["responses"]["Conflict"];
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
       422: components["responses"]["InvalidState"];
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
     };
   };
   get_runs_run_id: {
@@ -1679,8 +2019,80 @@ export interface operations {
           "application/json": components["schemas"]["RunStatus"];
         };
       };
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
       403: components["responses"]["Forbidden"];
       404: components["responses"]["NotFound"];
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Erro de validação/autorização/estado ou indisponibilidade; código estável e message_key localizado */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
     };
   };
   get_leaderboards_kind: {

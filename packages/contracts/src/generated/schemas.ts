@@ -266,6 +266,18 @@ export const definitions = {
       ranked: {
         type: ["boolean", "null"],
       },
+      expires_at: {
+        type: "string",
+        format: "date-time",
+      },
+      upload_deadline: {
+        type: ["string", "null"],
+        format: "date-time",
+      },
+      submitted_complete_at: {
+        type: ["string", "null"],
+        format: "date-time",
+      },
     },
     additionalProperties: false,
     allOf: [
@@ -581,6 +593,41 @@ export const definitions = {
         type: "integer",
         const: 86400,
       },
+      max_run_encoded_bytes: {
+        type: "integer",
+        minimum: 1,
+        maximum: 9007199254740991,
+        description:
+          "Política imutável de transporte/recursos por tentativa; baseline inicial 134217728, não limite de distância/fase.",
+      },
+      max_player_encoded_bytes: {
+        type: "integer",
+        minimum: 1,
+        maximum: 9007199254740991,
+        description:
+          "Política imutável de transporte/recursos por tentativa; baseline inicial 536870912, não limite de distância/fase.",
+      },
+      max_segments_per_run: {
+        type: "integer",
+        minimum: 1,
+        maximum: 9007199254740991,
+        description:
+          "Política imutável de transporte/recursos por tentativa; baseline inicial 10000, não limite de distância/fase.",
+      },
+      max_active_runs: {
+        type: "integer",
+        minimum: 1,
+        maximum: 9007199254740991,
+        description:
+          "Política imutável de transporte/recursos por tentativa; baseline inicial 3, não limite de distância/fase.",
+      },
+      wall_time_tolerance_ticks: {
+        type: "integer",
+        minimum: 1,
+        maximum: 9007199254740991,
+        description:
+          "Política imutável de transporte/recursos por tentativa; baseline inicial 120, não limite de distância/fase.",
+      },
     },
     required: [
       "segment_ticks",
@@ -588,6 +635,11 @@ export const definitions = {
       "max_decoded_bytes",
       "max_actions_per_tick",
       "upload_grace_seconds",
+      "max_run_encoded_bytes",
+      "max_player_encoded_bytes",
+      "max_segments_per_run",
+      "max_active_runs",
+      "wall_time_tolerance_ticks",
     ],
     additionalProperties: false,
   },
@@ -716,5 +768,11 @@ export const definitions = {
       "controls",
     ],
     additionalProperties: false,
+  },
+  GuestRequest: {
+    type: "object",
+    additionalProperties: false,
+    description:
+      "Primeiro acesso não exige apelido; idioma vem da primeira preferência Accept-Language.",
   },
 } as const;

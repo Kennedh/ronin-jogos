@@ -11,3 +11,5 @@ export function preferredLocale(languages: readonly string[]): Locale {
   const first = languages[0]?.toLowerCase();
   return first === "pt" || first?.startsWith("pt-") ? "pt-BR" : "en";
 }
+
+export { API_ERRORS, apiErrorMessage } from "./api-errors.ts";
