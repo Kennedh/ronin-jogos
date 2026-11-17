@@ -32,3 +32,7 @@ As especificações de física, inimigos, chefes, missões, desafios semanais e 
 **Para uso com Codex:** ler `AGENTS.md` e as especificações antes de começar. **Está autorizado iniciar código, testes e migrations locais/de desenvolvimento**, seguindo as ADRs, arquitetura completa, branch própria e PRs. **Não fazer deploy em produção, alterar DNS/Caddy existentes ou executar ações irreversíveis sem aprovação separada.**
 
 **Regras centrais já confirmadas:** quatro regiões e ciclos infinitos, três vidas sem cura, abismo fatal, salto duplo inicial, chefes que podem recuar, controles mobile por gestos, pt-BR/en, Ronin ID com visitante/e-mail/Google, Criador completo de aparência básica livre e cosméticos especiais desbloqueáveis, desafios semanais autogerados com selos 2/4/5, Traço da Aurora pelos quatro selos dos chefes, rankings validados no servidor.
+
+## Revisão e execução por partes — 17/11/2026
+
+[Análise, ajustes e plano para aceite](docs/REVISAO_E_PLANO_EXECUCAO.md). Revisão documental atual; implementação aguarda aceite do plano. A Issue #1 será entregue pelas partes 1A–1D, com o escopo público completo preservado.

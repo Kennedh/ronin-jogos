@@ -1,5 +1,7 @@
 # Ronin Runner: Tinta e Aço — Especificação de Produto e Jogo
 
+> Revisão de 17/11/2026: autorização histórica em AGENTS.md/Issue #1. O pedido atual é analisar, estruturar e apresentar para aceite antes do código. Restrições antigas de autorização neste documento são históricas; requisitos de produto permanecem. Veja [revisão e plano por etapas](./REVISAO_E_PLANO_EXECUCAO.md).
+
 > **Baseline de planejamento v0.18 (G01–G15):** [matriz de aceite e execução](./RONIN_RUNNER_MATRIZ_ACEITE_E_EXECUCAO_v1.md) · [simulação, partidas longas e ranking](./RONIN_RUNNER_CONTRATO_SIMULACAO_PARTIDAS_RANKING_v1.md) · [identidade, dados e privacidade](./RONIN_RUNNER_CONTRATO_IDENTIDADE_DADOS_PRIVACIDADE.md) · [arte, telas e conteúdo](./RONIN_RUNNER_ARTES_TELAS_CATALOGO_CONTEUDO_v1.md) · [VPS, portal e testes](./RONIN_RUNNER_OPERACAO_VPS_PORTAL_TESTES_v1.md) · [OpenAPI 3.1 inicial](./openapi.ronin-runner.v1.yaml). **Valores BASELINE/TUNABLE prevalecem sobre propostas antigas, mas não substituem decisões explícitas do usuário. Nenhum código foi escrito.**
 
 > **Detalhamento técnico do movimento, gestos e combate:** [Game Design v0.9](./RONIN_RUNNER_MOVIMENTACAO_COMBATE.md). PT-BR/EN obrigatórios em todas as telas. Valores físicos são parâmetros iniciais calibráveis; três vidas sem qualquer cura.
@@ -10,14 +12,14 @@
 > **Interface, criador visual e Ronin ID:** [Game Design v0.14, atualizado em v0.15](./RONIN_RUNNER_INTERFACE_PERSONAGEM_RONIN_ID.md). Define telas, fluxos de visitante/e-mail/Google, criador modular **confirmado**, recuperação, mesclagem segura e testes E2E.
 > **Criador completo, rig, animações, telas e critérios de aceite:** [Game Design v0.15, distribuição v0.16](./RONIN_RUNNER_PERSONAGEM_ANIMACOES_VALIDACAO.md). Personalização completa de cabelo, rosto, tom de pele, roupas, acessórios e katana é obrigatória no primeiro lançamento. **Aparência básica livre; cosméticos especiais conquistados jogando.**
 > **Contratos REST/DTOs/DB:** [v0.16](./RONIN_RUNNER_CONTRATOS_API_PERSISTENCIA.md). **Segurança e verificação de partidas:** [v0.16](./RONIN_RUNNER_SEGURANCA_PARTIDAS.md). **Testes e gates de lançamento:** [v0.16](./RONIN_RUNNER_TESTES_LANCAMENTO.md). **Preparação para Codex (sem programar):** [v0.16](./RONIN_RUNNER_PREPARACAO_CODEX.md).
-> **Auditoria do alinhamento para Codex (v0.17):** [15 lacunas e ordem de fechamento](./RONIN_RUNNER_AUDITORIA_ALINHAMENTO_CODEX.md). **Entrada do Codex:** [AGENTS.md](../AGENTS.md), com escopo confirmado e regra de não programar até autorização.
+> **Auditoria do alinhamento para Codex (v0.17):** [15 lacunas e ordem de fechamento](./RONIN_RUNNER_AUDITORIA_ALINHAMENTO_CODEX.md). **Entrada do Codex:** [AGENTS.md](../AGENTS.md), com escopo confirmado e histórico de autorização.
 
 Versão: 0.18 — baseline das 15 áreas de planejamento, com contratos e testes de aceite (sem implementação)  
 Status: **escopo funcional completo definido; parâmetros de balanceamento e decisões de UX sujeitos a playtest**  
 Repositório: `Kennedh/ronin-jogos`  
 Ecossistema futuro: `play.ronin.dev.br`
 
-> Documento consolidado das decisões do projeto. Não autoriza começar a programar: o objetivo atual é detalhar, revisar e testar conceitualmente o design. A arquitetura deve mirar a versão completa desde a primeira implementação, sem substituir sistemas provisórios posteriormente.
+> Documento consolidado das decisões do projeto. A autorização histórica de desenvolvimento consta de AGENTS.md/Issue #1. O pedido atual é revisar e apresentar o plano para aceite. A arquitetura deve mirar a versão completa desde a primeira implementação, sem substituir sistemas provisórios posteriormente.
 
 ## 1. Visão e pilares
 
@@ -321,7 +323,7 @@ A auditoria G01–G15 foi respondida com **propostas concretas de contrato e com
 
 Arquivos-base: [simulação/partidas/ranking](./RONIN_RUNNER_CONTRATO_SIMULACAO_PARTIDAS_RANKING_v1.md), [identidade/dados/privacidade](./RONIN_RUNNER_CONTRATO_IDENTIDADE_DADOS_PRIVACIDADE.md), [arte/telas/30 modelos semanais](./RONIN_RUNNER_ARTES_TELAS_CATALOGO_CONTEUDO_v1.md), [VPS/portal/ops](./RONIN_RUNNER_OPERACAO_VPS_PORTAL_TESTES_v1.md), [API OpenAPI v1](./openapi.ronin-runner.v1.yaml) e [matriz aceite/handoff](./RONIN_RUNNER_MATRIZ_ACEITE_E_EXECUCAO_v1.md).
 
-**Precedência documental:** escolha explícita do usuário > invariante de produto deste documento > baseline v0.18 por subsistema > valores PROPOSTOS em versões anteriores. Contradições devem ser registradas e revisadas no mesmo PR de documentação. **Nenhuma autorização para programar foi concedida.**
+**Precedência documental:** escolha explícita do usuário > invariante de produto deste documento > baseline v0.18 por subsistema > valores PROPOSTOS em versões anteriores. Contradições devem ser registradas e revisadas no mesmo PR de documentação. **A autorização histórica consta de AGENTS.md/Issue #1; o pedido atual exige aceite do plano antes do código.**
 
 ## 16. Pontos ainda em aberto para discussão antes de programar
 
