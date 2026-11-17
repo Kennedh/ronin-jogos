@@ -10,6 +10,17 @@ test(
     assert.equal(checksum("SELECT 1;\r\n"), checksum("SELECT 1;\n"));
     const db = await testPostgres();
     try {
+      if (process.platform === "win32") {
+        await assert.rejects(
+          () => db.cluster.start(),
+          /dev_postgres_already_running/,
+        );
+        // Refusing a second start must preserve the active server.
+        assert.equal(
+          (await db.pool.query("SELECT 1 AS alive")).rows[0].alive,
+          1,
+        );
+      }
       const version = await db.pool.query("SHOW server_version");
       console.log("QA PostgreSQL", version.rows[0]["server_version"]);
       assert.equal(

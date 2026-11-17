@@ -18,7 +18,7 @@ Decisões completas em [ADR005](docs/adr/ADR-005-FUNDACAO-1B.md). ADR001–004 e
 
 Local Windows/Node24.14.0: npm run verify aprovado,33unitários/integração+2navegador,zero falhas/skips, contratos/typecheck/lint/formato/build. DB server_version18.6, loopback apenas, cluster efêmero limpo. npm run db:dev -- --check (equivalente node scripts/dev-db.ts --check) validou duas inicializações sucessivas sem recriar schema; cluster dev foi parado e dados fictícios preservados.
 
-Navegador Chrome157.0.8103.78,600estados iguais nas três cadências e Node, trace0481dd7bcf1f468aca5e64a1013903cc631e4a3aad91377fbc7016a8d47733cc. Isso não mede FPS em hardware mobile. Vetor de codec independente e curso300inimigos/12000ticks aprovados. CI remota deve ser consultada após push; local não implica resultado remoto.
+Navegador Chrome157.0.8103.78,600estados iguais nas três cadências e Node, trace0481dd7bcf1f468aca5e64a1013903cc631e4a3aad91377fbc7016a8d47733cc. Isso não mede FPS em hardware mobile. Vetor de codec independente e curso300inimigos/12000ticks aprovados. CI Linux passou no primeiro push. Falha Windows identificou recusa de postgres.exe sob runneradmin; adaptador local passou a iniciar/parar via pg_ctl, com privilégio reduzido e shutdown gracioso. Teste adicional recusa segundo start e confirma que o banco permanece ativo. CI do commit final deve ser consultada após push; local não implica resultado remoto.
 
 Logs privados: artifacts/phase-1b-verify.log,phase-1b-db.log,phase-1b-browser.log e phase-1b-runtime-audit.json. Runtime audit0; picomatch de desenvolvimento permanece pendente conformeADR004. NativePostgres18.6 só dev/QA; revisar versão de produção antes de deploy.
 

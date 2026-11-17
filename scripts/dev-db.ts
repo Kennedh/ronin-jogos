@@ -1,5 +1,5 @@
 /** Local development only: fixed synthetic credentials, no external DB URL accepted. */
-import EmbeddedPostgres from "embedded-postgres";
+import LocalPostgres from "./local-postgres.ts";
 import { Pool } from "pg";
 import { mkdir, realpath, stat } from "node:fs/promises";
 import { resolve, join } from "node:path";
@@ -11,7 +11,7 @@ if ((await realpath(expected)) !== expected)
 const dir = join(expected, "dev-postgres");
 await mkdir(dir, { recursive: true });
 if ((await realpath(dir)) !== dir) throw new Error("symlinked_dev_cluster");
-const pg = new EmbeddedPostgres({
+const pg = new LocalPostgres({
   databaseDir: dir,
   user: "ronin_dev",
   password: "ronin_dev",

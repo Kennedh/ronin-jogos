@@ -1,4 +1,4 @@
-import EmbeddedPostgres from "embedded-postgres";
+import LocalPostgres from "../../scripts/local-postgres.ts";
 import { mkdtemp, realpath, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, sep } from "node:path";
@@ -29,8 +29,8 @@ export async function testPostgres() {
       diagnostic + String(message).replaceAll(password, "[redacted]")
     ).slice(-16384);
   };
-  const pg = new EmbeddedPostgres({
-    databaseDir: dir,
+  const pg = new LocalPostgres({
+    databaseDir: join(dir, "data"),
     user: "ronin_test",
     password,
     port,
@@ -75,7 +75,7 @@ export async function testPostgres() {
     });
     phase = "connect";
     await pool.query("SELECT 1");
-    return { pool, close, port };
+    return { pool, close, port, cluster: pg };
   } catch (e) {
     await close();
     throw new Error(`qa_postgres_${phase}_failed: ${diagnostic}`, { cause: e });
