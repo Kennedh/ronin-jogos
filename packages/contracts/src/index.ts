@@ -11,8 +11,7 @@ export function schema(name: SchemaName) {
   return definitions[name];
 }
 export function validate(name: SchemaName, data: unknown): boolean {
-  return (
-    ajv.validate({ $ref: `urn:ronin:contracts:v1#/$defs/${name}` }, data) ===
-    true
-  );
+  const validator = ajv.getSchema(`urn:ronin:contracts:v1#/$defs/${name}`);
+  if (!validator) throw new Error("unknown_contract");
+  return validator(data) === true;
 }

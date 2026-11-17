@@ -1,12 +1,13 @@
-/** Competitive clock uses safe integers, never graphics frame time. */
-export const TICK_RATE = 60;
-export type EndReason = "HP_ZERO" | "ABYSS" | "QUIT";
-export function assertTick(value: number): number {
-  if (!Number.isSafeInteger(value) || value < 0)
-    throw new RangeError("invalid_tick");
-  return value;
-}
-export function nextTick(tick: number): number {
-  return assertTick(assertTick(tick) + 1);
-}
-/** Full step/physics is implemented in 1B. No renderer or clock dependency here. */
+export { TICK_RATE, RULES_V1, compileRules } from "./rules.ts";
+export { integer, add, divideStep, assertTick, nextTick } from "./math.ts";
+export { createRandom, randomNext } from "./rng.ts";
+export type { RandomState, RandomStream } from "./rng.ts";
+export { createWorld } from "./world.ts";
+export type { World, Entity, Gap } from "./world.ts";
+export { createState, step, control } from "./simulation.ts";
+export type { Action, SimState, SimEvent, EndReason } from "./simulation.ts";
+
+export { playSegment } from "./playback.ts";
+export type { PlaybackInput } from "./playback.ts";
+
+export type { Rules } from "./rules.ts";

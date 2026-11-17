@@ -75,3 +75,7 @@ Além dos documentos anteriores, o planejamento agora possui baseline de todas a
 O proprietário aceitou o plano por partes e confirmou **play.ronin.dev.br/roninrunner**. Entrada neutra /roninrunner; idiomas /roninrunner/pt-br e /roninrunner/en. Consultar PROGRESS.md e docs/adr/ antes de continuar. A parte1A é a entrega autorizada neste ciclo;1B–1D completam a Issue1, que não deve ser fechada após1A. Deploy/DNS continuam sujeitos a autorização separada. Conteúdo histórico que pede novo aceite do plano foi superado por esta decisão.
 
 Na fundação usar npm ci e npm run verify. Contratos são gerados do OpenAPI pelo comando contracts:generate; não editar arquivos generated manualmente. Passar o gate de fundação não aprova release pública, que ainda exige regressão funcional completa, dispositivos, banco/restore, arte/licenças e artefato selado conforme plano de validação.
+
+## Atualização — parte1B
+
+O proprietário autorizou expressamente iniciar1B. Core, codec e migrations de desenvolvimento estão implementados nesta branch; consultar PROGRESS.md/ADR005. `npm run verify` requer PostgreSQL nativo de QA (launcher devDependency) e Chromium, sem skips por falta de dependências. Parte1C/1D seguem separadas e Issue1 permanece aberta. Produção/DNS continuam fora do escopo.

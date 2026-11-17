@@ -1,0 +1,24 @@
+{
+  "source": "Independently constructed Python JSON sorted-key / SHA256 vector; no TypeScript implementation used",
+  "segment": {
+    "protocol": "rr-input-v1",
+    "run_id": "a0000000-0000-4000-8000-000000000001",
+    "index": 0,
+    "start_tick": 0,
+    "end_tick": 60,
+    "previous_hash": null,
+    "actions": [
+      {
+        "tick": 0,
+        "action": "JUMP"
+      },
+      {
+        "tick": 1,
+        "action": "JUMP"
+      }
+    ],
+    "controls": []
+  },
+  "canonical": "{\"actions\":[{\"action\":\"JUMP\",\"tick\":0},{\"action\":\"JUMP\",\"tick\":1}],\"controls\":[],\"end_tick\":60,\"index\":0,\"previous_hash\":null,\"protocol\":\"rr-input-v1\",\"run_id\":\"a0000000-0000-4000-8000-000000000001\",\"start_tick\":0}",
+  "hash": "04c261c0ee4d9062857aa2a00b41434c95cc45f15d634648d019c1967eb08383"
+}

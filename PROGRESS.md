@@ -1,39 +1,40 @@
 # Ronin Runner — continuidade
 
-## Parte atual
+## Estado atual
 
-**1A concluída localmente em17/11/2026**, sobre revisão9641666 e baseline103dd878. Branch feat/runner-foundation-1a. PR será enviado para revisão; Issue1 permanece aberta até1A–1D integradas. Código não publicado nem jogo completo.
+Parte1B concluída localmente em17/11/2026, branch feat/runner-foundation-1b, sobre3b6e405 (1A). Plano e domínio/caminho confirmados pelo proprietário: play.ronin.dev.br/roninrunner; idiomas /roninrunner/pt-br e /roninrunner/en. A1A está no PR2 ainda aberto; PR1B deve ter como base essa branch para revisão incremental. Não mesclar nem fechar Issue1 automaticamente; faltam1C/1D.
 
-## Decisões
+## Implementado na1B
 
-- Portal play.ronin.dev.br; jogo /roninrunner, traduções /roninrunner/pt-br e /roninrunner/en, decisão expressa do proprietário.
-- Npm workspace/lockfile, Node24LTS/npm11, TS5.9.3 (peers de gerador/linter não suportamTS7). Phaser4.2.1/Vite8.3.8/Fastify5.12.8.
-- Separação apps portal/api/verifier; packages core/client/contracts/data/content. Regras do core isoladas de render, relógio real e rede por lint.
-- OpenAPI gera tipos TS e schemas runtime Ajv2020 com formatos. Não editar generated manualmente.
-- ADR001rotas/workspace; ADR002replay/clock; ADR003prazos/commit; ADR004qualidade/riscos. Políticas baseline do plano aceito formalizadas, parâmetros físicos ainda TUNABLE.
+- Core puro60Hz, fixed-point com resíduos inteiros, overflow protegido, score decimal,3HP sem cura, salto duplo/coyote/buffer, slide e ataque, iFrame e abismo fatal.
+- PRNGxoshiro128** e streams separados; manifests imutáveis e vinculados à simulação; fixtures de geometrias autoritativas. Diretor/mundo completo/chefes não implementados.
+- Codec identity rr-input-v1, JSON canônico estrito/SHA256, parser de duplicatas/limites, cursor de partes/controls, fechamento estrutural e playback no mesmo core.
+- PostgreSQL nativo real de desenvolvimento/QA, migrations001/002 com ledger/checksumLF/lock/transação, FK/UNIQUE/constraints; dev local persistente via npm run db:dev.
+- Clock fracionário e paridade Node/Chromium em30/60/120cadências; CI expandida para instalar Chromium em Windows/Linux.
 
-## Código disponível
+Decisões completas em [ADR005](docs/adr/ADR-005-FUNDACAO-1B.md). ADR001–004 e specs v0.18 continuam fontes; parâmetros físicos pre-release são TUNABLE com versão, não regras silenciosamente alteráveis numa run ativa.
 
-Shell local bilíngue de desenvolvimento noindex; rotas de idioma sob caminho confirmado. Não representa jogo jogável. API Fastify com /api/v1/health real e apenas liveness. Funções de fronteira validam ticks seguros e configuração limitada do verificador. Dados/replay/score ainda não são persistidos ou simulados; nada em localStorage como autoridade.
+## Testes e evidências
 
-## Validação executada
+Local Windows/Node24.14.0: npm run verify aprovado,33unitários/integração+2navegador,zero falhas/skips, contratos/typecheck/lint/formato/build. DB server_version18.6, loopback apenas, cluster efêmero limpo. npm run db:dev -- --check (equivalente node scripts/dev-db.ts --check) validou duas inicializações sucessivas sem recriar schema; cluster dev foi parado e dados fictícios preservados.
 
-npm run verify: passou no Windows/Node24.14.0, incluindo lint OpenAPI, conferência exata de geração, typecheck, ESLint, Prettier,9testes e build Vite. Zero falhas/skips nos testes. OpenAPI sem erro estrutural/ref quebrada,20avisos remanescentes (licença ainda não escolhida, respostas4xx em contratos draft e componentes de replay aguardando uso); não houve ignore ou relaxamento do lint para aprovar.
+Navegador Chrome157.0.8103.78,600estados iguais nas três cadências e Node, trace0481dd7bcf1f468aca5e64a1013903cc631e4a3aad91377fbc7016a8d47733cc. Isso não mede FPS em hardware mobile. Vetor de codec independente e curso300inimigos/12000ticks aprovados. CI Linux passou no primeiro push. Falha Windows identificou recusa de postgres.exe sob runneradmin; adaptador local passou a iniciar/parar via pg_ctl, com privilégio reduzido e shutdown gracioso. Teste adicional recusa segundo start e confirma que o banco permanece ativo. CI do commit final deve ser consultada após push; local não implica resultado remoto.
 
-Cobertura inicial: RR-SEC-001/RR-RUN-004 (somente camada schema) rejeitam autoridade cliente/ações forjadas; ticket exige versões/seed/política e FULL começaBAMBOO; resultado VERIFIED exige score decimal e QUIT não pode ranquear; tick não sofre wrap32bits nem overflow silencioso; caminho/locale confirmados; API real responde liveness. RR-DATA-001 transacional ainda não comprovado: sem Postgres/leases nesta parte.
+Logs privados: artifacts/phase-1b-verify.log,phase-1b-db.log,phase-1b-browser.log e phase-1b-runtime-audit.json. Runtime audit0; picomatch de desenvolvimento permanece pendente conformeADR004. NativePostgres18.6 só dev/QA; revisar versão de produção antes de deploy.
 
-Não foram executados testes de física/replay integral, migrações, servidor de partidas, E2E de corrida, Google/SMTP ou hardware mobile. CI Windows/Linux está configurada, resultado remoto deve ser consultado após push. Gate público verify:release ainda não existe e não deve ser simulado.
+## Próxima parte autorizável:1C
 
-Auditoria:0vulnerabilidades runtime reportadas;10entradas high de desenvolvimento correspondem à cadeia picomatch/GHSA-fc5q-39xc-vjpf. Última versão consultada4.0.7 afetada, sem patch compatível disponível nesta verificação. Registrado no ADR004 para revisão antes de staging/release; devservers só loopback, CI sem segredos. Não chamar risco de resolvido nem atualizar com --force.
+1. Ler AGENTS, ADR001–005 e contratos/estados v0.18; conferir branch/PR2 e PR1B atuais antes de integrar.
+2. Guest real/sessãoCSRF, APIstart/segments/finish/status com autorização por dono e limites; prefixo /api/v1. Sem score cliente como autoridade.
+3. Persistência das partes fora de ordem e conflitos por índice/hash. Gzip somente com limite antes/depois de descompressão; codec identity já funciona.
+4. Registro imutável de regras/seed, checksum ligando Ticket/DB/engine; regras antigas suportadas. Verificar corpo/versões, idade/ticks e fim real por replay, não só assertFinish.
+5. Jobs com lease/generation/heartbeat/fencing, retry e commit atômico idempotente de outcome/outbox. Testar queda/stale/cancelamento e concessão única; projeções completas de progresso/ranking na7.
+6. Testes API/DB reais e regressão completa. Issue1 continua aberta até cena Phaser/gestos/resultado da1D.
 
-## Próxima parte: 1B
+## Limitações explícitas
 
-1. Ler AGENTS, esta continuidade, ADR001–004 e contratos v0.18 afetados.
-2. PostgreSQL de desenvolvimento/CI efêmero, ligado a loopback, migrations com ledger/checksum/lock, FKs e UNIQUE(run_id,index). Não conectar produção.
-3. Core60Hz e física inteira/racional com resíduos, PRNG versionado/streams,3HP/sem cura/abismo/salto duplo/slide/attack, prioridades e fixtures independentes.
-4. Codec canônico rr-input-v1/hashes/intervalos/controles pausados; testes de fronteira e paridade browser/Node30/60/120FPS.
-5. Integração DB real e upgrades; expandir CI e manter9testes iniciais. Não fechar Issue1 antes de1C/1D.
+Sem HTTP de partidas, worker executando jobs, ranking público, concentração/especial, diretor procedural, quatro regiões/chefes, creator, authGoogle/SMTP, progressão e semanais completos. Shell local ainda informa que o jogo não é jogável. Sem VPS/DNS/Caddy/credenciais de produção tocados. Gate de fundação não aprova publicação; verify:release completo será criado antes da promoção pública.
 
 ## Comandos
 
-npm ci; npm run verify; npm run dev (portal loopback5173); npm run dev:api (liveness loopback3001). Para mudar contrato: npm run contracts:generate, depois verify. Nenhuma credencial necessária para1A. VPS/DNS/Caddy/serviços existentes não alterados.
+npm ci; npm run verify; npm run db:dev; npm run dev; npm run dev:api. Teste dirigido: node --test tests/core.test.ts ou tests/database.test.ts; npm run test:browser. Sem Chrome local: npx playwright install chromium. Na CI Linux, instalação inclui --with-deps. Dados privados de QA não vão ao Git. Nenhum passo inicia1C automaticamente.

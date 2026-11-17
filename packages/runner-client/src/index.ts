@@ -5,3 +5,5 @@ export interface RendererLifecycle {
   destroy(): void;
 }
 /** Scene implementation and mounting belong to 1D, after the core exists. */
+
+export { FixedClock } from "./clock.ts";
