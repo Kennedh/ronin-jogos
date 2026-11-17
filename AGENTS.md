@@ -69,3 +69,9 @@ Além dos documentos anteriores, o planejamento agora possui baseline de todas a
 4. Executar testes e criar PR com resumo, evidências, limitações e próximos itens; **não afirmar que o produto está completo** antes de passar todos os gates.
 
 **Política de divergência:** se um baseline técnico precisar de ajuste por impossibilidade/segurança, registrar ADR e alternativa sem inventar regras de produto. Pedir decisão somente sobre mudanças relevantes no produto ou serviços externos, não sobre detalhes banais de implementação.
+
+## Execução aprovada em17/11/2026
+
+O proprietário aceitou o plano por partes e confirmou **play.ronin.dev.br/roninrunner**. Entrada neutra /roninrunner; idiomas /roninrunner/pt-br e /roninrunner/en. Consultar PROGRESS.md e docs/adr/ antes de continuar. A parte1A é a entrega autorizada neste ciclo;1B–1D completam a Issue1, que não deve ser fechada após1A. Deploy/DNS continuam sujeitos a autorização separada. Conteúdo histórico que pede novo aceite do plano foi superado por esta decisão.
+
+Na fundação usar npm ci e npm run verify. Contratos são gerados do OpenAPI pelo comando contracts:generate; não editar arquivos generated manualmente. Passar o gate de fundação não aprova release pública, que ainda exige regressão funcional completa, dispositivos, banco/restore, arte/licenças e artefato selado conforme plano de validação.

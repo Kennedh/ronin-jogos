@@ -1,6 +1,8 @@
 # Ronin Runner — Matriz de aceite, baselines e execução futura pelo Codex (v0.18)
 
-**Uso:** documento de referência para revisão final G0 e futura programação, **sem autorização de código agora**. Contratos detalhados: [motor/partidas/ranking](./RONIN_RUNNER_CONTRATO_SIMULACAO_PARTIDAS_RANKING_v1.md), [conta/dados/privacidade](./RONIN_RUNNER_CONTRATO_IDENTIDADE_DADOS_PRIVACIDADE.md), [arte/telas/catálogos](./RONIN_RUNNER_ARTES_TELAS_CATALOGO_CONTEUDO_v1.md), [VPS/portal/testes](./RONIN_RUNNER_OPERACAO_VPS_PORTAL_TESTES_v1.md), [OpenAPI v1](./openapi.ronin-runner.v1.yaml).
+> Revisão de 17/11/2026: autorização histórica em AGENTS.md/Issue #1. O plano foi aceito em17/11/2026 e a parte1A está em execução; progresso em PROGRESS.md. Restrições antigas de autorização neste documento são históricas; requisitos de produto permanecem. Veja [revisão e plano por etapas](./REVISAO_E_PLANO_EXECUCAO.md).
+
+**Uso:** documento de referência para revisão final G0 e futura programação, com autorização histórica em AGENTS.md/Issue #1; implementação subordinada ao aceite atual. Contratos detalhados: [motor/partidas/ranking](./RONIN_RUNNER_CONTRATO_SIMULACAO_PARTIDAS_RANKING_v1.md), [conta/dados/privacidade](./RONIN_RUNNER_CONTRATO_IDENTIDADE_DADOS_PRIVACIDADE.md), [arte/telas/catálogos](./RONIN_RUNNER_ARTES_TELAS_CATALOGO_CONTEUDO_v1.md), [VPS/portal/testes](./RONIN_RUNNER_OPERACAO_VPS_PORTAL_TESTES_v1.md), [OpenAPI v1](./openapi.ronin-runner.v1.yaml).
 
 ## 1. Estado dos itens G01–G15
 
@@ -86,7 +88,7 @@
 
 - Dono do projeto tem uma **lista de baselines** redigida neste pacote; opções de produto já confirmadas não serão reabertas. Alterações em baselines podem ser feitas de uma vez, não por dezenas de perguntas sequenciais.
 - Escopo completo v1 e interfaces/entidades cobrem S00–S13, creator, boss, weekly, ranking, auth e os quatro biomas.
-- OpenAPI deve passar **validação sintática + lint de $refs**; desenho de migrations/DDL e ERD deve cobrir cada constraint; execução e testes de DB aguardam autorização de código.
+- OpenAPI deve passar **validação sintática + lint de $refs**; desenho de migrations/DDL e ERD deve cobrir cada constraint; execução e testes de DB pertencem à fundação após aceite do plano.
 - Versões de regras e política de run estão explícitas e consistentes; condições de limites de replay e de upload não contradizem "endless" em gameplay.
 
 ### Gate implementação G1 (quando autorizado)
@@ -100,7 +102,7 @@
 - Quatro regiões e chefes em completo funcionamento, Creator completo, Ronin ID/Google/email/guest, weekly gerados e tiers, server verifier e ranking em staging.
 - Tests acima executados com evidências e dispositivos reais; nenhuma falha P0 aberta.
 - Revisão de licenças, LGPD/termos, backups/restauração, Caddy/TLS, SMTP, carga e limites da VPS medidos; rollback possível.
-- A publicação pública acontece somente após passar os gates; ainda não há permissão de implementação.
+- A publicação pública acontece somente após passar os gates; a implementação segue autorização vigente; publicação exige aprovação separada.
 
 ## 6. Pacote final para o Codex e estratégia de trabalho
 

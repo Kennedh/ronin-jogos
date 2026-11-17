@@ -1,0 +1,11 @@
+{
+  "name": "@ronin/verifier",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "dependencies": {
+    "@ronin/contracts": "0.1.0"
+  },
+  "devDependencies": {}
+}

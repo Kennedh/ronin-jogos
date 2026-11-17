@@ -5,10 +5,10 @@
 
 ## 1. Domínios e integração com o site
 
-**BASELINE de destino:** hospedar portal `https://play.ronin.dev.br` e o jogo nas rotas `/pt-br/ronin-runner` e `/en/ronin-runner`. A página `/` detecta o idioma do navegador e oferece seletor; links internos, `hreflang`, canonical, sitemap e meta título/descrição próprios para ambos idiomas. A rota de login e API fica no MESMO ORIGIN `https://play.ronin.dev.br/api/v1` com Caddy reverse proxy. Domain/paths são **propostos**, a confirmar DNS e arquitetura existente sem alterar produção.
+**BASELINE de destino:** hospedar portal `https://play.ronin.dev.br` e o jogo nas rotas `/roninrunner/pt-br` e `/roninrunner/en`. A página `/` detecta o idioma do navegador e oferece seletor; links internos, `hreflang`, canonical, sitemap e meta título/descrição próprios para ambos idiomas. A rota de login e API fica no MESMO ORIGIN `https://play.ronin.dev.br/api/v1` com Caddy reverse proxy. Domain/paths são **propostos**, a confirmar DNS e arquitetura existente sem alterar produção.
 
 - Site `ronin.dev.br` linka para o portal, sem compartilhamento frágil de cookies entre todo `.ronin.dev.br`.
-- `arquivos.dev.br` permanece aplicação independente, sem incorporar acesso a Ronin ID sem pedido explícito.
+- `arquivos.ronin.dev.br` permanece aplicação independente, sem incorporar acesso a Ronin ID sem pedido explícito.
 - Ronin ID compartilha identidade entre todos os jogos **dentro do portal/play origin**; jogos futuros em outros domínios exigirão federação/autorização formal, não cookie `Domain=.ronin.dev.br` por conveniência.
 - Conta Google requer OAuth/Identity configuração de domínio e redirect/origin autorizados; e-mail precisa fluxo de verificação HTTPS nessa origem.
 - SEO: páginas específicas por jogo e idioma, informações indexáveis de texto, previews OG originais, performance da homepage, sitemap e robots adequados. Scores/perfis privados não indexados; dados de ranking públicos com medidas contra scraping abusivo e exposição de perfis.

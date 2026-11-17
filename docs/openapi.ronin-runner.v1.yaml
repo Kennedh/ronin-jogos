@@ -1,76 +1,101 @@
 openapi: 3.1.0
 info:
   title: Ronin Runner API - contrato preliminar de design
-  version: 0.18.0-draft
+  version: 0.19.0-foundation-draft
   description: |
     Contrato de especificacao, nao implementacao. Prefixo /api/v1.
     Produto fechado; limites indicados como baseline devem ser aferidos antes do deploy.
     Nunca aceitar score, vida, posicao ou eventos de kill declarados pelo cliente como verdade.
 servers:
   - url: https://play.ronin.dev.br/api/v1
-    description: Origem proposta, sujeita a confirmacao de DNS/Caddy
+    description: Origem confirmada; implantação ainda não autorizada
 tags:
   - name: Auth
+    description: Contratos do domínio Auth
   - name: Profile
+    description: Contratos do domínio Profile
   - name: Runs
+    description: Contratos do domínio Runs
   - name: Leaderboards
+    description: Contratos do domínio Leaderboards
   - name: Weekly
+    description: Contratos do domínio Weekly
+  - name: Operations
+    description: Saúde operacional sem dados privados
 security:
   - roninSession: []
 paths:
   /auth/guest:
     post:
-      tags: [Auth]
+      operationId: post_auth_guest
+      tags:
+        - Auth
       summary: Criar ou reutilizar identidade visitante
       security: []
       responses:
-        '200':
+        "200":
           description: Sessao de visitante restaurada
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/PlayerSummary' }
-        '201':
+              schema:
+                $ref: "#/components/schemas/PlayerSummary"
+        "201":
           description: Identidade visitante criada
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/PlayerSummary' }
-        '429': { $ref: '#/components/responses/RateLimited' }
+              schema:
+                $ref: "#/components/schemas/PlayerSummary"
+        "429":
+          $ref: "#/components/responses/RateLimited"
   /auth/register:
     post:
-      tags: [Auth]
+      operationId: post_auth_register
+      tags:
+        - Auth
       summary: Registrar conta por email e senha
       security: []
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/RegisterRequest' }
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
       responses:
-        '202':
+        "202":
           description: Confirmacao solicitada sem enumeracao de contas
-        '400': { $ref: '#/components/responses/BadRequest' }
-        '429': { $ref: '#/components/responses/RateLimited' }
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
   /auth/login:
     post:
-      tags: [Auth]
+      operationId: post_auth_login
+      tags:
+        - Auth
       summary: Login email/senha
       security: []
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/EmailLoginRequest' }
+            schema:
+              $ref: "#/components/schemas/EmailLoginRequest"
       responses:
-        '200':
+        "200":
           description: Sessao autenticada emitida em cookie seguro
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/PlayerSummary' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '429': { $ref: '#/components/responses/RateLimited' }
+              schema:
+                $ref: "#/components/schemas/PlayerSummary"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
   /auth/google:
     post:
-      tags: [Auth]
+      operationId: post_auth_google
+      tags:
+        - Auth
       summary: Login com credencial do Google verificada no servidor
       security: []
       requestBody:
@@ -79,22 +104,33 @@ paths:
           application/json:
             schema:
               type: object
-              required: [id_token, csrf_proof]
+              required:
+                - id_token
+                - csrf_proof
               properties:
-                id_token: { type: string, minLength: 1 }
-                csrf_proof: { type: string, minLength: 1 }
+                id_token:
+                  type: string
+                  minLength: 1
+                csrf_proof:
+                  type: string
+                  minLength: 1
               additionalProperties: false
       responses:
-        '200':
+        "200":
           description: Identidade Google autenticada e vinculada ao sub
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/PlayerSummary' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '429': { $ref: '#/components/responses/RateLimited' }
+              schema:
+                $ref: "#/components/schemas/PlayerSummary"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
   /auth/verify-email:
     post:
-      tags: [Auth]
+      operationId: post_auth_verify_email
+      tags:
+        - Auth
       summary: Confirmar email por token de uso unico
       security: []
       requestBody:
@@ -103,16 +139,22 @@ paths:
           application/json:
             schema:
               type: object
-              required: [token]
+              required:
+                - token
               properties:
-                token: { type: string }
+                token:
+                  type: string
               additionalProperties: false
       responses:
-        '204': { description: Endereco confirmado }
-        '422': { $ref: '#/components/responses/InvalidState' }
+        "204":
+          description: Endereco confirmado
+        "422":
+          $ref: "#/components/responses/InvalidState"
   /auth/password/forgot:
     post:
-      tags: [Auth]
+      operationId: post_auth_password_forgot
+      tags:
+        - Auth
       summary: Pedir redefinicao de senha sem revelar se conta existe
       security: []
       requestBody:
@@ -121,16 +163,23 @@ paths:
           application/json:
             schema:
               type: object
-              required: [email]
+              required:
+                - email
               properties:
-                email: { type: string, format: email }
+                email:
+                  type: string
+                  format: email
               additionalProperties: false
       responses:
-        '202': { description: Pedido recebido; resposta neutra }
-        '429': { $ref: '#/components/responses/RateLimited' }
+        "202":
+          description: Pedido recebido; resposta neutra
+        "429":
+          $ref: "#/components/responses/RateLimited"
   /auth/password/reset:
     post:
-      tags: [Auth]
+      operationId: post_auth_password_reset
+      tags:
+        - Auth
       summary: Redefinir senha com token de uso unico
       security: []
       requestBody:
@@ -139,24 +188,38 @@ paths:
           application/json:
             schema:
               type: object
-              required: [token, new_password]
+              required:
+                - token
+                - new_password
               properties:
-                token: { type: string }
-                new_password: { type: string, minLength: 12, maxLength: 256 }
+                token:
+                  type: string
+                new_password:
+                  type: string
+                  minLength: 12
+                  maxLength: 256
               additionalProperties: false
       responses:
-        '204': { description: Senha atualizada, sessoes rotacionadas }
-        '422': { $ref: '#/components/responses/InvalidState' }
+        "204":
+          description: Senha atualizada, sessoes rotacionadas
+        "422":
+          $ref: "#/components/responses/InvalidState"
   /auth/logout:
     post:
-      tags: [Auth]
+      operationId: post_auth_logout
+      tags:
+        - Auth
       summary: Revogar sessao atual
       responses:
-        '204': { description: Sessao encerrada }
-        '401': { $ref: '#/components/responses/Unauthorized' }
+        "204":
+          description: Sessao encerrada
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /auth/merge/preview:
     post:
-      tags: [Auth]
+      operationId: post_auth_merge_preview
+      tags:
+        - Auth
       summary: Consultar potencial mesclagem com prova de ambas identidades
       requestBody:
         required: true
@@ -164,27 +227,41 @@ paths:
           application/json:
             schema:
               type: object
-              required: [target_session_proof]
+              required:
+                - target_session_proof
               properties:
-                target_session_proof: { type: string }
+                target_session_proof:
+                  type: string
               additionalProperties: false
       responses:
-        '200':
+        "200":
           description: Comparativo sem modificar dados
           content:
             application/json:
               schema:
                 type: object
-                required: [merge_nonce, source_player_id, target_player_id]
+                required:
+                  - merge_nonce
+                  - source_player_id
+                  - target_player_id
                 properties:
-                  merge_nonce: { type: string }
-                  source_player_id: { type: string, format: uuid }
-                  target_player_id: { type: string, format: uuid }
-                  summary: { type: object }
-        '403': { $ref: '#/components/responses/Forbidden' }
+                  merge_nonce:
+                    type: string
+                  source_player_id:
+                    type: string
+                    format: uuid
+                  target_player_id:
+                    type: string
+                    format: uuid
+                  summary:
+                    type: object
+        "403":
+          $ref: "#/components/responses/Forbidden"
   /auth/merge/confirm:
     post:
-      tags: [Auth]
+      operationId: post_auth_merge_confirm
+      tags:
+        - Auth
       summary: Mesclar duas identidades autenticadas com idempotencia
       requestBody:
         required: true
@@ -192,21 +269,30 @@ paths:
           application/json:
             schema:
               type: object
-              required: [merge_nonce, confirmed]
+              required:
+                - merge_nonce
+                - confirmed
               properties:
-                merge_nonce: { type: string }
-                confirmed: { type: boolean, const: true }
+                merge_nonce:
+                  type: string
+                confirmed:
+                  type: boolean
+                  const: true
               additionalProperties: false
       responses:
-        '200':
+        "200":
           description: Perfil canonico, sem duplicar eventos
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/PlayerSummary' }
-        '409': { $ref: '#/components/responses/Conflict' }
+              schema:
+                $ref: "#/components/schemas/PlayerSummary"
+        "409":
+          $ref: "#/components/responses/Conflict"
   /auth/link:
     post:
-      tags: [Auth]
+      operationId: post_auth_link
+      tags:
+        - Auth
       summary: Vincular Google ou email a identidade autenticada
       requestBody:
         required: true
@@ -214,25 +300,38 @@ paths:
           application/json:
             schema:
               type: object
-              required: [method, proof]
+              required:
+                - method
+                - proof
               properties:
-                method: { type: string, enum: [EMAIL, GOOGLE] }
-                proof: { type: string, description: Prova de posse validada no servidor }
+                method:
+                  type: string
+                  enum:
+                    - EMAIL
+                    - GOOGLE
+                proof:
+                  type: string
+                  description: Prova de posse validada no servidor
               additionalProperties: false
       responses:
-        '200':
+        "200":
           description: Metodo associado, sessao rotacionada
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/PlayerSummary' }
-        '403': { $ref: '#/components/responses/Forbidden' }
-        '409': { $ref: '#/components/responses/Conflict' }
+              schema:
+                $ref: "#/components/schemas/PlayerSummary"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
   /me/sessions:
     get:
-      tags: [Auth]
+      operationId: get_me_sessions
+      tags:
+        - Auth
       summary: Sessoes ativas e autenticacoes recentes resumidas
       responses:
-        '200':
+        "200":
           description: Dispositivos sem dados sensiveis
           content:
             application/json:
@@ -243,24 +342,45 @@ paths:
                     type: array
                     items:
                       type: object
-                      required: [session_id, created_at, current]
+                      required:
+                        - session_id
+                        - created_at
+                        - current
                       properties:
-                        session_id: { type: string }
-                        created_at: { type: string, format: date-time }
-                        current: { type: boolean }
-                        last_seen_at: { type: [string, 'null'], format: date-time }
+                        session_id:
+                          type: string
+                        created_at:
+                          type: string
+                          format: date-time
+                        current:
+                          type: boolean
+                        last_seen_at:
+                          type:
+                            - string
+                            - "null"
+                          format: date-time
   /me/sessions/{session_id}:
     delete:
-      tags: [Auth]
+      operationId: delete_me_sessions_session_id
+      tags:
+        - Auth
       summary: Revogar sessao do proprio usuario
       parameters:
-        - { name: session_id, in: path, required: true, schema: { type: string } }
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
-        '204': { description: Sessao revogada }
-        '403': { $ref: '#/components/responses/Forbidden' }
+        "204":
+          description: Sessao revogada
+        "403":
+          $ref: "#/components/responses/Forbidden"
   /me/preferences:
     patch:
-      tags: [Profile]
+      operationId: patch_me_preferences
+      tags:
+        - Profile
       summary: Idioma, som, acessibilidade e qualidade
       requestBody:
         required: true
@@ -269,14 +389,30 @@ paths:
             schema:
               type: object
               properties:
-                locale: { type: string, enum: [pt-BR, en] }
-                reduced_motion: { type: boolean }
-                graphics_quality: { type: string, enum: [AUTO, LOW, HIGH] }
-                music_volume: { type: number, minimum: 0, maximum: 1 }
-                effects_volume: { type: number, minimum: 0, maximum: 1 }
+                locale:
+                  type: string
+                  enum:
+                    - pt-BR
+                    - en
+                reduced_motion:
+                  type: boolean
+                graphics_quality:
+                  type: string
+                  enum:
+                    - AUTO
+                    - LOW
+                    - HIGH
+                music_volume:
+                  type: number
+                  minimum: 0
+                  maximum: 1
+                effects_volume:
+                  type: number
+                  minimum: 0
+                  maximum: 1
               additionalProperties: false
       responses:
-        '200':
+        "200":
           description: Preferencias persistidas
           content:
             application/json:
@@ -285,338 +421,543 @@ paths:
                 additionalProperties: true
   /me/progress:
     get:
-      tags: [Profile]
+      operationId: get_me_progress
+      tags:
+        - Profile
       summary: Metricas de carreira e regioes desbloqueadas verificadas
       responses:
-        '200':
+        "200":
           description: Progresso e marcos
           content:
             application/json:
               schema:
                 type: object
-                required: [verified_distance_m, verified_perfect_slashes, verified_kills, unlocked_regions]
+                required:
+                  - verified_distance_m
+                  - verified_perfect_slashes
+                  - verified_kills
+                  - unlocked_regions
                 properties:
-                  verified_distance_m: { type: integer, minimum: 0 }
-                  verified_perfect_slashes: { type: integer, minimum: 0 }
-                  verified_kills: { type: integer, minimum: 0 }
-                  unlocked_regions: { type: array, items: { type: string } }
+                  verified_distance_m:
+                    type: integer
+                    minimum: 0
+                  verified_perfect_slashes:
+                    type: integer
+                    minimum: 0
+                  verified_kills:
+                    type: integer
+                    minimum: 0
+                  unlocked_regions:
+                    type: array
+                    items:
+                      type: string
   /me/missions:
     get:
-      tags: [Profile]
+      operationId: get_me_missions
+      tags:
+        - Profile
       summary: Catalogo de missoes e progresso confiavel
       responses:
-        '200':
+        "200":
           description: Progresso das missoes
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  missions: { type: array, items: { type: object, additionalProperties: true } }
+                  missions:
+                    type: array
+                    items:
+                      type: object
+                      additionalProperties: true
   /me/achievements:
     get:
-      tags: [Profile]
+      operationId: get_me_achievements
+      tags:
+        - Profile
       summary: Conquistas e quatro selos de chefes
       responses:
-        '200':
+        "200":
           description: Conquistas concedidas
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  achievements: { type: array, items: { type: string } }
-                  boss_seals: { type: array, items: { type: string } }
+                  achievements:
+                    type: array
+                    items:
+                      type: string
+                  boss_seals:
+                    type: array
+                    items:
+                      type: string
   /me/regions:
     get:
-      tags: [Profile]
+      operationId: get_me_regions
+      tags:
+        - Profile
       summary: Regioes atingidas legitimamente
       responses:
-        '200':
+        "200":
           description: Lista de region IDs
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  unlocked_regions: { type: array, items: { type: string } }
+                  unlocked_regions:
+                    type: array
+                    items:
+                      type: string
   /players/{player_id}/public:
     get:
-      tags: [Profile]
+      operationId: get_players_player_id_public
+      tags:
+        - Profile
       security: []
       summary: Somente dados publicos de perfil
       parameters:
-        - { name: player_id, in: path, required: true, schema: { type: string, format: uuid } }
+        - name: player_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
-        '200':
+        "200":
           description: Nome publico, avatar sintetico e conquistas publicas
           content:
             application/json:
               schema:
                 type: object
-                required: [player_id, public_name]
+                required:
+                  - player_id
+                  - public_name
                 properties:
-                  player_id: { type: string, format: uuid }
-                  public_name: { type: string }
-                  avatar_parts: { type: object, additionalProperties: { type: string } }
-                  achievements_public: { type: array, items: { type: string } }
+                  player_id:
+                    type: string
+                    format: uuid
+                  public_name:
+                    type: string
+                  avatar_parts:
+                    type: object
+                    additionalProperties:
+                      type: string
+                  achievements_public:
+                    type: array
+                    items:
+                      type: string
   /me/export:
     post:
-      tags: [Profile]
+      operationId: post_me_export
+      tags:
+        - Profile
       summary: Solicitar exportacao de dados protegida
       responses:
-        '202': { description: Pedido aceito apos autenticacao recente quando necessario }
-        '403': { $ref: '#/components/responses/Forbidden' }
+        "202":
+          description: Pedido aceito apos autenticacao recente quando necessario
+        "403":
+          $ref: "#/components/responses/Forbidden"
   /me/delete-request:
     post:
-      tags: [Profile]
+      operationId: post_me_delete_request
+      tags:
+        - Profile
       summary: Solicitar exclusao de conta apos reautenticacao
       responses:
-        '202': { description: Pedido aceito com instrucoes e periodo de confirmacao }
-        '403': { $ref: '#/components/responses/Forbidden' }
+        "202":
+          description: Pedido aceito com instrucoes e periodo de confirmacao
+        "403":
+          $ref: "#/components/responses/Forbidden"
   /me:
     get:
-      tags: [Profile]
+      operationId: get_me
+      tags:
+        - Profile
       summary: Perfil atual da identidade
       responses:
-        '200':
+        "200":
           description: Perfil e configuracoes
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/PlayerSummary' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
+              schema:
+                $ref: "#/components/schemas/PlayerSummary"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /character/catalog:
     get:
-      tags: [Profile]
+      operationId: get_character_catalog
+      tags:
+        - Profile
       summary: Pecas basicas livres e cosmeticos desbloqueaveis
       security: []
       responses:
-        '200':
+        "200":
           description: Catalogo versionado
           content:
             application/json:
               schema:
                 type: object
-                required: [catalog_version, parts]
+                required:
+                  - catalog_version
+                  - parts
                 properties:
-                  catalog_version: { type: string }
+                  catalog_version:
+                    type: string
                   parts:
                     type: array
-                    items: { $ref: '#/components/schemas/CharacterPart' }
+                    items:
+                      $ref: "#/components/schemas/CharacterPart"
   /me/character:
     get:
-      tags: [Profile]
+      operationId: get_me_character
+      tags:
+        - Profile
       summary: Aparencia atual
       responses:
-        '200':
+        "200":
           description: Equipamento atual
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Character' }
+              schema:
+                $ref: "#/components/schemas/Character"
     patch:
-      tags: [Profile]
+      operationId: patch_me_character
+      tags:
+        - Profile
       summary: Atualizar IDs de pecas permitidas com controle de concorrencia
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/CharacterUpdate' }
+            schema:
+              $ref: "#/components/schemas/CharacterUpdate"
       responses:
-        '200':
+        "200":
           description: Aparencia canonica atualizada
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Character' }
-        '403': { $ref: '#/components/responses/Forbidden' }
-        '409': { $ref: '#/components/responses/Conflict' }
+              schema:
+                $ref: "#/components/schemas/Character"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
   /runs/start:
     post:
-      tags: [Runs]
+      operationId: post_runs_start
+      tags:
+        - Runs
       summary: Criar tentativa competitiva FULL ou REGIONAL
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required: [mode]
-              properties:
-                mode: { $ref: '#/components/schemas/RunMode' }
-                region_id: { type: string }
-              additionalProperties: false
+              $ref: "#/components/schemas/RunStart"
       responses:
-        '201':
+        "201":
           description: Tentativa autorizada, seed e versoes do servidor
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/RunTicket' }
-        '403': { $ref: '#/components/responses/Forbidden' }
-        '429': { $ref: '#/components/responses/RateLimited' }
+              schema:
+                $ref: "#/components/schemas/RunTicket"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/RateLimited"
   /runs/{run_id}/segments/{index}:
     put:
-      tags: [Runs]
+      operationId: put_runs_run_id_segments_index
+      tags:
+        - Runs
       summary: Enviar bloco compacto de comandos em ticks
       parameters:
-        - { $ref: '#/components/parameters/RunId' }
-        - { name: index, in: path, required: true, schema: { type: integer, minimum: 0 } }
-        - { name: X-Start-Tick, in: header, required: true, schema: { type: integer, minimum: 0 } }
-        - { name: X-End-Tick, in: header, required: true, schema: { type: integer, minimum: 1 } }
-        - { name: X-Segment-Hash, in: header, required: true, schema: { type: string } }
-        - { name: X-Previous-Segment-Hash, in: header, required: false, schema: { type: string } }
+        - $ref: "#/components/parameters/RunId"
+        - name: index
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+        - name: X-Start-Tick
+          in: header
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+        - name: X-End-Tick
+          in: header
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+        - name: X-Segment-Hash
+          in: header
+          required: true
+          schema: &a1
+            type: string
+            pattern: ^[a-f0-9]{64}$
+        - name: X-Previous-Segment-Hash
+          in: header
+          required: false
+          schema: *a1
       requestBody:
         required: true
         content:
           application/octet-stream:
-            schema: { type: string, format: binary }
+            schema:
+              type: string
+              format: binary
       responses:
-        '200':
+        "200":
           description: Segmento identico ja recebido
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/SegmentAck' }
-        '201':
+              schema:
+                $ref: "#/components/schemas/SegmentAck"
+        "201":
           description: Segmento persistido; ainda nao verificado
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/SegmentAck' }
-        '409': { $ref: '#/components/responses/Conflict' }
-        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+              schema:
+                $ref: "#/components/schemas/SegmentAck"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
+      description: Codec rr-input-v1 conforme ADR-002; headers devem coincidir com o envelope. Hash da representação
+        canônica descomprimida, não dos bytes gzip. Limites aplicados em streaming antes/depois da
+        descompressão.
   /runs/{run_id}/finish:
     post:
-      tags: [Runs]
+      operationId: post_runs_run_id_finish
+      tags:
+        - Runs
       summary: Finalizar e pedir verificacao server-side
       parameters:
-        - { $ref: '#/components/parameters/RunId' }
+        - $ref: "#/components/parameters/RunId"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required: [final_segment_index, final_tick, final_hash, end_reason]
-              properties:
-                final_segment_index: { type: integer, minimum: 0 }
-                final_tick: { type: integer, minimum: 0 }
-                final_hash: { type: string }
-                end_reason: { type: string, enum: [HP_ZERO, ABYSS, QUIT] }
-              additionalProperties: false
+              $ref: "#/components/schemas/FinishRequest"
       responses:
-        '202':
-          description: Verificacao pendente, score ainda nao publicado
+        "202":
+          description: Fechamento imutável recebido; AWAITING_SEGMENTS até cadeia completa, depois PENDING; sem score
+            público
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/RunStatus' }
-        '409': { $ref: '#/components/responses/Conflict' }
-        '422': { $ref: '#/components/responses/InvalidState' }
+              schema:
+                $ref: "#/components/schemas/RunStatus"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/InvalidState"
+      description: Primeiro finish fixa final_tick/hash/motivo até expires_at. Retry idêntico não renova prazo.
+        Partes faltantes podem chegar até upload_deadline; PENDING apenas após completude. Atraso do worker
+        não altera elegibilidade semanal.
   /runs/{run_id}:
     get:
-      tags: [Runs]
+      operationId: get_runs_run_id
+      tags:
+        - Runs
       summary: Consultar somente a propria tentativa
       parameters:
-        - { $ref: '#/components/parameters/RunId' }
+        - $ref: "#/components/parameters/RunId"
       responses:
-        '200':
+        "200":
           description: Status e resultados confirmados se VERIFIED
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/RunStatus' }
-        '403': { $ref: '#/components/responses/Forbidden' }
-        '404': { $ref: '#/components/responses/NotFound' }
+              schema:
+                $ref: "#/components/schemas/RunStatus"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
   /leaderboards/{kind}:
     get:
-      tags: [Leaderboards]
+      operationId: get_leaderboards_kind
+      tags:
+        - Leaderboards
       security: []
       summary: Ranking FULL global ou REGIONAL separado por versao de regra
       parameters:
-        - { name: kind, in: path, required: true, schema: { type: string, enum: [global, global_weekly, regional, regional_weekly, hall_of_fame] } }
-        - { name: region_id, in: query, required: false, schema: { type: string } }
-        - { name: rules_major, in: query, required: false, schema: { type: integer, minimum: 1 } }
-        - { name: cursor, in: query, required: false, schema: { type: string } }
+        - name: kind
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - global
+              - global_weekly
+              - regional
+              - regional_weekly
+              - hall_of_fame
+        - name: region_id
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: rules_major
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
       responses:
-        '200':
+        "200":
           description: Melhor run VERIFIED por jogador por quadro e paginacao cursor
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/LeaderboardPage' }
+              schema:
+                $ref: "#/components/schemas/LeaderboardPage"
   /weekly/current:
     get:
-      tags: [Weekly]
+      operationId: get_weekly_current
+      tags:
+        - Weekly
       security: []
       summary: Edicao global publicada de desafios
       responses:
-        '200':
+        "200":
           description: Cinco desafios e prazo UTC
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/WeeklyEdition' }
+              schema:
+                $ref: "#/components/schemas/WeeklyEdition"
   /weekly/me:
     get:
-      tags: [Weekly]
+      operationId: get_weekly_me
+      tags:
+        - Weekly
       summary: Progresso atual validado e selos 2/4/5
       responses:
-        '200':
+        "200":
           description: Edicao, progresso individual e maior tier
           content:
             application/json:
               schema:
                 type: object
-                required: [edition, challenges_completed, earned_tiers]
+                required:
+                  - edition
+                  - challenges_completed
+                  - earned_tiers
                 properties:
-                  edition: { $ref: '#/components/schemas/WeeklyEdition' }
-                  challenges_completed: { type: integer, minimum: 0, maximum: 5 }
-                  earned_tiers: { type: array, items: { type: string, enum: [BRONZE, SILVER, GOLD] } }
+                  edition:
+                    $ref: "#/components/schemas/WeeklyEdition"
+                  challenges_completed:
+                    type: integer
+                    minimum: 0
+                    maximum: 5
+                  earned_tiers:
+                    type: array
+                    items:
+                      type: string
+                      enum:
+                        - BRONZE
+                        - SILVER
+                        - GOLD
   /weekly/archive:
     get:
-      tags: [Weekly]
+      operationId: get_weekly_archive
+      tags:
+        - Weekly
       security: []
       summary: Historico de edicoes, sem progresso privado
       parameters:
-        - { name: cursor, in: query, required: false, schema: { type: string } }
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
       responses:
-        '200':
+        "200":
           description: Pagina de edicoes ja publicadas
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  editions: { type: array, items: { $ref: '#/components/schemas/WeeklyEdition' } }
-                  next_cursor: { type: [string, 'null'] }
+                  editions:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/WeeklyEdition"
+                  next_cursor:
+                    type:
+                      - string
+                      - "null"
   /weekly/{week_id}/me:
     get:
-      tags: [Weekly]
+      operationId: get_weekly_week_id_me
+      tags:
+        - Weekly
       summary: Progresso individual de edicao historica
       parameters:
-        - { name: week_id, in: path, required: true, schema: { type: string } }
+        - name: week_id
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
-        '200':
+        "200":
           description: Recompensas bronze prata e ouro da edicao
           content:
             application/json:
               schema:
                 type: object
-                required: [week_id, challenges_completed, earned_tiers]
+                required:
+                  - week_id
+                  - challenges_completed
+                  - earned_tiers
                 properties:
-                  week_id: { type: string }
-                  challenges_completed: { type: integer, minimum: 0, maximum: 5 }
-                  earned_tiers: { type: array, items: { type: string, enum: [BRONZE, SILVER, GOLD] } }
+                  week_id:
+                    type: string
+                  challenges_completed:
+                    type: integer
+                    minimum: 0
+                    maximum: 5
+                  earned_tiers:
+                    type: array
+                    items:
+                      type: string
+                      enum:
+                        - BRONZE
+                        - SILVER
+                        - GOLD
   /me/cosmetics:
     get:
-      tags: [Profile]
+      operationId: get_me_cosmetics
+      tags:
+        - Profile
       summary: Inventario de cosmeticos
       responses:
-        '200':
+        "200":
           description: Itens e estado de posse/equipamento
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  unlocked_part_ids: { type: array, items: { type: string } }
-                  equipped: { $ref: '#/components/schemas/Character' }
+                  unlocked_part_ids:
+                    type: array
+                    items:
+                      type: string
+                  equipped:
+                    $ref: "#/components/schemas/Character"
   /me/emblems/equip:
     patch:
-      tags: [Profile]
+      operationId: patch_me_emblems_equip
+      tags:
+        - Profile
       summary: Equipar um unico emblema ja concedido
       requestBody:
         required: true
@@ -624,13 +965,33 @@ paths:
           application/json:
             schema:
               type: object
-              required: [emblem_instance_id]
+              required:
+                - emblem_instance_id
               properties:
-                emblem_instance_id: { type: [string, 'null'] }
+                emblem_instance_id:
+                  type:
+                    - string
+                    - "null"
               additionalProperties: false
       responses:
-        '204': { description: Emblema atualizado apos verificacao de posse }
-        '403': { $ref: '#/components/responses/Forbidden' }
+        "204":
+          description: Emblema atualizado apos verificacao de posse
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /health:
+    get:
+      operationId: get_health
+      tags:
+        - Operations
+      security: []
+      summary: Liveness da API, sem afirmar prontidão do banco/verificador
+      responses:
+        "200":
+          description: Processo responde
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
 components:
   securitySchemes:
     roninSession:
@@ -643,182 +1004,634 @@ components:
       name: run_id
       in: path
       required: true
-      schema: { type: string, format: uuid }
+      schema:
+        type: string
+        format: uuid
   schemas:
     RunMode:
       type: string
-      enum: [FULL, REGIONAL]
+      enum:
+        - FULL
+        - REGIONAL
     PlayerSummary:
       type: object
-      required: [player_id, account_type, nickname, locale]
+      required:
+        - player_id
+        - account_type
+        - nickname
+        - locale
       properties:
-        player_id: { type: string, format: uuid }
-        account_type: { type: string, enum: [GUEST, EMAIL, GOOGLE, MULTI] }
-        nickname: { type: [string, 'null'] }
-        locale: { type: string, enum: [pt-BR, en] }
-        email_verified: { type: boolean }
-        region_unlocks: { type: array, items: { type: string } }
+        player_id:
+          type: string
+          format: uuid
+        account_type:
+          type: string
+          enum:
+            - GUEST
+            - EMAIL
+            - GOOGLE
+            - MULTI
+        nickname:
+          type:
+            - string
+            - "null"
+        locale:
+          type: string
+          enum:
+            - pt-BR
+            - en
+        email_verified:
+          type: boolean
+        region_unlocks:
+          type: array
+          items:
+            type: string
     RegisterRequest:
       type: object
-      required: [email, password]
+      required:
+        - email
+        - password
       properties:
-        email: { type: string, format: email }
-        password: { type: string, minLength: 12, maxLength: 256 }
-        nickname: { type: string, minLength: 3, maxLength: 20 }
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 12
+          maxLength: 256
+        nickname:
+          type: string
+          minLength: 3
+          maxLength: 20
       additionalProperties: false
     EmailLoginRequest:
       type: object
-      required: [email, password]
+      required:
+        - email
+        - password
       properties:
-        email: { type: string, format: email }
-        password: { type: string }
+        email:
+          type: string
+          format: email
+        password:
+          type: string
       additionalProperties: false
     CharacterPart:
       type: object
-      required: [part_id, slot, is_basic_free, rig_version]
+      required:
+        - part_id
+        - slot
+        - is_basic_free
+        - rig_version
       properties:
-        part_id: { type: string }
-        slot: { type: string }
-        is_basic_free: { type: boolean }
-        unlock_requirement_id: { type: [string, 'null'] }
-        rig_version: { type: string }
-        locale_key: { type: string }
+        part_id:
+          type: string
+        slot:
+          type: string
+        is_basic_free:
+          type: boolean
+        unlock_requirement_id:
+          type:
+            - string
+            - "null"
+        rig_version:
+          type: string
+        locale_key:
+          type: string
     Character:
       type: object
-      required: [player_id, appearance_version, slots]
+      required:
+        - player_id
+        - appearance_version
+        - slots
       properties:
-        player_id: { type: string, format: uuid }
-        appearance_version: { type: integer, minimum: 1 }
-        slots: { type: object, additionalProperties: { type: string } }
+        player_id:
+          type: string
+          format: uuid
+        appearance_version:
+          type: integer
+          minimum: 1
+        slots:
+          type: object
+          additionalProperties:
+            type: string
     CharacterUpdate:
       type: object
-      required: [expected_appearance_version, slots]
+      required:
+        - expected_appearance_version
+        - slots
       properties:
-        expected_appearance_version: { type: integer, minimum: 1 }
-        slots: { type: object, additionalProperties: { type: string } }
+        expected_appearance_version:
+          type: integer
+          minimum: 1
+        slots:
+          type: object
+          additionalProperties:
+            type: string
       additionalProperties: false
     RunTicket:
       type: object
-      required: [run_id, mode, seed, rules_major, rules_patch, generator_version, replay_protocol_version, started_at]
       properties:
-        run_id: { type: string, format: uuid }
-        mode: { $ref: '#/components/schemas/RunMode' }
-        starting_region_id: { type: string }
-        seed: { type: string }
-        rules_major: { type: integer }
-        rules_patch: { type: integer }
-        generator_version: { type: string }
-        replay_protocol_version: { type: string }
-        started_at: { type: string, format: date-time }
+        run_id: &a5
+          type: string
+          format: uuid
+        mode:
+          $ref: "#/components/schemas/RunMode"
+        starting_region_id: &a3
+          type: string
+          enum:
+            - BAMBOO
+            - TEMPLE
+            - MOUNTAINS
+            - CASTLE
+        seed:
+          type: string
+          pattern: ^[a-f0-9]{32}$
+        versions:
+          $ref: "#/components/schemas/RunVersions"
+        started_at: &a2
+          type: string
+          format: date-time
+        expires_at: *a2
+        limits:
+          $ref: "#/components/schemas/RunLimits"
+        server_time: *a2
+      required:
+        - run_id
+        - mode
+        - starting_region_id
+        - seed
+        - versions
+        - started_at
+        - expires_at
+        - limits
+        - server_time
+      additionalProperties: false
+      oneOf:
+        - properties:
+            mode:
+              const: FULL
+            starting_region_id:
+              const: BAMBOO
+        - properties:
+            mode:
+              const: REGIONAL
     SegmentAck:
       type: object
-      required: [run_id, index, segment_hash, persisted]
+      required:
+        - run_id
+        - index
+        - segment_hash
+        - persisted
       properties:
-        run_id: { type: string, format: uuid }
-        index: { type: integer, minimum: 0 }
-        segment_hash: { type: string }
-        persisted: { type: boolean, const: true }
+        run_id:
+          type: string
+          format: uuid
+        index:
+          type: integer
+          minimum: 0
+        segment_hash: *a1
+        persisted:
+          type: boolean
+          const: true
+      additionalProperties: false
     RunStatus:
       type: object
-      required: [run_id, status]
+      required:
+        - run_id
+        - status
       properties:
-        run_id: { type: string, format: uuid }
-        status: { type: string, enum: [CREATED, ACTIVE, PENDING, VERIFYING, VERIFIED, REJECTED, ABANDONED, EXPIRED] }
-        score: { type: [string, 'null'], description: Pontuacao inteira decimal somente quando verificada }
-        distance_m: { type: [integer, 'null'], minimum: 0 }
-        verified_at: { type: [string, 'null'], format: date-time }
-        rejection_code: { type: [string, 'null'] }
+        run_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+            - CREATED
+            - ACTIVE
+            - AWAITING_SEGMENTS
+            - PENDING
+            - VERIFYING
+            - VERIFIED
+            - REJECTED
+            - ABANDONED
+            - EXPIRED
+        score:
+          type:
+            - string
+            - "null"
+          pattern: ^(0|[1-9][0-9]*)$
+        distance_m:
+          type:
+            - integer
+            - "null"
+          minimum: 0
+        verified_at:
+          type:
+            - string
+            - "null"
+          format: date-time
+        rejection_code:
+          type:
+            - string
+            - "null"
+        end_reason:
+          type:
+            - string
+            - "null"
+          enum:
+            - HP_ZERO
+            - ABYSS
+            - QUIT
+            - null
+        ranked:
+          type:
+            - boolean
+            - "null"
+      additionalProperties: false
+      allOf:
+        - if:
+            properties:
+              status:
+                const: VERIFIED
+          then:
+            required:
+              - score
+              - distance_m
+              - verified_at
+              - end_reason
+              - ranked
+            properties:
+              score:
+                type: string
+              distance_m:
+                type: integer
+              verified_at:
+                type: string
+              end_reason:
+                type: string
+              ranked:
+                type: boolean
+          else:
+            properties:
+              score:
+                type: "null"
+              distance_m:
+                type: "null"
+              verified_at:
+                type: "null"
+              ranked:
+                type: "null"
+        - if:
+            properties:
+              end_reason:
+                const: QUIT
+            required:
+              - end_reason
+          then:
+            properties:
+              ranked:
+                enum:
+                  - false
+                  - null
     LeaderboardEntry:
       type: object
-      required: [rank, public_name, score, distance_m, rules_major]
+      required:
+        - rank
+        - public_name
+        - score
+        - distance_m
+        - rules_major
       properties:
-        rank: { type: integer, minimum: 1 }
-        player_id: { type: string, format: uuid }
-        public_name: { type: string }
-        avatar_parts: { type: object, additionalProperties: { type: string } }
-        score: { type: string, description: Inteiro decimal para evitar overflow de JavaScript }
-        distance_m: { type: integer, minimum: 0 }
-        rules_major: { type: integer, minimum: 1 }
+        rank:
+          type: integer
+          minimum: 1
+        player_id:
+          type: string
+          format: uuid
+        public_name:
+          type: string
+        avatar_parts:
+          type: object
+          additionalProperties:
+            type: string
+        score:
+          type: string
+          description: Inteiro decimal para evitar overflow de JavaScript
+        distance_m:
+          type: integer
+          minimum: 0
+        rules_major:
+          type: integer
+          minimum: 1
     LeaderboardPage:
       type: object
-      required: [entries, rules_major]
+      required:
+        - entries
+        - rules_major
       properties:
-        entries: { type: array, items: { $ref: '#/components/schemas/LeaderboardEntry' } }
-        next_cursor: { type: [string, 'null'] }
-        rules_major: { type: integer, minimum: 1 }
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/LeaderboardEntry"
+        next_cursor:
+          type:
+            - string
+            - "null"
+        rules_major:
+          type: integer
+          minimum: 1
     WeeklyEdition:
       type: object
-      required: [week_id, starts_at, ends_at, challenges]
+      required:
+        - week_id
+        - starts_at
+        - ends_at
+        - challenges
       properties:
-        week_id: { type: string }
-        starts_at: { type: string, format: date-time }
-        ends_at: { type: string, format: date-time }
+        week_id:
+          type: string
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
         challenges:
           type: array
           minItems: 5
           maxItems: 5
           items:
             type: object
-            required: [challenge_id, tier, metric, target, locale_key]
+            required:
+              - challenge_id
+              - tier
+              - metric
+              - target
+              - locale_key
             properties:
-              challenge_id: { type: string }
-              tier: { type: string, enum: [EASY, MEDIUM, HARD] }
-              metric: { type: string }
-              target: { type: integer, minimum: 1 }
-              locale_key: { type: string }
+              challenge_id:
+                type: string
+              tier:
+                type: string
+                enum:
+                  - EASY
+                  - MEDIUM
+                  - HARD
+              metric:
+                type: string
+              target:
+                type: integer
+                minimum: 1
+              locale_key:
+                type: string
     ApiError:
       type: object
-      required: [error]
+      required:
+        - error
       properties:
         error:
           type: object
-          required: [code, message_key, request_id]
+          required:
+            - code
+            - message_key
+            - request_id
           properties:
-            code: { type: string }
-            message_key: { type: string }
-            request_id: { type: string }
-            details: { type: object }
+            code:
+              type: string
+            message_key:
+              type: string
+            request_id:
+              type: string
+            details:
+              type: object
+    Health:
+      type: object
+      properties:
+        status:
+          type: string
+          const: ok
+        service:
+          type: string
+          const: ronin-play-api
+      required:
+        - status
+        - service
+      additionalProperties: false
+    RunStart:
+      type: object
+      properties:
+        mode:
+          $ref: "#/components/schemas/RunMode"
+        region_id: *a3
+      required:
+        - mode
+      additionalProperties: false
+      oneOf:
+        - properties:
+            mode:
+              const: FULL
+            region_id: false
+        - properties:
+            mode:
+              const: REGIONAL
+            region_id: *a3
+          required:
+            - region_id
+    RunVersions:
+      type: object
+      properties:
+        rules_major:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        rules_patch:
+          type: integer
+          minimum: 0
+          maximum: 2147483647
+        generator_version:
+          type: string
+          minLength: 1
+        scoring_version:
+          type: string
+          minLength: 1
+        replay_protocol_version:
+          type: string
+          const: rr-input-v1
+        rules_manifest_hash: *a1
+        assets_manifest_version:
+          type: string
+          minLength: 1
+      required:
+        - rules_major
+        - rules_patch
+        - generator_version
+        - scoring_version
+        - replay_protocol_version
+        - rules_manifest_hash
+        - assets_manifest_version
+      additionalProperties: false
+    RunLimits:
+      type: object
+      properties:
+        segment_ticks:
+          type: integer
+          const: 3600
+        max_encoded_bytes:
+          type: integer
+          const: 262144
+        max_decoded_bytes:
+          type: integer
+          const: 1048576
+        max_actions_per_tick:
+          type: integer
+          const: 2
+        upload_grace_seconds:
+          type: integer
+          const: 86400
+      required:
+        - segment_ticks
+        - max_encoded_bytes
+        - max_decoded_bytes
+        - max_actions_per_tick
+        - upload_grace_seconds
+      additionalProperties: false
+    FinishRequest:
+      type: object
+      properties:
+        final_segment_index: &a4
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        final_tick: *a4
+        final_hash: *a1
+        end_reason:
+          type: string
+          enum:
+            - HP_ZERO
+            - ABYSS
+            - QUIT
+      required:
+        - final_segment_index
+        - final_tick
+        - final_hash
+        - end_reason
+      additionalProperties: false
+    ReplayAction:
+      type: object
+      properties:
+        tick: *a4
+        action:
+          type: string
+          enum:
+            - JUMP
+            - SLIDE
+            - ATTACK
+      required:
+        - tick
+        - action
+      additionalProperties: false
+    ReplayControl:
+      type: object
+      properties:
+        tick: *a4
+        sequence: *a4
+        action:
+          type: string
+          enum:
+            - PAUSE
+            - RESUME
+            - QUIT
+      required:
+        - tick
+        - sequence
+        - action
+      additionalProperties: false
+    ReplaySegment:
+      type: object
+      properties:
+        protocol:
+          type: string
+          const: rr-input-v1
+        run_id: *a5
+        index: *a4
+        start_tick: *a4
+        end_tick: *a4
+        previous_hash:
+          anyOf:
+            - *a1
+            - type: "null"
+        actions:
+          type: array
+          maxItems: 7200
+          items:
+            $ref: "#/components/schemas/ReplayAction"
+        controls:
+          type: array
+          maxItems: 4096
+          items:
+            $ref: "#/components/schemas/ReplayControl"
+      required:
+        - protocol
+        - run_id
+        - index
+        - start_tick
+        - end_tick
+        - previous_hash
+        - actions
+        - controls
+      additionalProperties: false
   responses:
     BadRequest:
       description: Corpo ou formato invalido
       content:
         application/json:
-          schema: { $ref: '#/components/schemas/ApiError' }
+          schema:
+            $ref: "#/components/schemas/ApiError"
     Unauthorized:
       description: Sessao ou credencial invalida
       content:
         application/json:
-          schema: { $ref: '#/components/schemas/ApiError' }
+          schema:
+            $ref: "#/components/schemas/ApiError"
     Forbidden:
       description: Sem permissao sobre recurso
       content:
         application/json:
-          schema: { $ref: '#/components/schemas/ApiError' }
+          schema:
+            $ref: "#/components/schemas/ApiError"
     NotFound:
       description: Recurso inexistente
       content:
         application/json:
-          schema: { $ref: '#/components/schemas/ApiError' }
+          schema:
+            $ref: "#/components/schemas/ApiError"
     Conflict:
       description: Idempotencia, versao concorrente ou estado de run invalido
       content:
         application/json:
-          schema: { $ref: '#/components/schemas/ApiError' }
+          schema:
+            $ref: "#/components/schemas/ApiError"
     InvalidState:
       description: Estado invalido ou token expirado
       content:
         application/json:
-          schema: { $ref: '#/components/schemas/ApiError' }
+          schema:
+            $ref: "#/components/schemas/ApiError"
     PayloadTooLarge:
       description: Segmento maior que limite da politica
       content:
         application/json:
-          schema: { $ref: '#/components/schemas/ApiError' }
+          schema:
+            $ref: "#/components/schemas/ApiError"
     RateLimited:
       description: Muitas requisicoes, usar Retry-After
       headers:
         Retry-After:
-          schema: { type: integer, minimum: 1 }
+          schema:
+            type: integer
+            minimum: 1
       content:
         application/json:
-          schema: { $ref: '#/components/schemas/ApiError' }
+          schema:
+            $ref: "#/components/schemas/ApiError"
