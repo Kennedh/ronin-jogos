@@ -1,3 +1,4 @@
+import { trackPoolClose } from "./pool-close.ts";
 import LocalPostgres from "../../scripts/local-postgres.ts";
 import { mkdtemp, realpath, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -49,10 +50,10 @@ export async function testPostgres() {
     onLog: record,
     onError: record,
   });
-  let pool: Pool | undefined;
+  let closePool: (() => Promise<void>) | undefined;
   let started = false;
   async function close() {
-    await pool?.end();
+    await closePool?.();
     if (started) await pg.stop();
     const target = await realpath(dir);
     if (!target.startsWith(root + sep) || !target.includes("ronin-qa-pg-"))
@@ -64,7 +65,7 @@ export async function testPostgres() {
     phase = "start";
     await pg.start();
     started = true;
-    pool = new Pool({
+    const pool = new Pool({
       host: "127.0.0.1",
       port,
       user: "ronin_test",
@@ -73,6 +74,7 @@ export async function testPostgres() {
       max: 4,
       connectionTimeoutMillis: 10000,
     });
+    closePool = trackPoolClose(pool);
     phase = "connect";
     await pool.query("SELECT 1");
     return { pool, close, port, cluster: pg };
