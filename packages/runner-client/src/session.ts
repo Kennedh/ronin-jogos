@@ -1,4 +1,4 @@
-import { createState, control, step } from "@ronin/runner-core";
+import { createState, control, step, worldAtTick } from "@ronin/runner-core";
 import type { Action, SimState, SimEvent, World } from "@ronin/runner-core";
 import { courseFor } from "@ronin/content/runner-manifest";
 import type { RunnerManifest } from "@ronin/content/runner-manifest";
@@ -31,9 +31,19 @@ export class RunSession {
   constructor(ticket: RunTicket, manifest: RunnerManifest) {
     this.ticket = ticket;
     this.manifest = manifest;
-    this.state = createState(ticket.seed, manifest.physics);
+    this.state = createState(
+      ticket.seed,
+      manifest.physics,
+      ticket.starting_region_id,
+    );
     this.recorder = new Recorder(ticket);
-    this.course = courseFor(manifest, ticket.seed, 0, 2000000);
+    this.course = courseFor(
+      manifest,
+      ticket.seed,
+      0,
+      2000000,
+      ticket.starting_region_id,
+    );
     this.courseEnd = 2000000;
   }
   get world() {
@@ -44,9 +54,19 @@ export class RunSession {
         this.ticket.seed,
         this.state.distance,
         this.courseEnd,
+        this.ticket.starting_region_id,
       );
     }
     return this.course;
+  }
+  get renderWorld() {
+    return this.state.journey
+      ? worldAtTick(
+          this.world,
+          Math.max(0, this.state.tick - 1),
+          this.state.resolved,
+        )
+      : this.world;
   }
   input(action: Action) {
     if (this.phase === "running") this.queued.add(action);

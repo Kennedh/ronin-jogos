@@ -6688,6 +6688,31 @@ var e = Object.create,
             normalBreaksCombo: { type: `integer`, minimum: 0, maximum: 1 },
             specialReach: { type: `integer`, minimum: 1, maximum: 1e6 },
             specialFxTicks: { type: `integer`, minimum: 1, maximum: 60 },
+            bambooMeters: {
+              type: `integer`,
+              minimum: 1,
+              maximum: 9007199254740991,
+            },
+            templeMeters: {
+              type: `integer`,
+              minimum: 1,
+              maximum: 9007199254740991,
+            },
+            mountainMeters: {
+              type: `integer`,
+              minimum: 1,
+              maximum: 9007199254740991,
+            },
+            castleMeters: {
+              type: `integer`,
+              minimum: 1,
+              maximum: 9007199254740991,
+            },
+            cycleSpeedStep: {
+              type: `integer`,
+              minimum: 1,
+              maximum: 9007199254740991,
+            },
           },
         },
         q = RegExp(`^[a-zA-Z0-9._-]{1,100}$`, `u`);
@@ -7979,6 +8004,181 @@ var e = Object.create,
                 let e = {
                   instancePath: t + `/specialFxTicks`,
                   schemaPath: `#/properties/specialFxTicks/minimum`,
+                  keyword: `minimum`,
+                  params: { comparison: `>=`, limit: 1 },
+                  message: `must be >= 1`,
+                };
+                (o === null ? (o = [e]) : o.push(e), s++);
+              }
+            }
+          }
+          if (e.bambooMeters !== void 0) {
+            let n = e.bambooMeters;
+            if (typeof n != `number` || n % 1 || isNaN(n) || !isFinite(n)) {
+              let e = {
+                instancePath: t + `/bambooMeters`,
+                schemaPath: `#/properties/bambooMeters/type`,
+                keyword: `type`,
+                params: { type: `integer` },
+                message: `must be integer`,
+              };
+              (o === null ? (o = [e]) : o.push(e), s++);
+            }
+            if (typeof n == `number` && isFinite(n)) {
+              if (n > 9007199254740991 || isNaN(n)) {
+                let e = {
+                  instancePath: t + `/bambooMeters`,
+                  schemaPath: `#/properties/bambooMeters/maximum`,
+                  keyword: `maximum`,
+                  params: { comparison: `<=`, limit: 9007199254740991 },
+                  message: `must be <= 9007199254740991`,
+                };
+                (o === null ? (o = [e]) : o.push(e), s++);
+              }
+              if (n < 1 || isNaN(n)) {
+                let e = {
+                  instancePath: t + `/bambooMeters`,
+                  schemaPath: `#/properties/bambooMeters/minimum`,
+                  keyword: `minimum`,
+                  params: { comparison: `>=`, limit: 1 },
+                  message: `must be >= 1`,
+                };
+                (o === null ? (o = [e]) : o.push(e), s++);
+              }
+            }
+          }
+          if (e.templeMeters !== void 0) {
+            let n = e.templeMeters;
+            if (typeof n != `number` || n % 1 || isNaN(n) || !isFinite(n)) {
+              let e = {
+                instancePath: t + `/templeMeters`,
+                schemaPath: `#/properties/templeMeters/type`,
+                keyword: `type`,
+                params: { type: `integer` },
+                message: `must be integer`,
+              };
+              (o === null ? (o = [e]) : o.push(e), s++);
+            }
+            if (typeof n == `number` && isFinite(n)) {
+              if (n > 9007199254740991 || isNaN(n)) {
+                let e = {
+                  instancePath: t + `/templeMeters`,
+                  schemaPath: `#/properties/templeMeters/maximum`,
+                  keyword: `maximum`,
+                  params: { comparison: `<=`, limit: 9007199254740991 },
+                  message: `must be <= 9007199254740991`,
+                };
+                (o === null ? (o = [e]) : o.push(e), s++);
+              }
+              if (n < 1 || isNaN(n)) {
+                let e = {
+                  instancePath: t + `/templeMeters`,
+                  schemaPath: `#/properties/templeMeters/minimum`,
+                  keyword: `minimum`,
+                  params: { comparison: `>=`, limit: 1 },
+                  message: `must be >= 1`,
+                };
+                (o === null ? (o = [e]) : o.push(e), s++);
+              }
+            }
+          }
+          if (e.mountainMeters !== void 0) {
+            let n = e.mountainMeters;
+            if (typeof n != `number` || n % 1 || isNaN(n) || !isFinite(n)) {
+              let e = {
+                instancePath: t + `/mountainMeters`,
+                schemaPath: `#/properties/mountainMeters/type`,
+                keyword: `type`,
+                params: { type: `integer` },
+                message: `must be integer`,
+              };
+              (o === null ? (o = [e]) : o.push(e), s++);
+            }
+            if (typeof n == `number` && isFinite(n)) {
+              if (n > 9007199254740991 || isNaN(n)) {
+                let e = {
+                  instancePath: t + `/mountainMeters`,
+                  schemaPath: `#/properties/mountainMeters/maximum`,
+                  keyword: `maximum`,
+                  params: { comparison: `<=`, limit: 9007199254740991 },
+                  message: `must be <= 9007199254740991`,
+                };
+                (o === null ? (o = [e]) : o.push(e), s++);
+              }
+              if (n < 1 || isNaN(n)) {
+                let e = {
+                  instancePath: t + `/mountainMeters`,
+                  schemaPath: `#/properties/mountainMeters/minimum`,
+                  keyword: `minimum`,
+                  params: { comparison: `>=`, limit: 1 },
+                  message: `must be >= 1`,
+                };
+                (o === null ? (o = [e]) : o.push(e), s++);
+              }
+            }
+          }
+          if (e.castleMeters !== void 0) {
+            let n = e.castleMeters;
+            if (typeof n != `number` || n % 1 || isNaN(n) || !isFinite(n)) {
+              let e = {
+                instancePath: t + `/castleMeters`,
+                schemaPath: `#/properties/castleMeters/type`,
+                keyword: `type`,
+                params: { type: `integer` },
+                message: `must be integer`,
+              };
+              (o === null ? (o = [e]) : o.push(e), s++);
+            }
+            if (typeof n == `number` && isFinite(n)) {
+              if (n > 9007199254740991 || isNaN(n)) {
+                let e = {
+                  instancePath: t + `/castleMeters`,
+                  schemaPath: `#/properties/castleMeters/maximum`,
+                  keyword: `maximum`,
+                  params: { comparison: `<=`, limit: 9007199254740991 },
+                  message: `must be <= 9007199254740991`,
+                };
+                (o === null ? (o = [e]) : o.push(e), s++);
+              }
+              if (n < 1 || isNaN(n)) {
+                let e = {
+                  instancePath: t + `/castleMeters`,
+                  schemaPath: `#/properties/castleMeters/minimum`,
+                  keyword: `minimum`,
+                  params: { comparison: `>=`, limit: 1 },
+                  message: `must be >= 1`,
+                };
+                (o === null ? (o = [e]) : o.push(e), s++);
+              }
+            }
+          }
+          if (e.cycleSpeedStep !== void 0) {
+            let n = e.cycleSpeedStep;
+            if (typeof n != `number` || n % 1 || isNaN(n) || !isFinite(n)) {
+              let e = {
+                instancePath: t + `/cycleSpeedStep`,
+                schemaPath: `#/properties/cycleSpeedStep/type`,
+                keyword: `type`,
+                params: { type: `integer` },
+                message: `must be integer`,
+              };
+              (o === null ? (o = [e]) : o.push(e), s++);
+            }
+            if (typeof n == `number` && isFinite(n)) {
+              if (n > 9007199254740991 || isNaN(n)) {
+                let e = {
+                  instancePath: t + `/cycleSpeedStep`,
+                  schemaPath: `#/properties/cycleSpeedStep/maximum`,
+                  keyword: `maximum`,
+                  params: { comparison: `<=`, limit: 9007199254740991 },
+                  message: `must be <= 9007199254740991`,
+                };
+                (o === null ? (o = [e]) : o.push(e), s++);
+              }
+              if (n < 1 || isNaN(n)) {
+                let e = {
+                  instancePath: t + `/cycleSpeedStep`,
+                  schemaPath: `#/properties/cycleSpeedStep/minimum`,
                   keyword: `minimum`,
                   params: { comparison: `>=`, limit: 1 },
                   message: `must be >= 1`,
@@ -9530,6 +9730,181 @@ var e = Object.create,
                   }
                 }
               }
+              if (n.bambooMeters !== void 0) {
+                let e = n.bambooMeters;
+                if (typeof e != `number` || e % 1 || isNaN(e) || !isFinite(e)) {
+                  let e = {
+                    instancePath: t + `/physics/bambooMeters`,
+                    schemaPath: `#/$defs/PhysicsRules/properties/bambooMeters/type`,
+                    keyword: `type`,
+                    params: { type: `integer` },
+                    message: `must be integer`,
+                  };
+                  (o === null ? (o = [e]) : o.push(e), c++);
+                }
+                if (typeof e == `number` && isFinite(e)) {
+                  if (e > 9007199254740991 || isNaN(e)) {
+                    let e = {
+                      instancePath: t + `/physics/bambooMeters`,
+                      schemaPath: `#/$defs/PhysicsRules/properties/bambooMeters/maximum`,
+                      keyword: `maximum`,
+                      params: { comparison: `<=`, limit: 9007199254740991 },
+                      message: `must be <= 9007199254740991`,
+                    };
+                    (o === null ? (o = [e]) : o.push(e), c++);
+                  }
+                  if (e < 1 || isNaN(e)) {
+                    let e = {
+                      instancePath: t + `/physics/bambooMeters`,
+                      schemaPath: `#/$defs/PhysicsRules/properties/bambooMeters/minimum`,
+                      keyword: `minimum`,
+                      params: { comparison: `>=`, limit: 1 },
+                      message: `must be >= 1`,
+                    };
+                    (o === null ? (o = [e]) : o.push(e), c++);
+                  }
+                }
+              }
+              if (n.templeMeters !== void 0) {
+                let e = n.templeMeters;
+                if (typeof e != `number` || e % 1 || isNaN(e) || !isFinite(e)) {
+                  let e = {
+                    instancePath: t + `/physics/templeMeters`,
+                    schemaPath: `#/$defs/PhysicsRules/properties/templeMeters/type`,
+                    keyword: `type`,
+                    params: { type: `integer` },
+                    message: `must be integer`,
+                  };
+                  (o === null ? (o = [e]) : o.push(e), c++);
+                }
+                if (typeof e == `number` && isFinite(e)) {
+                  if (e > 9007199254740991 || isNaN(e)) {
+                    let e = {
+                      instancePath: t + `/physics/templeMeters`,
+                      schemaPath: `#/$defs/PhysicsRules/properties/templeMeters/maximum`,
+                      keyword: `maximum`,
+                      params: { comparison: `<=`, limit: 9007199254740991 },
+                      message: `must be <= 9007199254740991`,
+                    };
+                    (o === null ? (o = [e]) : o.push(e), c++);
+                  }
+                  if (e < 1 || isNaN(e)) {
+                    let e = {
+                      instancePath: t + `/physics/templeMeters`,
+                      schemaPath: `#/$defs/PhysicsRules/properties/templeMeters/minimum`,
+                      keyword: `minimum`,
+                      params: { comparison: `>=`, limit: 1 },
+                      message: `must be >= 1`,
+                    };
+                    (o === null ? (o = [e]) : o.push(e), c++);
+                  }
+                }
+              }
+              if (n.mountainMeters !== void 0) {
+                let e = n.mountainMeters;
+                if (typeof e != `number` || e % 1 || isNaN(e) || !isFinite(e)) {
+                  let e = {
+                    instancePath: t + `/physics/mountainMeters`,
+                    schemaPath: `#/$defs/PhysicsRules/properties/mountainMeters/type`,
+                    keyword: `type`,
+                    params: { type: `integer` },
+                    message: `must be integer`,
+                  };
+                  (o === null ? (o = [e]) : o.push(e), c++);
+                }
+                if (typeof e == `number` && isFinite(e)) {
+                  if (e > 9007199254740991 || isNaN(e)) {
+                    let e = {
+                      instancePath: t + `/physics/mountainMeters`,
+                      schemaPath: `#/$defs/PhysicsRules/properties/mountainMeters/maximum`,
+                      keyword: `maximum`,
+                      params: { comparison: `<=`, limit: 9007199254740991 },
+                      message: `must be <= 9007199254740991`,
+                    };
+                    (o === null ? (o = [e]) : o.push(e), c++);
+                  }
+                  if (e < 1 || isNaN(e)) {
+                    let e = {
+                      instancePath: t + `/physics/mountainMeters`,
+                      schemaPath: `#/$defs/PhysicsRules/properties/mountainMeters/minimum`,
+                      keyword: `minimum`,
+                      params: { comparison: `>=`, limit: 1 },
+                      message: `must be >= 1`,
+                    };
+                    (o === null ? (o = [e]) : o.push(e), c++);
+                  }
+                }
+              }
+              if (n.castleMeters !== void 0) {
+                let e = n.castleMeters;
+                if (typeof e != `number` || e % 1 || isNaN(e) || !isFinite(e)) {
+                  let e = {
+                    instancePath: t + `/physics/castleMeters`,
+                    schemaPath: `#/$defs/PhysicsRules/properties/castleMeters/type`,
+                    keyword: `type`,
+                    params: { type: `integer` },
+                    message: `must be integer`,
+                  };
+                  (o === null ? (o = [e]) : o.push(e), c++);
+                }
+                if (typeof e == `number` && isFinite(e)) {
+                  if (e > 9007199254740991 || isNaN(e)) {
+                    let e = {
+                      instancePath: t + `/physics/castleMeters`,
+                      schemaPath: `#/$defs/PhysicsRules/properties/castleMeters/maximum`,
+                      keyword: `maximum`,
+                      params: { comparison: `<=`, limit: 9007199254740991 },
+                      message: `must be <= 9007199254740991`,
+                    };
+                    (o === null ? (o = [e]) : o.push(e), c++);
+                  }
+                  if (e < 1 || isNaN(e)) {
+                    let e = {
+                      instancePath: t + `/physics/castleMeters`,
+                      schemaPath: `#/$defs/PhysicsRules/properties/castleMeters/minimum`,
+                      keyword: `minimum`,
+                      params: { comparison: `>=`, limit: 1 },
+                      message: `must be >= 1`,
+                    };
+                    (o === null ? (o = [e]) : o.push(e), c++);
+                  }
+                }
+              }
+              if (n.cycleSpeedStep !== void 0) {
+                let e = n.cycleSpeedStep;
+                if (typeof e != `number` || e % 1 || isNaN(e) || !isFinite(e)) {
+                  let e = {
+                    instancePath: t + `/physics/cycleSpeedStep`,
+                    schemaPath: `#/$defs/PhysicsRules/properties/cycleSpeedStep/type`,
+                    keyword: `type`,
+                    params: { type: `integer` },
+                    message: `must be integer`,
+                  };
+                  (o === null ? (o = [e]) : o.push(e), c++);
+                }
+                if (typeof e == `number` && isFinite(e)) {
+                  if (e > 9007199254740991 || isNaN(e)) {
+                    let e = {
+                      instancePath: t + `/physics/cycleSpeedStep`,
+                      schemaPath: `#/$defs/PhysicsRules/properties/cycleSpeedStep/maximum`,
+                      keyword: `maximum`,
+                      params: { comparison: `<=`, limit: 9007199254740991 },
+                      message: `must be <= 9007199254740991`,
+                    };
+                    (o === null ? (o = [e]) : o.push(e), c++);
+                  }
+                  if (e < 1 || isNaN(e)) {
+                    let e = {
+                      instancePath: t + `/physics/cycleSpeedStep`,
+                      schemaPath: `#/$defs/PhysicsRules/properties/cycleSpeedStep/minimum`,
+                      keyword: `minimum`,
+                      params: { comparison: `>=`, limit: 1 },
+                      message: `must be >= 1`,
+                    };
+                    (o === null ? (o = [e]) : o.push(e), c++);
+                  }
+                }
+              }
             } else {
               let e = {
                 instancePath: t + `/physics`,
@@ -9554,8 +9929,25 @@ var e = Object.create,
         return ((Y.errors = o), c === 0);
       }
       ((Y.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
-        (e.RunManifest = X));
-      function X(
+        (e.RegionUnlocks = Z));
+      let X = {
+        type: `object`,
+        additionalProperties: !1,
+        required: [`unlocked_regions`],
+        properties: {
+          unlocked_regions: {
+            type: `array`,
+            minItems: 1,
+            maxItems: 4,
+            uniqueItems: !0,
+            items: {
+              type: `string`,
+              enum: [`BAMBOO`, `TEMPLE`, `MOUNTAINS`, `CASTLE`],
+            },
+          },
+        },
+      };
+      function Z(
         e,
         {
           instancePath: t = ``,
@@ -9567,7 +9959,153 @@ var e = Object.create,
       ) {
         let o = null,
           s = 0,
-          c = X.evaluated;
+          c = Z.evaluated;
+        if (
+          (c.dynamicProps && (c.props = void 0),
+          c.dynamicItems && (c.items = void 0),
+          e && typeof e == `object` && !Array.isArray(e))
+        ) {
+          if (e.unlocked_regions === void 0) {
+            let e = {
+              instancePath: t,
+              schemaPath: `#/required`,
+              keyword: `required`,
+              params: { missingProperty: `unlocked_regions` },
+              message: `must have required property 'unlocked_regions'`,
+            };
+            (o === null ? (o = [e]) : o.push(e), s++);
+          }
+          for (let n in e)
+            if (n !== `unlocked_regions`) {
+              let e = {
+                instancePath: t,
+                schemaPath: `#/additionalProperties`,
+                keyword: `additionalProperties`,
+                params: { additionalProperty: n },
+                message: `must NOT have additional properties`,
+              };
+              (o === null ? (o = [e]) : o.push(e), s++);
+            }
+          if (e.unlocked_regions !== void 0) {
+            let n = e.unlocked_regions;
+            if (Array.isArray(n)) {
+              if (n.length > 4) {
+                let e = {
+                  instancePath: t + `/unlocked_regions`,
+                  schemaPath: `#/properties/unlocked_regions/maxItems`,
+                  keyword: `maxItems`,
+                  params: { limit: 4 },
+                  message: `must NOT have more than 4 items`,
+                };
+                (o === null ? (o = [e]) : o.push(e), s++);
+              }
+              if (n.length < 1) {
+                let e = {
+                  instancePath: t + `/unlocked_regions`,
+                  schemaPath: `#/properties/unlocked_regions/minItems`,
+                  keyword: `minItems`,
+                  params: { limit: 1 },
+                  message: `must NOT have fewer than 1 items`,
+                };
+                (o === null ? (o = [e]) : o.push(e), s++);
+              }
+              let e = n.length;
+              for (let r = 0; r < e; r++) {
+                let e = n[r];
+                if (typeof e != `string`) {
+                  let e = {
+                    instancePath: t + `/unlocked_regions/` + r,
+                    schemaPath: `#/properties/unlocked_regions/items/type`,
+                    keyword: `type`,
+                    params: { type: `string` },
+                    message: `must be string`,
+                  };
+                  (o === null ? (o = [e]) : o.push(e), s++);
+                }
+                if (
+                  e !== `BAMBOO` &&
+                  e !== `TEMPLE` &&
+                  e !== `MOUNTAINS` &&
+                  e !== `CASTLE`
+                ) {
+                  let e = {
+                    instancePath: t + `/unlocked_regions/` + r,
+                    schemaPath: `#/properties/unlocked_regions/items/enum`,
+                    keyword: `enum`,
+                    params: {
+                      allowedValues: X.properties.unlocked_regions.items.enum,
+                    },
+                    message: `must be equal to one of the allowed values`,
+                  };
+                  (o === null ? (o = [e]) : o.push(e), s++);
+                }
+              }
+              let r = n.length,
+                i;
+              if (r > 1) {
+                let e = {};
+                for (; r--;) {
+                  let a = n[r];
+                  if (typeof a == `string`) {
+                    if (typeof e[a] == `number`) {
+                      i = e[a];
+                      let n = {
+                        instancePath: t + `/unlocked_regions`,
+                        schemaPath: `#/properties/unlocked_regions/uniqueItems`,
+                        keyword: `uniqueItems`,
+                        params: { i: r, j: i },
+                        message:
+                          `must NOT have duplicate items (items ## ` +
+                          i +
+                          ` and ` +
+                          r +
+                          ` are identical)`,
+                      };
+                      (o === null ? (o = [n]) : o.push(n), s++);
+                      break;
+                    }
+                    e[a] = r;
+                  }
+                }
+              }
+            } else {
+              let e = {
+                instancePath: t + `/unlocked_regions`,
+                schemaPath: `#/properties/unlocked_regions/type`,
+                keyword: `type`,
+                params: { type: `array` },
+                message: `must be array`,
+              };
+              (o === null ? (o = [e]) : o.push(e), s++);
+            }
+          }
+        } else {
+          let e = {
+            instancePath: t,
+            schemaPath: `#/type`,
+            keyword: `type`,
+            params: { type: `object` },
+            message: `must be object`,
+          };
+          (o === null ? (o = [e]) : o.push(e), s++);
+        }
+        return ((Z.errors = o), s === 0);
+      }
+      ((Z.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.RunManifest = Q));
+      function Q(
+        e,
+        {
+          instancePath: t = ``,
+          parentData: n,
+          parentDataProperty: r,
+          rootData: i = e,
+          dynamicAnchors: a = {},
+        } = {},
+      ) {
+        let o = null,
+          s = 0,
+          c = Q.evaluated;
         if (
           (c.dynamicProps && (c.props = void 0),
           c.dynamicItems && (c.items = void 0),
@@ -9648,9 +10186,9 @@ var e = Object.create,
           };
           (o === null ? (o = [e]) : o.push(e), s++);
         }
-        return ((X.errors = o), s === 0);
+        return ((Q.errors = o), s === 0);
       }
-      X.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+      Q.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
     })(),
   ).default;
 export { d as validators };

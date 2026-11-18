@@ -35,6 +35,28 @@ export const RULES_V2 = Object.freeze({
   specialReach: 220000,
   specialFxTicks: 12,
 });
+/** Endless director development major; historical algorithms stay available. */
+export const RULES_V3 = Object.freeze({
+  ...RULES_V2,
+  version: "rr-physics-0.3.0",
+  bambooMeters: 1500,
+  templeMeters: 2000,
+  mountainMeters: 2500,
+  castleMeters: 2000,
+  cycleSpeedStep: 80000,
+});
+export interface DirectorRules {
+  readonly bambooMeters: number;
+  readonly templeMeters: number;
+  readonly mountainMeters: number;
+  readonly castleMeters: number;
+  readonly cycleSpeedStep: number;
+}
+export function directorRules(r: Rules): DirectorRules | undefined {
+  return r.version === RULES_V3.version
+    ? (r as Rules & DirectorRules)
+    : undefined;
+}
 export interface CombatRules {
   readonly concentrationCap: number;
   readonly perfectGain: number;
@@ -44,19 +66,27 @@ export interface CombatRules {
   readonly specialFxTicks: number;
 }
 export function combatRules(rules: Rules): CombatRules | undefined {
-  return rules.version === RULES_V2.version
+  return rules.version === RULES_V2.version ||
+    rules.version === RULES_V3.version
     ? (rules as Rules & CombatRules)
     : undefined;
 }
 export type Rules = {
   readonly [K in keyof typeof RULES_V1]: K extends "version" ? string : number;
-} & Partial<CombatRules>;
+} & Partial<CombatRules> &
+  Partial<DirectorRules>;
 export function compileRules(input: Rules): Rules {
   if (
     typeof input.version !== "string" ||
     !/^[a-zA-Z0-9._-]{1,100}$/.test(input.version) ||
     Object.keys(input).sort().join(",") !==
-      Object.keys(input.version === RULES_V2.version ? RULES_V2 : RULES_V1)
+      Object.keys(
+        input.version === RULES_V3.version
+          ? RULES_V3
+          : input.version === RULES_V2.version
+            ? RULES_V2
+            : RULES_V1,
+      )
         .sort()
         .join(",")
   )
@@ -116,6 +146,26 @@ export function compileRules(input: Rules): Rules {
       combat.specialFxTicks > 60)
   )
     throw new RangeError("invalid_combat_rules");
+  const director = directorRules(input);
+  if (
+    director &&
+    ([
+      director.bambooMeters,
+      director.templeMeters,
+      director.mountainMeters,
+      director.castleMeters,
+    ].some((n) => n < 100 || n > 100000) ||
+      director.cycleSpeedStep < 1 ||
+      !Number.isSafeInteger(
+        (director.bambooMeters +
+          director.templeMeters +
+          director.mountainMeters +
+          director.castleMeters) *
+          input.scale *
+          input.unitsPerMeter,
+      ))
+  )
+    throw new RangeError("invalid_director_rules");
   return Object.freeze({ ...input });
 }
 export const TICK_RATE = RULES_V1.tickRate;

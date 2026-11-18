@@ -7,6 +7,7 @@ import {
   RunSession,
   Submission,
   Gestures,
+  abyssAhead,
   DEFAULT_BINDINGS,
   parseBindings,
   rebind,
@@ -18,6 +19,7 @@ import {
   canvasBrush,
 } from "@ronin/runner-client";
 import type { RunTicket, PauseReason } from "@ronin/runner-client";
+import { REGIONS } from "@ronin/runner-core";
 import { RULES_V2 } from "@ronin/runner-core";
 import type { RunnerTextKey } from "@ronin/content/runner-copy";
 import type { Animation } from "@ronin/runner-client";
@@ -44,6 +46,7 @@ export async function initializeGame(
     api = new RunnerApi();
   const play = get<HTMLButtonElement>("play"),
     mode = get<HTMLSelectElement>("mode"),
+    regionSelect = get<HTMLSelectElement>("region"),
     pause = get<HTMLButtonElement>("pause"),
     resume = get<HTMLButtonElement>("resume"),
     newRun = get<HTMLButtonElement>("new-run"),
@@ -58,6 +61,9 @@ export async function initializeGame(
     startKey = "",
     candidate: RunTicket | undefined,
     latchedMode: "FULL" | "REGIONAL" = "FULL",
+    latchedRegion: RunTicket["starting_region_id"] = "BAMBOO",
+    unlocked: string[] = ["BAMBOO"],
+    regionsPromise: ReturnType<RunnerApi["guest"]> | undefined,
     startError: ClientError | undefined,
     confirming = false,
     portraitAllowed = false,
@@ -117,6 +123,23 @@ export async function initializeGame(
     get("binding-error").hidden = true;
     saveSettings();
   });
+  const loadRegions = () => {
+    regionsPromise = api.guest();
+    void regionsPromise
+      .then((player) => {
+        unlocked = player.region_unlocks ?? ["BAMBOO"];
+        render();
+      })
+      .catch(() => {})
+      .finally(() => {
+        regionsPromise = undefined;
+      });
+    return regionsPromise;
+  };
+  mode.addEventListener("change", () => {
+    if (!session && !starting && mode.value === "REGIONAL") void loadRegions();
+    render();
+  });
   const isPortrait = () =>
     navigator.maxTouchPoints > 0 && window.innerHeight > window.innerWidth;
   function message(error: ClientError, atStart = false) {
@@ -157,6 +180,25 @@ export async function initializeGame(
       requestAnimationFrame(() => renderer?.resize());
     }
     surface.setAttribute("aria-label", t.stageLabel);
+    const region = state?.journey?.region ?? "BAMBOO",
+      cycle = state?.journey?.cycle ?? 1;
+    get("biome-name").textContent = t[("region_" + region) as RunnerTextKey];
+    get("biome-index").textContent = String(
+      REGIONS.indexOf(region) + 1,
+    ).padStart(2, "0");
+    root.querySelector<HTMLElement>(".stage-meta")!.textContent =
+      `${t[("region_" + region) as RunnerTextKey]} / ${t.cycle} ${cycle}`;
+    regionSelect.hidden = mode.value !== "REGIONAL";
+    get("region-label").hidden = regionSelect.hidden;
+    regionSelect.disabled = starting || !!startKey;
+    for (const option of regionSelect.options) {
+      option.disabled = !unlocked.includes(option.value);
+      option.textContent =
+        t[("region_" + option.value) as RunnerTextKey] +
+        (option.disabled ? ` · ${t.locked}` : "");
+    }
+    root.querySelector<HTMLElement>(".mode-help")!.textContent = t.directorHelp;
+    root.querySelector<HTMLElement>(".scope")!.textContent = t.directorScope;
     for (const action of ["JUMP", "SLIDE", "ATTACK"] as const)
       get<HTMLInputElement>("bind-" + action).value = bindings[action]
         .map(keyLabel)
@@ -168,6 +210,11 @@ export async function initializeGame(
       });
     const keyboard = root.querySelector<HTMLElement>(".keyboard-help")!;
     keyboard.textContent = `${bindings.JUMP.map(keyLabel).join(" / ")} ${t.jump} · ${bindings.SLIDE.map(keyLabel).join(" / ")} ${t.slide} · ${bindings.ATTACK.map(keyLabel).join(" / ")} ${t.attack} · Esc ${t.pause}`;
+    get("world-warning").hidden = !(
+      s &&
+      state &&
+      abyssAhead(state, s.world, s.manifest.physics)
+    );
     const combat = state?.combat;
     get<HTMLProgressElement>("concentration").value =
       combat?.concentration ?? 0;
@@ -359,12 +406,18 @@ export async function initializeGame(
     if (!startKey) {
       startKey = crypto.randomUUID();
       latchedMode = mode.value === "REGIONAL" ? "REGIONAL" : "FULL";
+      latchedRegion = REGIONS.includes(
+        regionSelect.value as RunTicket["starting_region_id"],
+      )
+        ? (regionSelect.value as RunTicket["starting_region_id"])
+        : "BAMBOO";
     }
     const immersion = immersive();
     render();
     try {
-      await api.guest();
-      candidate ??= await api.start(startKey, latchedMode);
+      const player = await (regionsPromise ?? api.guest());
+      unlocked = player.region_unlocks ?? ["BAMBOO"];
+      candidate ??= await api.start(startKey, latchedMode, latchedRegion);
       const manifest = await api.manifest(candidate);
       await immersion;
       lab.open = false;
@@ -435,6 +488,7 @@ export async function initializeGame(
     startKey = "";
     startError = undefined;
     portraitAllowed = false;
+    if (mode.value === "REGIONAL") void loadRegions();
     surface.removeAttribute("data-state-hash");
     render();
     play.focus();

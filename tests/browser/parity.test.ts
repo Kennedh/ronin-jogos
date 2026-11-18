@@ -124,3 +124,56 @@ test(
     }
   },
 );
+
+test(
+  "3: director clock/regions, moving attacks/projectiles and survival replay match Chromium/Node",
+  { timeout: 60000 },
+  async () => {
+    const { directorScenario } =
+      await import("../fixtures/director-scenario.ts");
+    const server = await createServer({
+      root: process.cwd(),
+      logLevel: "silent",
+      server: { host: "127.0.0.1", port: 0 },
+    });
+    await server.listen();
+    const address = server.httpServer!.address();
+    if (!address || typeof address === "string") throw new Error("no_port");
+    const chrome = "C:/Program Files/Google/Chrome/Application/chrome.exe",
+      browser = await chromium.launch(
+        existsSync(chrome) ? { executablePath: chrome } : {},
+      );
+    try {
+      const page = await browser.newPage();
+      await page.goto(
+        `http://127.0.0.1:${address.port}/tests/fixtures/parity.html`,
+      );
+      await page.waitForFunction(
+        () =>
+          typeof (window as unknown as { directorScenario: unknown })
+            .directorScenario === "function",
+      );
+      const expected = await directorScenario(60);
+      assert.equal(expected.updates, 3600);
+      assert.equal(expected.state.hp, 3);
+      assert.ok(expected.state.journey!.cycle >= 2);
+      for (const fps of [30, 60, 120]) {
+        const result = await page.evaluate(
+          async (fps) =>
+            await (
+              window as unknown as {
+                directorScenario: (fps: number) => Promise<unknown>;
+              }
+            ).directorScenario(fps),
+          fps,
+        );
+        assert.deepEqual(result, expected);
+        assert.deepEqual(await directorScenario(fps), expected);
+      }
+      console.log("Director parity", browser.version(), expected.traceHash);
+    } finally {
+      await browser.close();
+      await server.close();
+    }
+  },
+);

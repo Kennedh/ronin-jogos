@@ -4,6 +4,10 @@ import type { Rules } from "./rules.ts";
 import { createRandom } from "./rng.ts";
 import type { RandomState } from "./rng.ts";
 import { supported, overlap } from "./world.ts";
+import { worldAtTick } from "./actors.ts";
+import { journeyAt, startOffset } from "./journey.ts";
+import type { Journey, Region } from "./journey.ts";
+import { directorRules } from "./rules.ts";
 import type { World } from "./world.ts";
 export type Action = "JUMP" | "SLIDE" | "ATTACK";
 export type EndReason = "HP_ZERO" | "ABYSS" | "QUIT";
@@ -20,6 +24,8 @@ export interface CombatState {
 }
 export interface SimState {
   combat?: CombatState;
+  journey?: Journey;
+  damaged?: { id: string; end: number }[];
   rulesVersion: string;
   rulesIdentity: string;
   tick: number;
@@ -44,7 +50,7 @@ export interface SimState {
   score: string;
   status: "RUNNING" | "PAUSED" | "DEAD" | "QUIT";
   endReason: EndReason | null;
-  resolved: { id: string; end: number }[];
+  resolved: { id: string; end: number; tick?: number }[];
   rngWorld: RandomState;
   rngEnemies: RandomState;
 }
@@ -62,10 +68,19 @@ export interface SimEvent {
     | "SPECIAL"
     | "SPECIAL_HIT"
     | "DAMAGE"
-    | "DEATH";
+    | "DEATH"
+    | "DEFLECT"
+    | "REGION_ENTER"
+    | "CYCLE_ENTER";
   entity?: string;
+  region?: Region;
+  cycle?: number;
 }
-export function createState(seed: string, rules: Rules = RULES_V1): SimState {
+export function createState(
+  seed: string,
+  rules: Rules = RULES_V1,
+  region: Region = "BAMBOO",
+): SimState {
   const manifest = compileRules(rules);
   return {
     ...(combatRules(manifest)
@@ -81,6 +96,12 @@ export function createState(seed: string, rules: Rules = RULES_V1): SimState {
             attackArmed: false,
             specialUntil: 0,
           },
+        }
+      : {}),
+    ...(directorRules(manifest)
+      ? {
+          journey: journeyAt(0, startOffset(region, manifest), manifest),
+          damaged: [],
         }
       : {}),
     rulesVersion: manifest.version,
@@ -154,10 +175,21 @@ export function step(
   const s = {
     ...previous,
     ...(previous.combat ? { combat: { ...previous.combat } } : {}),
+    ...(previous.damaged
+      ? {
+          damaged: previous.damaged.filter(
+            (e) =>
+              e.end >=
+              previous.distance - (previous.journey ? 2000000 : r.bodyWidth),
+          ),
+        }
+      : {}),
     resolved: previous.resolved.filter(
-      (e) => e.end >= previous.distance - r.bodyWidth,
+      (e) =>
+        e.end >= previous.distance - (previous.journey ? 2000000 : r.bodyWidth),
     ),
   };
+  if (s.journey) world = worldAtTick(world, tick, s.resolved);
   const c = s.combat,
     cr = combatRules(r);
   const events: SimEvent[] = [];
@@ -213,7 +245,7 @@ export function step(
     }
     event("ATTACK");
   }
-  const [dx, xrem] = divideStep(r.speed, s.xRemainder);
+  const [dx, xrem] = divideStep(s.journey?.speed ?? r.speed, s.xRemainder);
   s.distance = add(s.distance, dx);
   s.xRemainder = xrem;
   const oldY = s.y;
@@ -303,7 +335,7 @@ export function step(
     ) {
       for (const e of world.entities) {
         if (
-          e.kind !== "ENEMY" ||
+          (e.kind !== "ENEMY" && !(s.journey && e.kind === "PROJECTILE")) ||
           s.resolved.some((v) => v.id === e.id) ||
           (c &&
             e.vulnerability &&
@@ -318,7 +350,15 @@ export function step(
             bottom: e.bottom,
           })
         ) {
-          s.resolved.push({ id: e.id, end: add(e.x, e.width) });
+          s.resolved.push({
+            id: e.id,
+            end: add(e.x, e.width),
+            ...(s.journey ? { tick } : {}),
+          });
+          if (e.kind === "PROJECTILE") {
+            event("DEFLECT", e.id);
+            continue;
+          }
           s.kills = add(s.kills, 1);
           event("HIT", e.id);
           const perfect =
@@ -364,6 +404,7 @@ export function step(
                 s.resolved.push({
                   id: extra.id,
                   end: add(extra.x, extra.width),
+                  ...(s.journey ? { tick } : {}),
                 });
                 s.kills = add(s.kills, 1);
                 event("SPECIAL_HIT", extra.id);
@@ -384,7 +425,9 @@ export function step(
     if (tick >= s.invulnerableUntil) {
       const hit = world.entities.find(
         (e) =>
-          !s.resolved.some((v) => v.id === e.id) &&
+          e.hazard !== false &&
+          !s.resolved.some((v) => v.id === (e.damageOwner ?? e.id)) &&
+          !s.damaged?.some((v) => v.id === (e.damageOwner ?? e.id)) &&
           overlap(body, {
             left: e.x,
             right: add(e.x, e.width),
@@ -395,7 +438,11 @@ export function step(
       if (hit) {
         s.hp -= 1;
         s.invulnerableUntil = add(tick, r.hurtTicks);
-        event("DAMAGE", hit.id);
+        event("DAMAGE", hit.damageOwner ?? hit.id);
+        s.damaged?.push({
+          id: hit.damageOwner ?? hit.id,
+          end: add(hit.x, hit.width + 200000),
+        });
         if (s.hp === 0) {
           s.status = "DEAD";
           s.endReason = "HP_ZERO";
@@ -403,6 +450,19 @@ export function step(
         }
       }
     }
+  }
+  if (s.journey) {
+    const next = journeyAt(s.distance, s.journey.worldOffset, r);
+    if (next.cycle !== s.journey.cycle)
+      events.push({ tick, type: "CYCLE_ENTER", cycle: next.cycle });
+    if (next.region !== s.journey.region || next.cycle !== s.journey.cycle)
+      events.push({
+        tick,
+        type: "REGION_ENTER",
+        region: next.region,
+        cycle: next.cycle,
+      });
+    s.journey = next;
   }
   s.score = (
     (BigInt(s.distance) / BigInt(r.scale * r.unitsPerMeter)) * 10n +

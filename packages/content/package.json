@@ -6,7 +6,9 @@
   "exports": {
     ".": "./src/index.ts",
     "./runner-manifest": "./src/runner-manifest.ts",
-    "./runner-copy": "./src/runner-copy.ts"
+    "./runner-copy": "./src/runner-copy.ts",
+    "./director": "./src/director.ts",
+    "./solver": "./src/solver.ts"
   },
   "dependencies": {
     "@ronin/runner-core": "0.1.0",

@@ -1,12 +1,17 @@
 import {
   RULES_V1,
   RULES_V2,
+  RULES_V3,
+  journeyAt,
+  startOffset,
   compileRules,
   createWorld,
   createRandom,
   randomNext,
   add,
 } from "@ronin/runner-core";
+import { directorCourse } from "./director.ts";
+import type { Region } from "@ronin/runner-core";
 import type { Rules, Entity, Gap } from "@ronin/runner-core";
 import { canonical, sha256 } from "@ronin/contracts/canonical";
 export interface RunnerManifest {
@@ -34,7 +39,14 @@ export const COMBAT_MANIFEST: RunnerManifest = Object.freeze({
   assets_manifest_version: "rr-rig-2",
   physics: RULES_V2,
 });
-export const CURRENT_MANIFEST = COMBAT_MANIFEST;
+export const DIRECTOR_MANIFEST: RunnerManifest = Object.freeze({
+  ...COMBAT_MANIFEST,
+  rules_major: 3,
+  generator_version: "rr-director-3",
+  assets_manifest_version: "rr-four-biomes-study-3",
+  physics: RULES_V3,
+});
+export const CURRENT_MANIFEST = DIRECTOR_MANIFEST;
 export async function manifestHash(manifest: RunnerManifest): Promise<string> {
   return sha256(new TextEncoder().encode(canonical(manifest)));
 }
@@ -47,13 +59,15 @@ export async function loadManifest(
     !manifest ||
     canonical(Object.keys(manifest).sort()) !==
       canonical(Object.keys(FOUNDATION_MANIFEST).sort()) ||
-    ![1, 2].includes(manifest.rules_major) ||
+    ![1, 2, 3].includes(manifest.rules_major) ||
     !Number.isSafeInteger(manifest.rules_patch) ||
     manifest.rules_patch < 0 ||
     manifest.generator_version !==
       (manifest.rules_major === 1
         ? "rr-primitive-course-1"
-        : "rr-combat-course-2") ||
+        : manifest.rules_major === 2
+          ? "rr-combat-course-2"
+          : "rr-director-3") ||
     manifest.scoring_version !== "rr-score-1" ||
     manifest.replay_protocol_version !== "rr-input-v1" ||
     typeof manifest.assets_manifest_version !== "string" ||
@@ -61,10 +75,28 @@ export async function loadManifest(
   )
     throw new Error("unsupported_manifest");
   const physics = compileRules(manifest.physics);
+  if (manifest.rules_major === 3) {
+    const tunableLengths = [
+      "bambooMeters",
+      "templeMeters",
+      "mountainMeters",
+      "castleMeters",
+    ];
+    for (const [key, value] of Object.entries(RULES_V3))
+      if (
+        !tunableLengths.includes(key) &&
+        physics[key as keyof Rules] !== value
+      )
+        throw new Error("unsupported_director_profile");
+  }
   // Dispatch old physics versions explicitly; numeric tuning alone cannot change the algorithm.
   if (
     physics.version !==
-    (manifest.rules_major === 1 ? RULES_V1.version : RULES_V2.version)
+    (manifest.rules_major === 1
+      ? RULES_V1.version
+      : manifest.rules_major === 2
+        ? RULES_V2.version
+        : RULES_V3.version)
   )
     throw new Error("unsupported_physics");
   if (expectedHash && (await manifestHash(manifest)) !== expectedHash)
@@ -119,7 +151,10 @@ export function courseFor(
   seed: string,
   distance: number,
   end: number,
+  region: Region = "BAMBOO",
 ) {
+  if (manifest.generator_version === "rr-director-3")
+    return directorCourse(seed, distance, end, manifest.physics, region);
   const world = primitiveCourse(seed, distance, end);
   if (manifest.generator_version === "rr-primitive-course-1") return world;
   if (manifest.generator_version !== "rr-combat-course-2")
@@ -147,4 +182,19 @@ export function courseFor(
           },
     ),
   );
+}
+
+/** Only verified runs call this; legacy versions have no new region projection. */
+export function regionsReached(
+  manifest: RunnerManifest,
+  region: Region,
+  distance: number,
+): readonly Region[] {
+  return manifest.rules_major === 3
+    ? journeyAt(
+        distance,
+        startOffset(region, manifest.physics),
+        manifest.physics,
+      ).visited
+    : [];
 }

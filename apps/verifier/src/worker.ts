@@ -59,7 +59,7 @@ export async function verifyLease(
       count > run.resource_policy.max_segments_per_run
     )
       throw new InvalidReplay("part_limit");
-    let state = createState(run.seed, manifest.physics),
+    let state = createState(run.seed, manifest.physics, run.starting_region),
       cursor = replayCursor(run.id);
     for (let index = 0; index < count; index++) {
       check();
@@ -98,7 +98,13 @@ export async function verifyLease(
           state = playSegment(
             state,
             slice,
-            courseFor(manifest, run.seed, state.distance, reach),
+            courseFor(
+              manifest,
+              run.seed,
+              state.distance,
+              reach,
+              run.starting_region,
+            ),
             undefined,
             manifest.physics,
           );

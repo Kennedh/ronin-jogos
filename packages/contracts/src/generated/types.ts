@@ -295,7 +295,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Regioes atingidas legitimamente */
+    /** Regioes alcançadas em replay VERIFIED, sem dados de outros jogadores */
     get: operations["get_me_regions"];
     put?: never;
     post?: never;
@@ -909,6 +909,11 @@ export interface components {
       normalBreaksCombo?: number;
       specialReach?: number;
       specialFxTicks?: number;
+      bambooMeters?: number;
+      templeMeters?: number;
+      mountainMeters?: number;
+      castleMeters?: number;
+      cycleSpeedStep?: number;
     };
     RunnerManifest: {
       rules_major: number;
@@ -919,6 +924,9 @@ export interface components {
       replay_protocol_version: "rr-input-v1";
       assets_manifest_version: string;
       physics: components["schemas"]["PhysicsRules"];
+    };
+    RegionUnlocks: {
+      unlocked_regions: ("BAMBOO" | "TEMPLE" | "MOUNTAINS" | "CASTLE")[];
     };
     RunManifest: {
       manifest_hash: string;
@@ -1563,17 +1571,17 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description Lista de region IDs */
+      /** @description Regioes desbloqueadas pelo dono da sessao */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": {
-            unlocked_regions?: string[];
-          };
+          "application/json": components["schemas"]["RegionUnlocks"];
         };
       };
+      401: components["responses"]["Unauthorized"];
+      403: components["responses"]["Forbidden"];
     };
   };
   get_players_player_id_public: {

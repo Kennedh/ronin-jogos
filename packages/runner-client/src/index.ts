@@ -33,3 +33,5 @@ export {
   actionFor,
   keyLabel,
 } from "./bindings.ts";
+
+export { abyssAhead } from "./warnings.ts";
