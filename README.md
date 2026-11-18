@@ -2,7 +2,7 @@
 
 Plataforma de jogos gratuitos para navegador, desenvolvida com tecnologias web.
 
-## Ronin Runner — mundo procedural da parte 3 em desenvolvimento
+## Ronin Runner — encontros de chefes da parte 4 em desenvolvimento
 
 O Ronin Runner concluiu a fase de especificação de baseline (v0.18). **O proprietário autorizou em 11/11/2026 o início da implementação com Codex**. A primeira versão pública deverá ser **completa** (sem mini-MVP descartável), com desenvolvimento incremental sobre a arquitetura definitiva. As partes 1A–1D têm implementação e testes: a primeira corrida Bambu já liga Phaser, teclado/gestos e resultado à API e ao verificador reais. Isso é uma fundação interna, ainda sem o escopo completo nem homologação pública.
 
@@ -101,3 +101,9 @@ A faixa sob a cena mostra concentração/combo/feedback PT-BR/EN. Antes de jogar
 Novas partidas usam major 3: Bambu → Templo → Montanhas → Castelo, repetindo com corrupção e dificuldade limitadas. O gerador escolhe padrões determinísticos e nove comportamentos de inimigo; abismos têm 190/280 unidades, com aviso antecipado. Transições não restauram vidas nem concentração. O visual continua estudo original; a arte final será nanquim colorido conforme referência aceita, na parte 6B.
 
 Ao alcançar uma região e concluir o envio/verificação, ela fica disponível em Expedição Regional. O servidor confere o desbloqueio; a expedição começa em zero metros reais. Perfil de movimento, segurança do gerador, provas e limites: [ADR009](docs/adr/ADR-009-DIRETOR-E-REGIOES.md). Próxima parte 4: chefes, após novo pedido. Nenhum deploy decorre desta entrega.
+
+## Parte 4 — quatro guardiões e selos
+
+Novas partidas usam major 4: Raiz Negra, Guardião do Sino, Espírito da Nevasca e Senhor do Eclipse têm avisos, ataques, janelas de katana e retirada em movimento. É possível só esquivar e continuar. Não há cura; vencer os quatro concede 2250 de bônus por ciclo, sem contar chefe como inimigo comum. Selos, conquistas iniciais e Traço da Aurora são persistidos somente após o replay verificado; quatro selos podem vir de sessões diferentes. O rastro é cosmético e seu equipamento no Creator chega na 6A.
+
+HUD e resultados PT/EN mostram energia, aberturas e bônus confirmados; “Atualizar selos” consulta o progresso privado. Avisos sonoros opcionais acompanham sinais visuais. Regras anteriores seguem executáveis. Banco dev recebe migration 004 ao iniciar db:dev. Ver [ADR010](docs/adr/ADR-010-CHEFES-E-SELOS.md) e [PROGRESS](PROGRESS.md) para evidências/limites. Arte atual continua estudo; próxima parte é 5A, conta e-mail com transporte local de teste, após novo pedido.

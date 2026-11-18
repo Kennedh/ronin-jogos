@@ -7,6 +7,8 @@ import {
   startOffset,
   tickAtDistance,
   add,
+  bossRules,
+  bossSchedule,
 } from "@ronin/runner-core";
 import type { Region, Rules, Archetype, Entity, Gap } from "@ronin/runner-core";
 export type StepKind = "LOW" | "HIGH" | "GAP" | "LONG_GAP" | Archetype;
@@ -133,6 +135,7 @@ export function blockAt(
   const neutral = { index, start, end, region: j.region, cycle: j.cycle };
   // Reserve a full safe corridor at region transitions and the future boss encounter.
   if (
+    (bossRules(r) && end >= bossSchedule(start, offset, r).warning - 2000000) ||
     start + FIRST_HAZARD < j.regionStart + 1000000 ||
     end > j.regionEnd - 6000000 ||
     index % 4 === 3

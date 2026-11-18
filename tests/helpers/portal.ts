@@ -2,6 +2,7 @@ import { createServer, request as proxyRequest } from "node:http";
 import { readFile } from "node:fs/promises";
 import { resolve, sep, extname } from "node:path";
 import { testPostgres } from "./postgres.ts";
+import type { Clock } from "@ronin/data";
 import { migrate, VerificationQueue } from "@ronin/data";
 import { runOnce } from "@ronin/verifier";
 import { createApi } from "../../apps/api/src/index.ts";
@@ -11,6 +12,7 @@ import type { RunnerManifest } from "@ronin/content/runner-manifest";
 /** Serves the exact build with CSP and a real same-origin API/DB/worker. */
 export async function portalFixture(
   manifest: RunnerManifest = FOUNDATION_MANIFEST,
+  clock?: Clock,
 ) {
   const db = await testPostgres();
   await migrate(db.pool);
@@ -92,6 +94,7 @@ export async function portalFixture(
   const origin = `http://127.0.0.1:${address.port}`;
   const api = createApi({
     pool: db.pool,
+    clock,
     manifest,
     origin,
     rateSecret: Buffer.alloc(32, 19),
@@ -100,7 +103,7 @@ export async function portalFixture(
   const aa = api.server.address();
   if (!aa || typeof aa === "string") throw new Error("no_api_port");
   apiPort = aa.port;
-  const queue = new VerificationQueue(db.pool),
+  const queue = new VerificationQueue(db.pool, clock),
     interval = setInterval(() => {
       if (!enabled || working) return;
       working = (async () => {

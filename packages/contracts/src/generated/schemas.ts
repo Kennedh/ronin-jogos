@@ -226,6 +226,13 @@ export const definitions = {
     type: "object",
     required: ["run_id", "status"],
     properties: {
+      boss_results: {
+        type: "array",
+        maxItems: 4,
+        items: {
+          $ref: "#/$defs/BossResultSummary",
+        },
+      },
       run_id: {
         type: "string",
         format: "uuid",
@@ -1050,6 +1057,62 @@ export const definitions = {
       },
       manifest: {
         $ref: "#/$defs/RunnerManifest",
+      },
+    },
+  },
+  BossResultSummary: {
+    type: "object",
+    additionalProperties: false,
+    required: ["boss_id", "defeated", "retreated", "bonus"],
+    properties: {
+      boss_id: {
+        type: "string",
+        enum: ["B01", "B02", "B03", "B04"],
+      },
+      defeated: {
+        type: "integer",
+        minimum: 0,
+      },
+      retreated: {
+        type: "integer",
+        minimum: 0,
+      },
+      bonus: {
+        type: "string",
+        pattern: "^(0|[1-9][0-9]*)$",
+      },
+    },
+  },
+  BossProgress: {
+    type: "object",
+    additionalProperties: false,
+    required: ["seals", "rewards"],
+    properties: {
+      seals: {
+        type: "array",
+        maxItems: 4,
+        uniqueItems: true,
+        items: {
+          type: "string",
+          enum: ["B01", "B02", "B03", "B04"],
+        },
+      },
+      rewards: {
+        type: "array",
+        maxItems: 7,
+        uniqueItems: true,
+        items: {
+          type: "string",
+          enum: [
+            "AURORA_TRAIL",
+            "FOUR_PATHS_GUARDIAN",
+            "PATH_LEGEND",
+            "BROKEN_ROOTS",
+            "SILENCED_BELL",
+            "TAMED_WIND",
+            "DISPELLED_ECLIPSE",
+          ],
+        },
       },
     },
   },

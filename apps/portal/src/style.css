@@ -1187,3 +1187,38 @@ footer a {
 .run-active .control-study {
   display: none;
 }
+
+.boss-hud {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 1rem;
+  padding: 0.4rem 1rem;
+  background: var(--paper);
+  color: var(--ink);
+  border-top: 1px solid currentColor;
+  font-size: 0.75rem;
+}
+.boss-hud[hidden] {
+  display: none;
+}
+.boss-hud progress {
+  width: 5rem;
+  height: 0.5rem;
+  accent-color: #a64340;
+}
+.boss-progress {
+  border-top: 1px solid #bbae90;
+  padding-top: 0.7rem;
+  font-size: 0.8rem;
+}
+.boss-progress button {
+  padding: 0.3rem 0.5rem;
+}
+@media (max-height: 500px) {
+  .boss-hud {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.6rem;
+    gap: 0.2rem 0.6rem;
+  }
+}

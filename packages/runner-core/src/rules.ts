@@ -45,6 +45,14 @@ export const RULES_V3 = Object.freeze({
   castleMeters: 2000,
   cycleSpeedStep: 80000,
 });
+/** Boss encounters are a new competitive algorithm; older majors remain immutable. */
+export const RULES_V4 = Object.freeze({
+  ...RULES_V3,
+  version: "rr-physics-0.4.0",
+});
+export function bossRules(r: Rules): boolean {
+  return r.version === RULES_V4.version;
+}
 export interface DirectorRules {
   readonly bambooMeters: number;
   readonly templeMeters: number;
@@ -53,7 +61,7 @@ export interface DirectorRules {
   readonly cycleSpeedStep: number;
 }
 export function directorRules(r: Rules): DirectorRules | undefined {
-  return r.version === RULES_V3.version
+  return r.version === RULES_V3.version || r.version === RULES_V4.version
     ? (r as Rules & DirectorRules)
     : undefined;
 }
@@ -67,7 +75,8 @@ export interface CombatRules {
 }
 export function combatRules(rules: Rules): CombatRules | undefined {
   return rules.version === RULES_V2.version ||
-    rules.version === RULES_V3.version
+    rules.version === RULES_V3.version ||
+    rules.version === RULES_V4.version
     ? (rules as Rules & CombatRules)
     : undefined;
 }
@@ -81,11 +90,13 @@ export function compileRules(input: Rules): Rules {
     !/^[a-zA-Z0-9._-]{1,100}$/.test(input.version) ||
     Object.keys(input).sort().join(",") !==
       Object.keys(
-        input.version === RULES_V3.version
-          ? RULES_V3
-          : input.version === RULES_V2.version
-            ? RULES_V2
-            : RULES_V1,
+        input.version === RULES_V4.version
+          ? RULES_V4
+          : input.version === RULES_V3.version
+            ? RULES_V3
+            : input.version === RULES_V2.version
+              ? RULES_V2
+              : RULES_V1,
       )
         .sort()
         .join(",")

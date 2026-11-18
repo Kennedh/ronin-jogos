@@ -1,3 +1,5 @@
+import { BOSS_IDS, BOSS_PROFILES } from "@ronin/runner-core";
+import type { BossOutcome } from "@ronin/runner-core";
 import type { Pool, PoolClient } from "pg";
 import { loadManifest, regionsReached } from "@ronin/content/runner-manifest";
 import type { RunnerManifest } from "@ronin/content/runner-manifest";
@@ -11,6 +13,7 @@ export class LeaseLost extends Error {
   }
 }
 export interface VerifiedResult {
+  bosses?: readonly BossOutcome[];
   score: string;
   distance: number;
   activeTicks: number;
@@ -238,6 +241,100 @@ export class VerificationQueue {
         run.starting_region,
         result.distance,
       );
+      const manifest = await loadManifest(stored.manifest, run.rules_hash);
+      if (manifest.rules_major === 4 && !result.bosses)
+        throw new Error("missing_boss_evidence");
+      if (manifest.rules_major !== 4 && result.bosses?.length)
+        throw new Error("legacy_boss_evidence");
+      // Serialize grants for concurrent verified runs owned by the same player.
+      if (result.bosses?.length)
+        await db.query("SELECT id FROM players WHERE id=$1 FOR UPDATE", [
+          run.player_id,
+        ]);
+      const seen = new Set<string>();
+      for (const boss of result.bosses ?? []) {
+        const index = BOSS_IDS.indexOf(boss.boss),
+          profile = BOSS_PROFILES[index];
+        if (
+          !profile ||
+          seen.has(boss.instance) ||
+          !Number.isSafeInteger(boss.cycle) ||
+          boss.cycle < 1 ||
+          boss.instance !== `b4:${boss.cycle}:${boss.region}:${boss.boss}` ||
+          ["BAMBOO", "TEMPLE", "MOUNTAINS", "CASTLE"][index] !== boss.region ||
+          !Number.isSafeInteger(boss.tick) ||
+          boss.tick < 0 ||
+          boss.tick >= result.activeTicks ||
+          !Number.isSafeInteger(boss.hits) ||
+          boss.hits < 0 ||
+          boss.hits > profile.hits ||
+          (boss.result !== "DEFEATED" && boss.result !== "RETREATED") ||
+          boss.bonus !== (boss.result === "DEFEATED" ? profile.bonus : 0) ||
+          (boss.result === "DEFEATED" && boss.hits !== profile.hits)
+        )
+          throw new Error("invalid_boss_evidence");
+        seen.add(boss.instance);
+        await db.query(
+          "INSERT INTO run_boss_outcomes(run_id,instance_id,boss_id,cycle_index,region_id,result,result_tick,hits,bonus) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)",
+          [
+            run.id,
+            boss.instance,
+            boss.boss,
+            boss.cycle,
+            boss.region,
+            boss.result,
+            boss.tick,
+            boss.hits,
+            boss.bonus,
+          ],
+        );
+        if (boss.result === "DEFEATED") {
+          await db.query(
+            "INSERT INTO player_boss_seals(player_id,boss_id,source_run,source_instance,earned_at) VALUES($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING",
+            [run.player_id, boss.boss, run.id, boss.instance, now],
+          );
+          await db.query(
+            "INSERT INTO player_rewards(player_id,reward_id,source_run,earned_at) VALUES($1,$2,$3,$4) ON CONFLICT DO NOTHING",
+            [
+              run.player_id,
+              [
+                "BROKEN_ROOTS",
+                "SILENCED_BELL",
+                "TAMED_WIND",
+                "DISPELLED_ECLIPSE",
+              ][index],
+              run.id,
+              now,
+            ],
+          );
+        }
+      }
+      if (result.bosses?.length) {
+        const seals = Number(
+          (
+            await db.query(
+              "SELECT count(*) AS n FROM player_boss_seals WHERE player_id=$1",
+              [run.player_id],
+            )
+          ).rows[0].n,
+        );
+        const rewards =
+          seals === 4 ? ["AURORA_TRAIL", "FOUR_PATHS_GUARDIAN"] : [];
+        if (
+          run.mode === "FULL" &&
+          new Set(
+            result.bosses
+              .filter((b) => b.result === "DEFEATED")
+              .map((b) => b.boss),
+          ).size === 4
+        )
+          rewards.push("PATH_LEGEND");
+        for (const reward of rewards)
+          await db.query(
+            "INSERT INTO player_rewards(player_id,reward_id,source_run,earned_at) VALUES($1,$2,$3,$4) ON CONFLICT DO NOTHING",
+            [run.player_id, reward, run.id, now],
+          );
+      }
       for (const region of reached)
         await db.query(
           "INSERT INTO player_regions(player_id,region_id) VALUES($1,$2) ON CONFLICT DO NOTHING",

@@ -9,6 +9,7 @@ import {
 } from "@ronin/contracts/replay";
 import type { ReplaySegment } from "@ronin/contracts/replay";
 import { stateHash } from "@ronin/contracts/canonical";
+import type { BossOutcome } from "@ronin/runner-core";
 import { createState, playSegment, add } from "@ronin/runner-core";
 import { loadManifest, courseFor } from "@ronin/content/runner-manifest";
 import { verifierBudget } from "./budget.ts";
@@ -59,6 +60,7 @@ export async function verifyLease(
       count > run.resource_policy.max_segments_per_run
     )
       throw new InvalidReplay("part_limit");
+    const bosses: BossOutcome[] = [];
     let state = createState(run.seed, manifest.physics, run.starting_region),
       cursor = replayCursor(run.id);
     for (let index = 0; index < count; index++) {
@@ -107,6 +109,9 @@ export async function verifyLease(
             ),
             undefined,
             manifest.physics,
+            (events) => {
+              for (const e of events) if (e.boss) bosses.push(e.boss);
+            },
           );
         } catch (error) {
           invalid(error);
@@ -143,6 +148,7 @@ export async function verifyLease(
       activeTicks: state.tick,
       endReason: state.endReason!,
       stateHash: checksum,
+      ...(manifest.rules_major === 4 ? { bosses } : {}),
     });
     return "VERIFIED" as const;
   } catch (error) {

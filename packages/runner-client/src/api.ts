@@ -89,6 +89,13 @@ export class RunnerApi {
     this.playerId = value.player_id;
     return value;
   }
+  async bosses() {
+    return (await this.request(
+      "/me/bosses",
+      "GET",
+      "BossProgress",
+    )) as components["schemas"]["BossProgress"];
+  }
   async start(
     key: string,
     mode: "FULL" | "REGIONAL" = "FULL",

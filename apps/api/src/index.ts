@@ -358,6 +358,22 @@ export function createApi(options?: ApiOptions) {
           ),
         ),
   );
+  api.get("/api/v1/me/bosses", async (request) => {
+    const player = auths.get(request)!.playerId;
+    const seals = (
+      await options.pool.query(
+        "SELECT boss_id FROM player_boss_seals WHERE player_id=$1 ORDER BY boss_id",
+        [player],
+      )
+    ).rows.map((v) => v.boss_id);
+    const rewards = (
+      await options.pool.query(
+        "SELECT reward_id FROM player_rewards WHERE player_id=$1 ORDER BY reward_id",
+        [player],
+      )
+    ).rows.map((v) => v.reward_id);
+    return checked("BossProgress", { seals, rewards });
+  });
   api.get("/api/v1/me/regions", async (request) =>
     checked("RegionUnlocks", {
       unlocked_regions: (await sessions.summary(session(request)))

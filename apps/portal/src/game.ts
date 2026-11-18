@@ -3,6 +3,7 @@ import type { Locale } from "@ronin/content";
 import type { runnerCopy } from "@ronin/content/runner-copy";
 import {
   RunnerApi,
+  BossSound,
   ClientError,
   RunSession,
   Submission,
@@ -19,6 +20,7 @@ import {
   canvasBrush,
 } from "@ronin/runner-client";
 import type { RunTicket, PauseReason } from "@ronin/runner-client";
+import { bossView } from "@ronin/runner-core";
 import { REGIONS } from "@ronin/runner-core";
 import { RULES_V2 } from "@ronin/runner-core";
 import type { RunnerTextKey } from "@ronin/content/runner-copy";
@@ -54,6 +56,23 @@ export async function initializeGame(
   const alternate = get<HTMLInputElement>("alternate"),
     reduced = get<HTMLInputElement>("reduced"),
     fullscreen = get<HTMLInputElement>("fullscreen");
+  const sound = new BossSound();
+  const soundSetting = get<HTMLInputElement>("boss-sound");
+  let bossProgress: Awaited<ReturnType<RunnerApi["bosses"]>> | undefined,
+    bossProgressError = false;
+  const refreshBosses = async () => {
+    try {
+      await api.guest();
+      bossProgress = await api.bosses();
+      bossProgressError = false;
+    } catch {
+      bossProgressError = true;
+    }
+    render();
+  };
+  get("boss-refresh").addEventListener("click", () => {
+    void refreshBosses();
+  });
   let session: RunSession | undefined,
     submission: Submission | undefined,
     engineReady = false,
@@ -77,7 +96,7 @@ export async function initializeGame(
       localStorage.getItem("ronin.runner.settings") ?? "{}",
     ) as Record<string, unknown>;
     if (saved["bindings"]) bindings = parseBindings(saved["bindings"]);
-    for (const input of [alternate, reduced, fullscreen])
+    for (const input of [alternate, reduced, fullscreen, soundSetting])
       if (typeof saved[input.id] === "boolean")
         input.checked = saved[input.id] as boolean;
   } catch {
@@ -89,6 +108,7 @@ export async function initializeGame(
         "ronin.runner.settings",
         JSON.stringify({
           bindings,
+          [soundSetting.id]: soundSetting.checked,
           alternate: alternate.checked,
           reduced: reduced.checked,
           fullscreen: fullscreen.checked,
@@ -99,7 +119,7 @@ export async function initializeGame(
     }
     render();
   };
-  for (const input of [alternate, reduced, fullscreen])
+  for (const input of [alternate, reduced, fullscreen, soundSetting])
     input.addEventListener("change", saveSettings);
   for (const input of root.querySelectorAll<HTMLInputElement>("[data-binding]"))
     input.addEventListener("keydown", (event) => {
@@ -215,6 +235,56 @@ export async function initializeGame(
       state &&
       abyssAhead(state, s.world, s.manifest.physics)
     );
+    const boss = state && s ? bossView(state, s.manifest.physics) : undefined;
+    const showBoss = !!boss && !["SCHEDULED", "COMPLETED"].includes(boss.phase);
+    get("boss-hud").hidden = !showBoss;
+    if (boss && showBoss) {
+      get("boss-name").textContent =
+        t[("boss_" + boss.profile.id) as RunnerTextKey];
+      const energy = get<HTMLProgressElement>("boss-energy");
+      energy.max = boss.profile.hits;
+      energy.value = boss.profile.hits - boss.hits;
+      get("boss-openings").textContent = `${t.bossChances}: ${boss.remaining}`;
+      const cue =
+        boss.phase === "WARNING"
+          ? t.bossWarning
+          : boss.phase === "ENTERING"
+            ? t.bossEntering
+            : boss.phase === "DEFEATED"
+              ? t.bossDefeated
+              : boss.phase === "RETREATED"
+                ? t.bossRetreated
+                : boss.phase === "EXITING"
+                  ? t.bossExit
+                  : boss.vulnerable
+                    ? boss.aerial
+                      ? t.bossAir
+                      : t.bossOpen
+                    : boss.lunge
+                      ? t.bossLunge
+                      : boss.high
+                        ? t.bossHigh
+                        : t.bossLow;
+      const node = get("boss-cue");
+      if (node.textContent !== cue) node.textContent = cue;
+      if (boss.telegraph && phase === "running")
+        sound.cue(
+          boss.instance + ":" + boss.window,
+          boss.high,
+          soundSetting.checked,
+        );
+      surface.dataset["boss"] = boss.profile.id;
+      surface.dataset["bossPhase"] = boss.phase;
+      surface.dataset["bossHits"] = String(boss.hits);
+    } else {
+      delete surface.dataset["boss"];
+      delete surface.dataset["bossPhase"];
+    }
+    get("boss-progress").textContent = bossProgressError
+      ? t.bossProgressError
+      : bossProgress
+        ? `${t.bossSeals}: ${bossProgress.seals.length}/4${bossProgress.rewards.includes("AURORA_TRAIL") ? " · " + t.bossAurora : ""}`
+        : "";
     const combat = state?.combat;
     get<HTMLProgressElement>("concentration").value =
       combat?.concentration ?? 0;
@@ -367,6 +437,19 @@ export async function initializeGame(
       } else if (submission?.received) {
         title = t.pending;
       }
+      const bossResults = get("boss-results");
+      bossResults.replaceChildren();
+      if (state?.bosses) {
+        const header = document.createElement("p");
+        header.textContent = verified ? t.bossResults : t.bossPending;
+        bossResults.append(header);
+        if (verified)
+          for (const item of status.boss_results ?? []) {
+            const row = document.createElement("p");
+            row.textContent = `${t[("boss_" + item.boss_id) as RunnerTextKey]} · ${t.bossDefeated}: ${item.defeated} · ${t.bossRetreated}: ${item.retreated} · +${formatted(item.bonus)}`;
+            bossResults.append(row);
+          }
+      }
       get("result-status").textContent = title;
       get("result-hint").textContent = hint;
       newRun.disabled = !submission?.safeToLeave;
@@ -412,6 +495,7 @@ export async function initializeGame(
         ? (regionSelect.value as RunTicket["starting_region_id"])
         : "BAMBOO";
     }
+    sound.unlock();
     const immersion = immersive();
     render();
     try {
@@ -489,6 +573,7 @@ export async function initializeGame(
     startError = undefined;
     portraitAllowed = false;
     if (mode.value === "REGIONAL") void loadRegions();
+    void refreshBosses();
     surface.removeAttribute("data-state-hash");
     render();
     play.focus();
@@ -730,6 +815,7 @@ export async function initializeGame(
         return;
       }
       submission?.dispose();
+      sound.close();
       mounted.destroy();
     });
     window.addEventListener("pageshow", (event) => {
