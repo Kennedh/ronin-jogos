@@ -1,12 +1,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, stat, readdir, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, stat, readdir, rm } from "node:fs/promises";
 import { resolve, join, relative, isAbsolute } from "node:path";
 import { randomUUID } from "node:crypto";
 import { LocalMailTransport } from "../scripts/local-auth-mail.ts";
 test("5A: private local mail transport is durable, idempotent and absent from public routes", async () => {
-  const root = resolve("artifacts"),
-    directory = await mkdtemp(join(root, "qa-auth-mail-"));
+  const root = resolve("artifacts");
+  await mkdir(root, { recursive: true });
+  const directory = await mkdtemp(join(root, "qa-auth-mail-"));
   const owned = () => {
     const path = relative(root, resolve(directory));
     assert.ok(path && !path.startsWith("..") && !isAbsolute(path));
