@@ -142,10 +142,12 @@ export function bossView(s: SimState, r: Rules) {
       s.distance >= recovery &&
       s.distance <= finish &&
       !c?.result,
-    remaining: Math.max(
-      0,
-      a.profile.opportunities - window - (c?.usedWindow === window ? 1 : 0),
-    ),
+    remaining: c?.result
+      ? 0
+      : Math.max(
+          0,
+          a.profile.opportunities - window - (c?.usedWindow === window ? 1 : 0),
+        ),
     result: c?.result ?? null,
   };
 }

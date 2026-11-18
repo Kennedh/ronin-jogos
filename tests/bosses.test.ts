@@ -65,6 +65,7 @@ test("RR-BOSS-001: all four guardians/cycles survive dodge-only with input margi
           );
           assert.equal(run.state.status, "RUNNING");
           assert.equal(run.outcomes.length, 1);
+          assert.equal(bossView(run.state, RULES_V4)!.remaining, 0);
           assert.equal(run.outcomes[0]!.result, "RETREATED");
           assert.equal(run.state.bosses!.bonus, "0");
           assert.equal(run.state.bosses!.seals, 0);
