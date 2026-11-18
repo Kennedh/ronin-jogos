@@ -1,7 +1,7 @@
 import { RULES_V1 } from "./rules.ts";
 import type { Rules } from "./rules.ts";
 import { step, control } from "./simulation.ts";
-import type { SimState, Action } from "./simulation.ts";
+import type { SimState, Action, SimEvent } from "./simulation.ts";
 import type { World } from "./world.ts";
 export interface PlaybackInput {
   start_tick: number;
@@ -20,6 +20,7 @@ export function playSegment(
   world: World,
   onState?: (state: SimState) => void,
   rules: Rules = RULES_V1,
+  onEvents?: (events: readonly SimEvent[]) => void,
 ): SimState {
   if (
     previous.tick !== input.start_tick ||
@@ -46,7 +47,9 @@ export function playSegment(
       input.actions[actionIndex]!.tick === state.tick
     )
       actions.push(input.actions[actionIndex++]!.action);
-    state = step(state, actions, world, rules).state;
+    const update = step(state, actions, world, rules);
+    state = update.state;
+    onEvents?.(update.events);
     onState?.(state);
   }
   if (

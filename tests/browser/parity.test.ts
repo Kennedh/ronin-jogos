@@ -177,3 +177,59 @@ test(
     }
   },
 );
+
+test(
+  "4: guardian hits/retreats/score match every tick in Chromium and Node",
+  { timeout: 60000 },
+  async () => {
+    const { bossScenario } = await import("../fixtures/boss-scenario.ts");
+    const server = await createServer({
+      root: process.cwd(),
+      logLevel: "silent",
+      server: { host: "127.0.0.1", port: 0 },
+    });
+    await server.listen();
+    const address = server.httpServer!.address();
+    if (!address || typeof address === "string") throw new Error("no_port");
+    const chrome = "C:/Program Files/Google/Chrome/Application/chrome.exe",
+      browser = await chromium.launch(
+        existsSync(chrome) ? { executablePath: chrome } : {},
+      );
+    try {
+      const page = await browser.newPage();
+      await page.goto(
+        `http://127.0.0.1:${address.port}/tests/fixtures/parity.html`,
+      );
+      await page.waitForFunction(
+        () =>
+          typeof (window as unknown as { bossScenario: unknown })
+            .bossScenario === "function",
+      );
+      const expected = await bossScenario(60);
+      assert.ok(expected.updates > 10000);
+      assert.equal(expected.victories, 4);
+      assert.equal(expected.retreats, 4);
+      assert.equal(
+        expected.traceHash,
+        "4dfdb4e8456c45c527e04d51a9576212ed66947311131e689ef6f6c67c8042b8",
+      );
+      for (const fps of [30, 60, 120]) {
+        const result = await page.evaluate(
+          async (fps) =>
+            await (
+              window as unknown as {
+                bossScenario: (fps: number) => Promise<unknown>;
+              }
+            ).bossScenario(fps),
+          fps,
+        );
+        assert.deepEqual(result, expected);
+        assert.deepEqual(await bossScenario(fps), expected);
+      }
+      console.log("Boss parity", browser.version(), expected.traceHash);
+    } finally {
+      await browser.close();
+      await server.close();
+    }
+  },
+);

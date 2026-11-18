@@ -36,3 +36,13 @@ export {
 export type { Journey, Region } from "./journey.ts";
 export { actorPhase, worldAtTick } from "./actors.ts";
 export type { Archetype, ActorScript, ActorPhase } from "./world.ts";
+
+export { RULES_V4, bossRules } from "./rules.ts";
+export { bossView, bossSchedule, BOSS_IDS, BOSS_PROFILES } from "./bosses.ts";
+export type {
+  BossState,
+  BossEncounter,
+  BossOutcome,
+  BossId,
+  BossPhase,
+} from "./bosses.ts";

@@ -1,5 +1,31 @@
 import type { Locale } from "./index.ts";
 const en = {
+  bossLunge: "Frontal lunge · jump, then counter",
+  boss_B01: "Black Root",
+  boss_B02: "Bell Guardian",
+  boss_B03: "Blizzard Spirit",
+  boss_B04: "Eclipse Lord",
+  bossWarning: "A guardian approaches",
+  bossEntering: "Read the stance",
+  bossLow: "Low attack · jump",
+  bossHigh: "High attack · slide",
+  bossOpen: "Opening · strike",
+  bossAir: "Aerial opening · jump and strike",
+  bossDefeated: "Guardian defeated",
+  bossRetreated: "The guardian retreated",
+  bossExit: "The journey continues",
+  bossHp: "Guardian energy",
+  bossChances: "Openings left",
+  bossResults: "Guardians · verified results",
+  bossPending: "Guardian rewards await replay verification",
+  bossSeals: "Guardian seals",
+  bossAurora: "Aurora Trail unlocked · cosmetic",
+  bossProgressError: "Could not load seals. Try again.",
+  bossRefresh: "Refresh seals",
+  bossSound: "Guardian sound cues",
+  bossHelp:
+    "Guardians can be defeated or avoided. They retreat without stopping the journey. Rewards never restore lives.",
+
   abyssAhead: "Gap ahead · prepare your jump",
   regionLabel: "Starting region",
   region_BAMBOO: "Bamboo Forest",
@@ -11,7 +37,7 @@ const en = {
   directorHelp:
     "Full Journey crosses all four regions. Expeditions start in a region unlocked by a verified run; only distance actually travelled counts.",
   directorScope:
-    "Four regions and endless cycles are available in this development build. Bosses, final art, customization and public leaderboards are still in development.",
+    "Four regions, guardian encounters and endless cycles are available in this development build. Final art, customization, accounts and public leaderboards are still in development.",
 
   concentration: "Concentration",
   combo: "Perfect streak",
@@ -180,6 +206,32 @@ const en = {
     "The start could not be confirmed. Reconnect and retry; the same request will be reused.",
 };
 const pt: Record<keyof typeof en, string> = {
+  bossLunge: "Investida frontal · pule e contra-ataque",
+  boss_B01: "Raiz Negra",
+  boss_B02: "Guardião do Sino",
+  boss_B03: "Espírito da Nevasca",
+  boss_B04: "Senhor do Eclipse",
+  bossWarning: "Um guardião se aproxima",
+  bossEntering: "Observe a postura",
+  bossLow: "Ataque baixo · pule",
+  bossHigh: "Ataque alto · deslize",
+  bossOpen: "Abertura · ataque",
+  bossAir: "Abertura aérea · pule e ataque",
+  bossDefeated: "Guardião derrotado",
+  bossRetreated: "O chefe se retirou",
+  bossExit: "A jornada continua",
+  bossHp: "Energia do guardião",
+  bossChances: "Aberturas restantes",
+  bossResults: "Guardiões · resultados verificados",
+  bossPending: "Recompensas aguardam verificação do replay",
+  bossSeals: "Selos dos guardiões",
+  bossAurora: "Traço da Aurora desbloqueado · cosmético",
+  bossProgressError: "Não foi possível carregar os selos. Tente novamente.",
+  bossRefresh: "Atualizar selos",
+  bossSound: "Avisos sonoros dos guardiões",
+  bossHelp:
+    "Guardiões podem ser vencidos ou evitados. Eles recuam sem interromper a jornada. Recompensas nunca restauram vidas.",
+
   abyssAhead: "Abismo adiante · prepare o salto",
   regionLabel: "Região de partida",
   region_BAMBOO: "Floresta de Bambu",
@@ -191,7 +243,7 @@ const pt: Record<keyof typeof en, string> = {
   directorHelp:
     "A Jornada Completa atravessa as quatro regiões. Expedições começam em regiões alcançadas em uma corrida verificada; só conta a distância realmente percorrida.",
   directorScope:
-    "Quatro regiões e ciclos infinitos estão disponíveis nesta versão de desenvolvimento. Chefes, arte final, personalização e rankings públicos seguem em desenvolvimento.",
+    "Quatro regiões, encontros de guardiões e ciclos infinitos estão disponíveis nesta versão de desenvolvimento. Arte final, personalização, contas e rankings públicos seguem em desenvolvimento.",
 
   concentration: "Concentração",
   combo: "Sequência perfeita",

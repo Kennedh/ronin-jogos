@@ -95,3 +95,7 @@ O proprietário autorizou “Iniciar parte 2”. Branch `feat/runner-combat-2` s
 ## Atualização — parte 3 (18/11/2026)
 
 O proprietário aceitou a revisão funcional da parte 2, esclareceu que a arte final será nanquim colorido com camadas/silhuetas conforme a referência enviada, pediu apenas aumentar os abismos por ora e autorizou a próxima etapa. Implementar parte 3 em `feat/runner-director-3`, base `3174bd7`/PR #6. Não alterar hitbox ou adicionar demolição/tropeço agora. Diretor/quatro regiões/ciclos/arquétipos com nova major, mantendo replay v1/v2; chefes pertencem à parte 4 e arte final à 6B. Não copiar os sprites/arte da referência. Gates e restrições de produção seguem vigentes; registrar evidência real de solver/seeds/concatenações e distinguir emulação de dispositivos físicos.
+
+## Atualização — parte 4 (18/11/2026)
+
+O proprietário autorizou “Iniciar parte 4”. Branch `feat/runner-bosses-4`, base `390dab9`/PR #7, sem merge automático. Ler ADR010/PROGRESS e regras de chefes/recompensas antes de continuar. Major 4 acrescenta encontros/selos e mantém majors 1–3 executáveis. Migration 004 nova, anteriores intocadas. Bônus/selos/Aurora somente após replay VERIFIED e na mesma transação, incluindo concorrência. Gate npm ci + npm run verify e revisão de pixels/capturas reais; arte/áudio finais e equipamento cosmético continuam 6A/6B. Parte 5A depende de novo pedido; SMTP/Google/produção/DNS não foram autorizados.

@@ -288,6 +288,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/me/bosses": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Selos e recompensas próprios, somente após replay verificado */
+    get: operations["getBossProgress"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/me/regions": {
     parameters: {
       query?: never;
@@ -721,6 +738,7 @@ export interface components {
       persisted: true;
     };
     RunStatus: {
+      boss_results?: components["schemas"]["BossResultSummary"][];
       /** Format: uuid */
       run_id: string;
       /** @enum {string} */
@@ -931,6 +949,25 @@ export interface components {
     RunManifest: {
       manifest_hash: string;
       manifest: components["schemas"]["RunnerManifest"];
+    };
+    BossResultSummary: {
+      /** @enum {string} */
+      boss_id: "B01" | "B02" | "B03" | "B04";
+      defeated: number;
+      retreated: number;
+      bonus: string;
+    };
+    BossProgress: {
+      seals: ("B01" | "B02" | "B03" | "B04")[];
+      rewards: (
+        | "AURORA_TRAIL"
+        | "FOUR_PATHS_GUARDIAN"
+        | "PATH_LEGEND"
+        | "BROKEN_ROOTS"
+        | "SILENCED_BELL"
+        | "TAMED_WIND"
+        | "DISPELLED_ECLIPSE"
+      )[];
     };
   };
   responses: {
@@ -1560,6 +1597,28 @@ export interface operations {
           };
         };
       };
+    };
+  };
+  getBossProgress: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Progresso de chefes do titular da sessão */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BossProgress"];
+        };
+      };
+      401: components["responses"]["Unauthorized"];
+      403: components["responses"]["Forbidden"];
     };
   };
   get_me_regions: {

@@ -1,3 +1,12 @@
+import { bossRules } from "./rules.ts";
+import {
+  bossInitial,
+  enterBoss,
+  hitBoss,
+  closeBoss,
+  bossHazard,
+} from "./bosses.ts";
+import type { BossState, BossOutcome } from "./bosses.ts";
 import { add, assertTick, divideStep, nextTick } from "./math.ts";
 import { RULES_V1, compileRules, rulesIdentity, combatRules } from "./rules.ts";
 import type { Rules } from "./rules.ts";
@@ -23,6 +32,7 @@ export interface CombatState {
   specialUntil: number;
 }
 export interface SimState {
+  bosses?: BossState;
   combat?: CombatState;
   journey?: Journey;
   damaged?: { id: string; end: number }[];
@@ -71,7 +81,12 @@ export interface SimEvent {
     | "DEATH"
     | "DEFLECT"
     | "REGION_ENTER"
-    | "CYCLE_ENTER";
+    | "CYCLE_ENTER"
+    | "BOSS_WARNING"
+    | "BOSS_HIT"
+    | "BOSS_DEFEATED"
+    | "BOSS_RETREATED";
+  boss?: BossOutcome;
   entity?: string;
   region?: Region;
   cycle?: number;
@@ -83,6 +98,7 @@ export function createState(
 ): SimState {
   const manifest = compileRules(rules);
   return {
+    ...(bossRules(manifest) ? { bosses: bossInitial(seed) } : {}),
     ...(combatRules(manifest)
       ? {
           combat: {
@@ -174,6 +190,18 @@ export function step(
     throw new RangeError("invalid_actions");
   const s = {
     ...previous,
+    ...(previous.bosses
+      ? {
+          bosses: {
+            ...previous.bosses,
+            current: previous.bosses.current
+              ? { ...previous.bosses.current }
+              : null,
+            defeats: [...previous.bosses.defeats],
+            retreats: [...previous.bosses.retreats],
+          },
+        }
+      : {}),
     ...(previous.combat ? { combat: { ...previous.combat } } : {}),
     ...(previous.damaged
       ? {
@@ -323,6 +351,9 @@ export function step(
     event("DEATH");
   }
   if (s.status === "RUNNING") {
+    enterBoss(s, r, events);
+    const hazard = bossHazard(s, r);
+    if (hazard) world = { ...world, entities: [...world.entities, hazard] };
     const sword = {
       left: body.right,
       right: add(body.right, r.swordReach),
@@ -333,6 +364,7 @@ export function step(
       s.attackAge >= r.attackWindup &&
       s.attackAge < r.attackWindup + r.attackActive
     ) {
+      hitBoss(s, r, sword, events);
       for (const e of world.entities) {
         if (
           (e.kind !== "ENEMY" && !(s.journey && e.kind === "PROJECTILE")) ||
@@ -451,6 +483,7 @@ export function step(
       }
     }
   }
+  closeBoss(s, r, events);
   if (s.journey) {
     const next = journeyAt(s.distance, s.journey.worldOffset, r);
     if (next.cycle !== s.journey.cycle)
@@ -467,7 +500,8 @@ export function step(
   s.score = (
     (BigInt(s.distance) / BigInt(r.scale * r.unitsPerMeter)) * 10n +
     BigInt(s.kills) * 30n +
-    BigInt(s.perfects) * 100n
+    BigInt(s.perfects) * 100n +
+    BigInt(s.bosses?.bonus ?? "0")
   ).toString();
   if (s.attackAge >= 0) s.attackAge += 1;
   s.tick = nextTick(tick);

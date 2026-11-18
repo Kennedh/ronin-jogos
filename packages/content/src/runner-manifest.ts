@@ -2,6 +2,7 @@ import {
   RULES_V1,
   RULES_V2,
   RULES_V3,
+  RULES_V4,
   journeyAt,
   startOffset,
   compileRules,
@@ -46,7 +47,15 @@ export const DIRECTOR_MANIFEST: RunnerManifest = Object.freeze({
   assets_manifest_version: "rr-four-biomes-study-3",
   physics: RULES_V3,
 });
-export const CURRENT_MANIFEST = DIRECTOR_MANIFEST;
+export const BOSS_MANIFEST: RunnerManifest = Object.freeze({
+  ...DIRECTOR_MANIFEST,
+  rules_major: 4,
+  generator_version: "rr-boss-director-4",
+  scoring_version: "rr-score-boss-4",
+  assets_manifest_version: "rr-boss-study-4",
+  physics: RULES_V4,
+});
+export const CURRENT_MANIFEST = BOSS_MANIFEST;
 export async function manifestHash(manifest: RunnerManifest): Promise<string> {
   return sha256(new TextEncoder().encode(canonical(manifest)));
 }
@@ -59,7 +68,7 @@ export async function loadManifest(
     !manifest ||
     canonical(Object.keys(manifest).sort()) !==
       canonical(Object.keys(FOUNDATION_MANIFEST).sort()) ||
-    ![1, 2, 3].includes(manifest.rules_major) ||
+    ![1, 2, 3, 4].includes(manifest.rules_major) ||
     !Number.isSafeInteger(manifest.rules_patch) ||
     manifest.rules_patch < 0 ||
     manifest.generator_version !==
@@ -67,24 +76,29 @@ export async function loadManifest(
         ? "rr-primitive-course-1"
         : manifest.rules_major === 2
           ? "rr-combat-course-2"
-          : "rr-director-3") ||
-    manifest.scoring_version !== "rr-score-1" ||
+          : manifest.rules_major === 3
+            ? "rr-director-3"
+            : "rr-boss-director-4") ||
+    manifest.scoring_version !==
+      (manifest.rules_major === 4 ? "rr-score-boss-4" : "rr-score-1") ||
     manifest.replay_protocol_version !== "rr-input-v1" ||
     typeof manifest.assets_manifest_version !== "string" ||
     !manifest.assets_manifest_version
   )
     throw new Error("unsupported_manifest");
   const physics = compileRules(manifest.physics);
-  if (manifest.rules_major === 3) {
+  if (manifest.rules_major >= 3) {
     const tunableLengths = [
       "bambooMeters",
       "templeMeters",
       "mountainMeters",
       "castleMeters",
     ];
-    for (const [key, value] of Object.entries(RULES_V3))
+    for (const [key, value] of Object.entries(
+      manifest.rules_major === 4 ? RULES_V4 : RULES_V3,
+    ))
       if (
-        !tunableLengths.includes(key) &&
+        !(manifest.rules_major === 3 && tunableLengths.includes(key)) &&
         physics[key as keyof Rules] !== value
       )
         throw new Error("unsupported_director_profile");
@@ -96,7 +110,9 @@ export async function loadManifest(
       ? RULES_V1.version
       : manifest.rules_major === 2
         ? RULES_V2.version
-        : RULES_V3.version)
+        : manifest.rules_major === 3
+          ? RULES_V3.version
+          : RULES_V4.version)
   )
     throw new Error("unsupported_physics");
   if (expectedHash && (await manifestHash(manifest)) !== expectedHash)
@@ -153,7 +169,9 @@ export function courseFor(
   end: number,
   region: Region = "BAMBOO",
 ) {
-  if (manifest.generator_version === "rr-director-3")
+  if (
+    ["rr-director-3", "rr-boss-director-4"].includes(manifest.generator_version)
+  )
     return directorCourse(seed, distance, end, manifest.physics, region);
   const world = primitiveCourse(seed, distance, end);
   if (manifest.generator_version === "rr-primitive-course-1") return world;
@@ -190,7 +208,7 @@ export function regionsReached(
   region: Region,
   distance: number,
 ): readonly Region[] {
-  return manifest.rules_major === 3
+  return manifest.rules_major >= 3
     ? journeyAt(
         distance,
         startOffset(region, manifest.physics),

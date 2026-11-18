@@ -232,6 +232,13 @@ export class Runs {
       ).rows[0]!;
       const physics = (await loadManifest(record.manifest, run.rules_hash))
         .physics;
+      if (record.manifest.rules_major === 4)
+        result.boss_results = (
+          await db.query(
+            "SELECT boss_id, count(*) FILTER(WHERE result='DEFEATED')::int AS defeated, count(*) FILTER(WHERE result='RETREATED')::int AS retreated, sum(bonus)::text AS bonus FROM run_boss_outcomes WHERE run_id=$1 GROUP BY boss_id ORDER BY boss_id",
+            [run.id],
+          )
+        ).rows;
       Object.assign(result, {
         score: out.score,
         distance_m: Number(

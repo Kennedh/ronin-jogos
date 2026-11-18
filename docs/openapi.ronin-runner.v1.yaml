@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Ronin Runner API - contrato preliminar de design
-  version: 0.23.0-foundation-draft
+  version: 0.24.0-foundation-draft
   description: |-
     API de fundação em desenvolvimento. Guest e runs implementados na1C; conta/Google/ranking/weekly permanecem contratos futuros. Prefixo /api/v1. Score somente após replay verificado; implantação não autorizada.
 servers:
@@ -564,6 +564,22 @@ paths:
                     type: array
                     items:
                       type: string
+  /me/bosses:
+    get:
+      operationId: getBossProgress
+      tags: [Progress]
+      summary: Selos e recompensas próprios, somente após replay verificado
+      responses:
+        "200":
+          description: Progresso de chefes do titular da sessão
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BossProgress"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
   /me/regions:
     get:
       operationId: get_me_regions
@@ -1540,6 +1556,11 @@ components:
         - run_id
         - status
       properties:
+        boss_results:
+          type: array
+          maxItems: 4
+          items:
+            $ref: "#/components/schemas/BossResultSummary"
         run_id:
           type: string
           format: uuid
@@ -2196,6 +2217,43 @@ components:
           pattern: ^[a-f0-9]{64}$
         manifest:
           $ref: "#/components/schemas/RunnerManifest"
+    BossResultSummary:
+      type: object
+      additionalProperties: false
+      required: [boss_id, defeated, retreated, bonus]
+      properties:
+        boss_id:
+          type: string
+          enum: [B01, B02, B03, B04]
+        defeated:
+          type: integer
+          minimum: 0
+        retreated:
+          type: integer
+          minimum: 0
+        bonus:
+          type: string
+          pattern: "^(0|[1-9][0-9]*)$"
+    BossProgress:
+      type: object
+      additionalProperties: false
+      required: [seals, rewards]
+      properties:
+        seals:
+          type: array
+          maxItems: 4
+          uniqueItems: true
+          items:
+            type: string
+            enum: [B01, B02, B03, B04]
+        rewards:
+          type: array
+          maxItems: 7
+          uniqueItems: true
+          items:
+            type: string
+            enum: [AURORA_TRAIL, FOUR_PATHS_GUARDIAN, PATH_LEGEND, BROKEN_ROOTS, SILENCED_BELL, TAMED_WIND, DISPELLED_ECLIPSE]
+
   responses:
     BadRequest:
       description: Corpo ou formato invalido

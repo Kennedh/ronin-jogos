@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { paintBoss } from "./boss-render.ts";
 import { biomeTheme, paintBackdrop, paintProps, paintEnemy } from "./biomes.ts";
 import type { Theme } from "./biomes.ts";
 import { drawRig, poseFor } from "./rig.ts";
@@ -230,6 +231,15 @@ export function mountRunner(parent: HTMLElement, options: SceneOptions) {
           }
         }
       }
+      if (state)
+        paintBoss(
+          g,
+          state,
+          rules,
+          this.ground,
+          this.theme,
+          options.reducedMotion(),
+        );
       g.save();
       g.translateCanvas(324, this.ground + (state?.y ?? 0) / scale);
       const pose = poseFor(state, rules, session?.recentEvents ?? []);

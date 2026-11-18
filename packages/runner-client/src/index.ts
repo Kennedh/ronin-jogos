@@ -35,3 +35,5 @@ export {
 } from "./bindings.ts";
 
 export { abyssAhead } from "./warnings.ts";
+
+export { BossSound } from "./boss-sound.ts";
