@@ -58,7 +58,14 @@ export async function testPostgres() {
     const target = await realpath(dir);
     if (!target.startsWith(root + sep) || !target.includes("ronin-qa-pg-"))
       throw new Error("unsafe_qa_path");
-    await rm(target, { recursive: true, force: false });
+    // Windows may briefly retain the stopped server log handle (or scan it).
+    // Retry only transient filesystem cleanup; a persistent lock still fails QA.
+    await rm(target, {
+      recursive: true,
+      force: false,
+      maxRetries: 5,
+      retryDelay: 100,
+    });
   }
   try {
     await pg.initialise();
