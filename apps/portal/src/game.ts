@@ -7,8 +7,20 @@ import {
   RunSession,
   Submission,
   Gestures,
+  DEFAULT_BINDINGS,
+  parseBindings,
+  rebind,
+  actionFor,
+  keyLabel,
+  ANIMATIONS,
+  demoPose,
+  drawRig,
+  canvasBrush,
 } from "@ronin/runner-client";
 import type { RunTicket, PauseReason } from "@ronin/runner-client";
+import { RULES_V2 } from "@ronin/runner-core";
+import type { RunnerTextKey } from "@ronin/content/runner-copy";
+import type { Animation } from "@ronin/runner-client";
 import type { Action } from "@ronin/runner-core";
 import { stateHash } from "@ronin/contracts/canonical";
 export async function initializeGame(
@@ -51,12 +63,14 @@ export async function initializeGame(
     portraitAllowed = false,
     lastPhase = "",
     renderer: { destroy(): void; resize(): void } | undefined;
+  let bindings = DEFAULT_BINDINGS;
   reduced.checked = matchMedia("(prefers-reduced-motion: reduce)").matches;
   fullscreen.checked = navigator.maxTouchPoints > 0;
   try {
     const saved = JSON.parse(
       localStorage.getItem("ronin.runner.settings") ?? "{}",
     ) as Record<string, unknown>;
+    if (saved["bindings"]) bindings = parseBindings(saved["bindings"]);
     for (const input of [alternate, reduced, fullscreen])
       if (typeof saved[input.id] === "boolean")
         input.checked = saved[input.id] as boolean;
@@ -68,6 +82,7 @@ export async function initializeGame(
       localStorage.setItem(
         "ronin.runner.settings",
         JSON.stringify({
+          bindings,
           alternate: alternate.checked,
           reduced: reduced.checked,
           fullscreen: fullscreen.checked,
@@ -80,6 +95,28 @@ export async function initializeGame(
   };
   for (const input of [alternate, reduced, fullscreen])
     input.addEventListener("change", saveSettings);
+  for (const input of root.querySelectorAll<HTMLInputElement>("[data-binding]"))
+    input.addEventListener("keydown", (event) => {
+      if (event.code === "Tab") return;
+      event.preventDefault();
+      event.stopPropagation();
+      try {
+        bindings = rebind(
+          bindings,
+          input.dataset["binding"] as Action,
+          event.code,
+        );
+        get("binding-error").hidden = true;
+        saveSettings();
+      } catch {
+        get("binding-error").hidden = false;
+      }
+    });
+  get("reset-keys").addEventListener("click", () => {
+    bindings = DEFAULT_BINDINGS;
+    get("binding-error").hidden = true;
+    saveSettings();
+  });
   const isPortrait = () =>
     navigator.maxTouchPoints > 0 && window.innerHeight > window.innerWidth;
   function message(error: ClientError, atStart = false) {
@@ -120,6 +157,55 @@ export async function initializeGame(
       requestAnimationFrame(() => renderer?.resize());
     }
     surface.setAttribute("aria-label", t.stageLabel);
+    for (const action of ["JUMP", "SLIDE", "ATTACK"] as const)
+      get<HTMLInputElement>("bind-" + action).value = bindings[action]
+        .map(keyLabel)
+        .join(" / ");
+    get<HTMLSelectElement>("rig-animation")
+      .querySelectorAll("option")
+      .forEach((o) => {
+        o.textContent = t[("anim_" + o.value) as RunnerTextKey];
+      });
+    const keyboard = root.querySelector<HTMLElement>(".keyboard-help")!;
+    keyboard.textContent = `${bindings.JUMP.map(keyLabel).join(" / ")} ${t.jump} · ${bindings.SLIDE.map(keyLabel).join(" / ")} ${t.slide} · ${bindings.ATTACK.map(keyLabel).join(" / ")} ${t.attack} · Esc ${t.pause}`;
+    const combat = state?.combat;
+    get<HTMLProgressElement>("concentration").value =
+      combat?.concentration ?? 0;
+    get("concentration-value").textContent =
+      (combat?.concentration ?? 0) + " / 100";
+    get("combo").textContent =
+      combat?.concentration === 100
+        ? t.specialReady
+        : (combat?.combo ?? 0) > 0
+          ? `${t.combo}: ${combat!.combo}`
+          : "";
+    const recent =
+      s?.recentEvents.filter(
+        (e) =>
+          ["SPECIAL", "PERFECT", "HIT", "MISS", "DAMAGE"].includes(e.type) &&
+          s.state.tick - e.tick < 45,
+      ) ?? [];
+    const priority = ["SPECIAL", "PERFECT", "DAMAGE", "HIT", "MISS"];
+    const feedback = recent.sort(
+      (a, b) =>
+        b.tick - a.tick || priority.indexOf(a.type) - priority.indexOf(b.type),
+    )[0];
+    const feedbackKeys = {
+      SPECIAL: "feedbackSpecial",
+      PERFECT: "feedbackPerfect",
+      HIT: "feedbackHit",
+      MISS: "feedbackMiss",
+      DAMAGE: "feedbackDamage",
+    } as const;
+    const feedbackText = feedback
+      ? t[feedbackKeys[feedback.type as keyof typeof feedbackKeys]]
+      : "";
+    const feedbackNode = get("combat-feedback");
+    if (feedbackNode.textContent !== feedbackText)
+      feedbackNode.textContent = feedbackText;
+    surface.dataset["concentration"] = String(combat?.concentration ?? 0);
+    surface.dataset["combo"] = String(combat?.combo ?? 0);
+    surface.dataset["specials"] = String(combat?.specials ?? 0);
     surface.dataset["phase"] = phase;
     surface.dataset["tick"] = String(state?.tick ?? 0);
     surface.dataset["hp"] = String(state?.hp ?? 3);
@@ -281,6 +367,8 @@ export async function initializeGame(
       candidate ??= await api.start(startKey, latchedMode);
       const manifest = await api.manifest(candidate);
       await immersion;
+      lab.open = false;
+      stopLab();
       session = new RunSession(candidate, manifest);
       submission = new Submission(api, session.recorder);
       submission.onChange = render;
@@ -438,13 +526,7 @@ export async function initializeGame(
       event.target.closest("button,a[href],summary")
     )
       return;
-    const action: Action | undefined = ["Space", "ArrowUp"].includes(event.code)
-      ? "JUMP"
-      : ["KeyS", "ArrowDown"].includes(event.code)
-        ? "SLIDE"
-        : event.code === "KeyJ"
-          ? "ATTACK"
-          : undefined;
+    const action = actionFor(bindings, event.code);
     if (action) {
       event.preventDefault();
       session.input(action);
@@ -514,6 +596,68 @@ export async function initializeGame(
       if (event.detail === 0) input();
     });
   }
+  const lab = get<HTMLDetailsElement>("rig-lab"),
+    poseSelect = get<HTMLSelectElement>("rig-animation"),
+    animate = get<HTMLInputElement>("rig-play"),
+    debug = get<HTMLInputElement>("rig-debug");
+  for (const value of ANIMATIONS) poseSelect.add(new Option(value, value));
+  poseSelect.value = "RUN";
+  animate.checked = !reduced.checked;
+  let labFrame = 0,
+    labTick = 0,
+    labAt = 0;
+  const stopLab = () => {
+    cancelAnimationFrame(labFrame);
+    labFrame = 0;
+    get("rig-preview").replaceChildren();
+  };
+  const startLab = () => {
+    stopLab();
+    if (!lab.open) return;
+    const canvas = document.createElement("canvas");
+    canvas.width = 640;
+    canvas.height = 300;
+    canvas.setAttribute("role", "img");
+    canvas.setAttribute("aria-label", text().rigTitle);
+    get("rig-preview").append(canvas);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    labAt = performance.now();
+    const paint = (time: number) => {
+      if (!lab.open) return;
+      if (animate.checked && document.visibilityState === "visible")
+        labTick += Math.min(6, Math.max(0, (time - labAt) * 0.06));
+      labAt = time;
+      ctx.fillStyle = "#f2e7ce";
+      ctx.fillRect(0, 0, 640, 300);
+      ctx.save();
+      const clip = poseSelect.value;
+      const lift = ["JUMP_START", "JUMP_APEX", "DOUBLE_JUMP", "FALL"].includes(
+        clip,
+      )
+        ? -Math.abs(Math.sin((labTick / 72) * Math.PI)) * 65
+        : 0;
+      ctx.translate(160, 250 + lift);
+      ctx.scale(1.75, 1.75);
+      drawRig(
+        canvasBrush(ctx),
+        demoPose(poseSelect.value as Animation, Math.floor(labTick)),
+        RULES_V2,
+        reduced.checked,
+        debug.checked,
+      );
+      ctx.restore();
+      canvas.dataset["frame"] = String(Math.floor(labTick));
+      canvas.dataset["animation"] = poseSelect.value;
+      labFrame = requestAnimationFrame(paint);
+    };
+    labFrame = requestAnimationFrame(paint);
+  };
+  lab.addEventListener("toggle", startLab);
+  window.addEventListener("pageshow", (event) => {
+    if (event.persisted && lab.open) startLab();
+  });
+  window.addEventListener("pagehide", stopLab);
   render();
   try {
     const { mountRunner } = await import("@ronin/runner-client/scene");

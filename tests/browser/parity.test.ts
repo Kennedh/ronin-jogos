@@ -72,3 +72,55 @@ test("fixed clock preserves fractional frame time and rejects overflow without t
   assert.throws(() => clock.advance(-1, () => {}));
   assert.throws(() => clock.advance(Number.MAX_SAFE_INTEGER, () => {}));
 });
+
+test(
+  "2: combat special, streak and concentration match every tick in Chromium/Node at 30/60/120",
+  { timeout: 60000 },
+  async () => {
+    const { combatScenario } = await import("../fixtures/combat-scenario.ts");
+    const server = await createServer({
+      root: process.cwd(),
+      logLevel: "silent",
+      server: { host: "127.0.0.1", port: 0 },
+    });
+    await server.listen();
+    const address = server.httpServer!.address();
+    if (!address || typeof address === "string") throw new Error("no_port");
+    const chrome = "C:/Program Files/Google/Chrome/Application/chrome.exe",
+      browser = await chromium.launch(
+        existsSync(chrome) ? { executablePath: chrome } : {},
+      );
+    try {
+      const page = await browser.newPage();
+      await page.goto(
+        `http://127.0.0.1:${address.port}/tests/fixtures/parity.html`,
+      );
+      await page.waitForFunction(
+        () =>
+          typeof (window as unknown as { combatScenario: unknown })
+            .combatScenario === "function",
+      );
+      const expected = await combatScenario(60);
+      assert.equal(expected.updates, 600);
+      assert.ok(expected.state.combat!.specials >= 1);
+      assert.ok(expected.state.combat!.bestCombo >= 9);
+      for (const fps of [30, 60, 120]) {
+        const result = await page.evaluate(
+          async (fps) =>
+            await (
+              window as unknown as {
+                combatScenario: (fps: number) => Promise<unknown>;
+              }
+            ).combatScenario(fps),
+          fps,
+        );
+        assert.deepEqual(result, expected);
+        assert.deepEqual(await combatScenario(fps), expected);
+      }
+      console.log("Combat parity", browser.version(), expected.traceHash);
+    } finally {
+      await browser.close();
+      await server.close();
+    }
+  },
+);

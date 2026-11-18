@@ -903,6 +903,12 @@ export interface components {
       slideHeight: number;
       swordReach: number;
       fatalY: number;
+      concentrationCap?: number;
+      perfectGain?: number;
+      normalGain?: number;
+      normalBreaksCombo?: number;
+      specialReach?: number;
+      specialFxTicks?: number;
     };
     RunnerManifest: {
       rules_major: number;

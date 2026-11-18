@@ -6,8 +6,12 @@ import { migrate, VerificationQueue } from "@ronin/data";
 import { runOnce } from "@ronin/verifier";
 import { createApi } from "../../apps/api/src/index.ts";
 import { PORTAL_CSP } from "../../apps/portal/security.ts";
+import { FOUNDATION_MANIFEST } from "@ronin/content/runner-manifest";
+import type { RunnerManifest } from "@ronin/content/runner-manifest";
 /** Serves the exact build with CSP and a real same-origin API/DB/worker. */
-export async function portalFixture() {
+export async function portalFixture(
+  manifest: RunnerManifest = FOUNDATION_MANIFEST,
+) {
   const db = await testPostgres();
   await migrate(db.pool);
   const dist = resolve("apps/portal/dist");
@@ -88,6 +92,7 @@ export async function portalFixture() {
   const origin = `http://127.0.0.1:${address.port}`;
   const api = createApi({
     pool: db.pool,
+    manifest,
     origin,
     rateSecret: Buffer.alloc(32, 19),
   });

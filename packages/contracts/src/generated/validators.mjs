@@ -6682,6 +6682,12 @@ var e = Object.create,
               maximum: 9007199254740991,
             },
             fatalY: { type: `integer`, minimum: 1, maximum: 9007199254740991 },
+            concentrationCap: { type: `integer`, minimum: 100, maximum: 100 },
+            perfectGain: { type: `integer`, minimum: 1, maximum: 100 },
+            normalGain: { type: `integer`, minimum: 1, maximum: 100 },
+            normalBreaksCombo: { type: `integer`, minimum: 0, maximum: 1 },
+            specialReach: { type: `integer`, minimum: 1, maximum: 1e6 },
+            specialFxTicks: { type: `integer`, minimum: 1, maximum: 60 },
           },
         },
         q = RegExp(`^[a-zA-Z0-9._-]{1,100}$`, `u`);
@@ -7763,6 +7769,216 @@ var e = Object.create,
                 let e = {
                   instancePath: t + `/fatalY`,
                   schemaPath: `#/properties/fatalY/minimum`,
+                  keyword: `minimum`,
+                  params: { comparison: `>=`, limit: 1 },
+                  message: `must be >= 1`,
+                };
+                (o === null ? (o = [e]) : o.push(e), s++);
+              }
+            }
+          }
+          if (e.concentrationCap !== void 0) {
+            let n = e.concentrationCap;
+            if (typeof n != `number` || n % 1 || isNaN(n) || !isFinite(n)) {
+              let e = {
+                instancePath: t + `/concentrationCap`,
+                schemaPath: `#/properties/concentrationCap/type`,
+                keyword: `type`,
+                params: { type: `integer` },
+                message: `must be integer`,
+              };
+              (o === null ? (o = [e]) : o.push(e), s++);
+            }
+            if (typeof n == `number` && isFinite(n)) {
+              if (n > 100 || isNaN(n)) {
+                let e = {
+                  instancePath: t + `/concentrationCap`,
+                  schemaPath: `#/properties/concentrationCap/maximum`,
+                  keyword: `maximum`,
+                  params: { comparison: `<=`, limit: 100 },
+                  message: `must be <= 100`,
+                };
+                (o === null ? (o = [e]) : o.push(e), s++);
+              }
+              if (n < 100 || isNaN(n)) {
+                let e = {
+                  instancePath: t + `/concentrationCap`,
+                  schemaPath: `#/properties/concentrationCap/minimum`,
+                  keyword: `minimum`,
+                  params: { comparison: `>=`, limit: 100 },
+                  message: `must be >= 100`,
+                };
+                (o === null ? (o = [e]) : o.push(e), s++);
+              }
+            }
+          }
+          if (e.perfectGain !== void 0) {
+            let n = e.perfectGain;
+            if (typeof n != `number` || n % 1 || isNaN(n) || !isFinite(n)) {
+              let e = {
+                instancePath: t + `/perfectGain`,
+                schemaPath: `#/properties/perfectGain/type`,
+                keyword: `type`,
+                params: { type: `integer` },
+                message: `must be integer`,
+              };
+              (o === null ? (o = [e]) : o.push(e), s++);
+            }
+            if (typeof n == `number` && isFinite(n)) {
+              if (n > 100 || isNaN(n)) {
+                let e = {
+                  instancePath: t + `/perfectGain`,
+                  schemaPath: `#/properties/perfectGain/maximum`,
+                  keyword: `maximum`,
+                  params: { comparison: `<=`, limit: 100 },
+                  message: `must be <= 100`,
+                };
+                (o === null ? (o = [e]) : o.push(e), s++);
+              }
+              if (n < 1 || isNaN(n)) {
+                let e = {
+                  instancePath: t + `/perfectGain`,
+                  schemaPath: `#/properties/perfectGain/minimum`,
+                  keyword: `minimum`,
+                  params: { comparison: `>=`, limit: 1 },
+                  message: `must be >= 1`,
+                };
+                (o === null ? (o = [e]) : o.push(e), s++);
+              }
+            }
+          }
+          if (e.normalGain !== void 0) {
+            let n = e.normalGain;
+            if (typeof n != `number` || n % 1 || isNaN(n) || !isFinite(n)) {
+              let e = {
+                instancePath: t + `/normalGain`,
+                schemaPath: `#/properties/normalGain/type`,
+                keyword: `type`,
+                params: { type: `integer` },
+                message: `must be integer`,
+              };
+              (o === null ? (o = [e]) : o.push(e), s++);
+            }
+            if (typeof n == `number` && isFinite(n)) {
+              if (n > 100 || isNaN(n)) {
+                let e = {
+                  instancePath: t + `/normalGain`,
+                  schemaPath: `#/properties/normalGain/maximum`,
+                  keyword: `maximum`,
+                  params: { comparison: `<=`, limit: 100 },
+                  message: `must be <= 100`,
+                };
+                (o === null ? (o = [e]) : o.push(e), s++);
+              }
+              if (n < 1 || isNaN(n)) {
+                let e = {
+                  instancePath: t + `/normalGain`,
+                  schemaPath: `#/properties/normalGain/minimum`,
+                  keyword: `minimum`,
+                  params: { comparison: `>=`, limit: 1 },
+                  message: `must be >= 1`,
+                };
+                (o === null ? (o = [e]) : o.push(e), s++);
+              }
+            }
+          }
+          if (e.normalBreaksCombo !== void 0) {
+            let n = e.normalBreaksCombo;
+            if (typeof n != `number` || n % 1 || isNaN(n) || !isFinite(n)) {
+              let e = {
+                instancePath: t + `/normalBreaksCombo`,
+                schemaPath: `#/properties/normalBreaksCombo/type`,
+                keyword: `type`,
+                params: { type: `integer` },
+                message: `must be integer`,
+              };
+              (o === null ? (o = [e]) : o.push(e), s++);
+            }
+            if (typeof n == `number` && isFinite(n)) {
+              if (n > 1 || isNaN(n)) {
+                let e = {
+                  instancePath: t + `/normalBreaksCombo`,
+                  schemaPath: `#/properties/normalBreaksCombo/maximum`,
+                  keyword: `maximum`,
+                  params: { comparison: `<=`, limit: 1 },
+                  message: `must be <= 1`,
+                };
+                (o === null ? (o = [e]) : o.push(e), s++);
+              }
+              if (n < 0 || isNaN(n)) {
+                let e = {
+                  instancePath: t + `/normalBreaksCombo`,
+                  schemaPath: `#/properties/normalBreaksCombo/minimum`,
+                  keyword: `minimum`,
+                  params: { comparison: `>=`, limit: 0 },
+                  message: `must be >= 0`,
+                };
+                (o === null ? (o = [e]) : o.push(e), s++);
+              }
+            }
+          }
+          if (e.specialReach !== void 0) {
+            let n = e.specialReach;
+            if (typeof n != `number` || n % 1 || isNaN(n) || !isFinite(n)) {
+              let e = {
+                instancePath: t + `/specialReach`,
+                schemaPath: `#/properties/specialReach/type`,
+                keyword: `type`,
+                params: { type: `integer` },
+                message: `must be integer`,
+              };
+              (o === null ? (o = [e]) : o.push(e), s++);
+            }
+            if (typeof n == `number` && isFinite(n)) {
+              if (n > 1e6 || isNaN(n)) {
+                let e = {
+                  instancePath: t + `/specialReach`,
+                  schemaPath: `#/properties/specialReach/maximum`,
+                  keyword: `maximum`,
+                  params: { comparison: `<=`, limit: 1e6 },
+                  message: `must be <= 1000000`,
+                };
+                (o === null ? (o = [e]) : o.push(e), s++);
+              }
+              if (n < 1 || isNaN(n)) {
+                let e = {
+                  instancePath: t + `/specialReach`,
+                  schemaPath: `#/properties/specialReach/minimum`,
+                  keyword: `minimum`,
+                  params: { comparison: `>=`, limit: 1 },
+                  message: `must be >= 1`,
+                };
+                (o === null ? (o = [e]) : o.push(e), s++);
+              }
+            }
+          }
+          if (e.specialFxTicks !== void 0) {
+            let n = e.specialFxTicks;
+            if (typeof n != `number` || n % 1 || isNaN(n) || !isFinite(n)) {
+              let e = {
+                instancePath: t + `/specialFxTicks`,
+                schemaPath: `#/properties/specialFxTicks/type`,
+                keyword: `type`,
+                params: { type: `integer` },
+                message: `must be integer`,
+              };
+              (o === null ? (o = [e]) : o.push(e), s++);
+            }
+            if (typeof n == `number` && isFinite(n)) {
+              if (n > 60 || isNaN(n)) {
+                let e = {
+                  instancePath: t + `/specialFxTicks`,
+                  schemaPath: `#/properties/specialFxTicks/maximum`,
+                  keyword: `maximum`,
+                  params: { comparison: `<=`, limit: 60 },
+                  message: `must be <= 60`,
+                };
+                (o === null ? (o = [e]) : o.push(e), s++);
+              }
+              if (n < 1 || isNaN(n)) {
+                let e = {
+                  instancePath: t + `/specialFxTicks`,
+                  schemaPath: `#/properties/specialFxTicks/minimum`,
                   keyword: `minimum`,
                   params: { comparison: `>=`, limit: 1 },
                   message: `must be >= 1`,
@@ -9096,6 +9312,216 @@ var e = Object.create,
                     let e = {
                       instancePath: t + `/physics/fatalY`,
                       schemaPath: `#/$defs/PhysicsRules/properties/fatalY/minimum`,
+                      keyword: `minimum`,
+                      params: { comparison: `>=`, limit: 1 },
+                      message: `must be >= 1`,
+                    };
+                    (o === null ? (o = [e]) : o.push(e), c++);
+                  }
+                }
+              }
+              if (n.concentrationCap !== void 0) {
+                let e = n.concentrationCap;
+                if (typeof e != `number` || e % 1 || isNaN(e) || !isFinite(e)) {
+                  let e = {
+                    instancePath: t + `/physics/concentrationCap`,
+                    schemaPath: `#/$defs/PhysicsRules/properties/concentrationCap/type`,
+                    keyword: `type`,
+                    params: { type: `integer` },
+                    message: `must be integer`,
+                  };
+                  (o === null ? (o = [e]) : o.push(e), c++);
+                }
+                if (typeof e == `number` && isFinite(e)) {
+                  if (e > 100 || isNaN(e)) {
+                    let e = {
+                      instancePath: t + `/physics/concentrationCap`,
+                      schemaPath: `#/$defs/PhysicsRules/properties/concentrationCap/maximum`,
+                      keyword: `maximum`,
+                      params: { comparison: `<=`, limit: 100 },
+                      message: `must be <= 100`,
+                    };
+                    (o === null ? (o = [e]) : o.push(e), c++);
+                  }
+                  if (e < 100 || isNaN(e)) {
+                    let e = {
+                      instancePath: t + `/physics/concentrationCap`,
+                      schemaPath: `#/$defs/PhysicsRules/properties/concentrationCap/minimum`,
+                      keyword: `minimum`,
+                      params: { comparison: `>=`, limit: 100 },
+                      message: `must be >= 100`,
+                    };
+                    (o === null ? (o = [e]) : o.push(e), c++);
+                  }
+                }
+              }
+              if (n.perfectGain !== void 0) {
+                let e = n.perfectGain;
+                if (typeof e != `number` || e % 1 || isNaN(e) || !isFinite(e)) {
+                  let e = {
+                    instancePath: t + `/physics/perfectGain`,
+                    schemaPath: `#/$defs/PhysicsRules/properties/perfectGain/type`,
+                    keyword: `type`,
+                    params: { type: `integer` },
+                    message: `must be integer`,
+                  };
+                  (o === null ? (o = [e]) : o.push(e), c++);
+                }
+                if (typeof e == `number` && isFinite(e)) {
+                  if (e > 100 || isNaN(e)) {
+                    let e = {
+                      instancePath: t + `/physics/perfectGain`,
+                      schemaPath: `#/$defs/PhysicsRules/properties/perfectGain/maximum`,
+                      keyword: `maximum`,
+                      params: { comparison: `<=`, limit: 100 },
+                      message: `must be <= 100`,
+                    };
+                    (o === null ? (o = [e]) : o.push(e), c++);
+                  }
+                  if (e < 1 || isNaN(e)) {
+                    let e = {
+                      instancePath: t + `/physics/perfectGain`,
+                      schemaPath: `#/$defs/PhysicsRules/properties/perfectGain/minimum`,
+                      keyword: `minimum`,
+                      params: { comparison: `>=`, limit: 1 },
+                      message: `must be >= 1`,
+                    };
+                    (o === null ? (o = [e]) : o.push(e), c++);
+                  }
+                }
+              }
+              if (n.normalGain !== void 0) {
+                let e = n.normalGain;
+                if (typeof e != `number` || e % 1 || isNaN(e) || !isFinite(e)) {
+                  let e = {
+                    instancePath: t + `/physics/normalGain`,
+                    schemaPath: `#/$defs/PhysicsRules/properties/normalGain/type`,
+                    keyword: `type`,
+                    params: { type: `integer` },
+                    message: `must be integer`,
+                  };
+                  (o === null ? (o = [e]) : o.push(e), c++);
+                }
+                if (typeof e == `number` && isFinite(e)) {
+                  if (e > 100 || isNaN(e)) {
+                    let e = {
+                      instancePath: t + `/physics/normalGain`,
+                      schemaPath: `#/$defs/PhysicsRules/properties/normalGain/maximum`,
+                      keyword: `maximum`,
+                      params: { comparison: `<=`, limit: 100 },
+                      message: `must be <= 100`,
+                    };
+                    (o === null ? (o = [e]) : o.push(e), c++);
+                  }
+                  if (e < 1 || isNaN(e)) {
+                    let e = {
+                      instancePath: t + `/physics/normalGain`,
+                      schemaPath: `#/$defs/PhysicsRules/properties/normalGain/minimum`,
+                      keyword: `minimum`,
+                      params: { comparison: `>=`, limit: 1 },
+                      message: `must be >= 1`,
+                    };
+                    (o === null ? (o = [e]) : o.push(e), c++);
+                  }
+                }
+              }
+              if (n.normalBreaksCombo !== void 0) {
+                let e = n.normalBreaksCombo;
+                if (typeof e != `number` || e % 1 || isNaN(e) || !isFinite(e)) {
+                  let e = {
+                    instancePath: t + `/physics/normalBreaksCombo`,
+                    schemaPath: `#/$defs/PhysicsRules/properties/normalBreaksCombo/type`,
+                    keyword: `type`,
+                    params: { type: `integer` },
+                    message: `must be integer`,
+                  };
+                  (o === null ? (o = [e]) : o.push(e), c++);
+                }
+                if (typeof e == `number` && isFinite(e)) {
+                  if (e > 1 || isNaN(e)) {
+                    let e = {
+                      instancePath: t + `/physics/normalBreaksCombo`,
+                      schemaPath: `#/$defs/PhysicsRules/properties/normalBreaksCombo/maximum`,
+                      keyword: `maximum`,
+                      params: { comparison: `<=`, limit: 1 },
+                      message: `must be <= 1`,
+                    };
+                    (o === null ? (o = [e]) : o.push(e), c++);
+                  }
+                  if (e < 0 || isNaN(e)) {
+                    let e = {
+                      instancePath: t + `/physics/normalBreaksCombo`,
+                      schemaPath: `#/$defs/PhysicsRules/properties/normalBreaksCombo/minimum`,
+                      keyword: `minimum`,
+                      params: { comparison: `>=`, limit: 0 },
+                      message: `must be >= 0`,
+                    };
+                    (o === null ? (o = [e]) : o.push(e), c++);
+                  }
+                }
+              }
+              if (n.specialReach !== void 0) {
+                let e = n.specialReach;
+                if (typeof e != `number` || e % 1 || isNaN(e) || !isFinite(e)) {
+                  let e = {
+                    instancePath: t + `/physics/specialReach`,
+                    schemaPath: `#/$defs/PhysicsRules/properties/specialReach/type`,
+                    keyword: `type`,
+                    params: { type: `integer` },
+                    message: `must be integer`,
+                  };
+                  (o === null ? (o = [e]) : o.push(e), c++);
+                }
+                if (typeof e == `number` && isFinite(e)) {
+                  if (e > 1e6 || isNaN(e)) {
+                    let e = {
+                      instancePath: t + `/physics/specialReach`,
+                      schemaPath: `#/$defs/PhysicsRules/properties/specialReach/maximum`,
+                      keyword: `maximum`,
+                      params: { comparison: `<=`, limit: 1e6 },
+                      message: `must be <= 1000000`,
+                    };
+                    (o === null ? (o = [e]) : o.push(e), c++);
+                  }
+                  if (e < 1 || isNaN(e)) {
+                    let e = {
+                      instancePath: t + `/physics/specialReach`,
+                      schemaPath: `#/$defs/PhysicsRules/properties/specialReach/minimum`,
+                      keyword: `minimum`,
+                      params: { comparison: `>=`, limit: 1 },
+                      message: `must be >= 1`,
+                    };
+                    (o === null ? (o = [e]) : o.push(e), c++);
+                  }
+                }
+              }
+              if (n.specialFxTicks !== void 0) {
+                let e = n.specialFxTicks;
+                if (typeof e != `number` || e % 1 || isNaN(e) || !isFinite(e)) {
+                  let e = {
+                    instancePath: t + `/physics/specialFxTicks`,
+                    schemaPath: `#/$defs/PhysicsRules/properties/specialFxTicks/type`,
+                    keyword: `type`,
+                    params: { type: `integer` },
+                    message: `must be integer`,
+                  };
+                  (o === null ? (o = [e]) : o.push(e), c++);
+                }
+                if (typeof e == `number` && isFinite(e)) {
+                  if (e > 60 || isNaN(e)) {
+                    let e = {
+                      instancePath: t + `/physics/specialFxTicks`,
+                      schemaPath: `#/$defs/PhysicsRules/properties/specialFxTicks/maximum`,
+                      keyword: `maximum`,
+                      params: { comparison: `<=`, limit: 60 },
+                      message: `must be <= 60`,
+                    };
+                    (o === null ? (o = [e]) : o.push(e), c++);
+                  }
+                  if (e < 1 || isNaN(e)) {
+                    let e = {
+                      instancePath: t + `/physics/specialFxTicks`,
+                      schemaPath: `#/$defs/PhysicsRules/properties/specialFxTicks/minimum`,
                       keyword: `minimum`,
                       params: { comparison: `>=`, limit: 1 },
                       message: `must be >= 1`,

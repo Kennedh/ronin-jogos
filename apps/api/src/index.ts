@@ -13,7 +13,10 @@ import {
 import { preferredLocale } from "@ronin/content";
 import { Runs, Sessions, Fault, rateLimit } from "@ronin/data";
 import type { Session, Clock, ResourcePolicy } from "@ronin/data";
+import { CURRENT_MANIFEST } from "@ronin/content/runner-manifest";
+import type { RunnerManifest } from "@ronin/content/runner-manifest";
 export interface ApiOptions {
+  manifest?: RunnerManifest;
   pool: Pool;
   origin: string;
   clock?: Clock;
@@ -77,7 +80,12 @@ export function createApi(options?: ApiOptions) {
   const rateSecret = options.rateSecret ?? randomBytes(32);
   if (rateSecret.length < 32) throw new Error("invalid_rate_secret");
   const sessions = new Sessions(options.pool, options.clock),
-    runs = new Runs(options.pool, options.clock, options.policy);
+    runs = new Runs(
+      options.pool,
+      options.clock,
+      options.policy,
+      options.manifest ?? CURRENT_MANIFEST,
+    );
   const cookieName = origin.protocol === "https:" ? "__Host-rr_sid" : "rr_sid";
   const readCookie = (request: FastifyRequest) => cookie(request, cookieName);
   const auths = new WeakMap<FastifyRequest, Session>();

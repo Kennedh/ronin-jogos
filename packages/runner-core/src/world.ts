@@ -11,6 +11,8 @@ export interface Entity {
   bottom: number;
   kind: "OBSTACLE" | "ENEMY";
   idealTick?: number;
+  vulnerability?: { readonly start: number; readonly end: number };
+  specialEligible?: boolean;
 }
 export interface World {
   readonly gaps: readonly Gap[];
@@ -52,6 +54,19 @@ export function createWorld(
       throw new RangeError("invalid_entity");
     if (e.idealTick !== undefined && integer(e.idealTick) < 0)
       throw new RangeError("invalid_telegraph");
+    if (e.vulnerability) {
+      if (
+        integer(e.vulnerability.start) < 0 ||
+        integer(e.vulnerability.end) <= e.vulnerability.start
+      )
+        throw new RangeError("invalid_vulnerability");
+      e.vulnerability = Object.freeze({ ...e.vulnerability });
+    }
+    if (
+      e.specialEligible !== undefined &&
+      typeof e.specialEligible !== "boolean"
+    )
+      throw new RangeError("invalid_special_eligibility");
     ids.add(e.id);
     Object.freeze(e);
   }

@@ -1,5 +1,5 @@
 import { add, assertTick, divideStep, nextTick } from "./math.ts";
-import { RULES_V1, compileRules, rulesIdentity } from "./rules.ts";
+import { RULES_V1, compileRules, rulesIdentity, combatRules } from "./rules.ts";
 import type { Rules } from "./rules.ts";
 import { createRandom } from "./rng.ts";
 import type { RandomState } from "./rng.ts";
@@ -7,7 +7,19 @@ import { supported, overlap } from "./world.ts";
 import type { World } from "./world.ts";
 export type Action = "JUMP" | "SLIDE" | "ATTACK";
 export type EndReason = "HP_ZERO" | "ABYSS" | "QUIT";
+export interface CombatState {
+  concentration: number;
+  combo: number;
+  bestCombo: number;
+  specials: number;
+  misses: number;
+  attackHit: boolean;
+  attackPerfect: boolean;
+  attackArmed: boolean;
+  specialUntil: number;
+}
 export interface SimState {
+  combat?: CombatState;
   rulesVersion: string;
   rulesIdentity: string;
   tick: number;
@@ -46,6 +58,9 @@ export interface SimEvent {
     | "ATTACK"
     | "HIT"
     | "PERFECT"
+    | "MISS"
+    | "SPECIAL"
+    | "SPECIAL_HIT"
     | "DAMAGE"
     | "DEATH";
   entity?: string;
@@ -53,6 +68,21 @@ export interface SimEvent {
 export function createState(seed: string, rules: Rules = RULES_V1): SimState {
   const manifest = compileRules(rules);
   return {
+    ...(combatRules(manifest)
+      ? {
+          combat: {
+            concentration: 0,
+            combo: 0,
+            bestCombo: 0,
+            specials: 0,
+            misses: 0,
+            attackHit: false,
+            attackPerfect: false,
+            attackArmed: false,
+            specialUntil: 0,
+          },
+        }
+      : {}),
     rulesVersion: manifest.version,
     rulesIdentity: rulesIdentity(manifest),
     tick: 0,
@@ -123,13 +153,21 @@ export function step(
     throw new RangeError("invalid_actions");
   const s = {
     ...previous,
+    ...(previous.combat ? { combat: { ...previous.combat } } : {}),
     resolved: previous.resolved.filter(
       (e) => e.end >= previous.distance - r.bodyWidth,
     ),
   };
+  const c = s.combat,
+    cr = combatRules(r);
   const events: SimEvent[] = [];
   const event = (type: SimEvent["type"], entity?: string) =>
     events.push(entity === undefined ? { tick, type } : { tick, type, entity });
+  if (c && s.attackAge === r.attackWindup + r.attackActive && !c.attackHit) {
+    c.combo = 0;
+    c.misses = add(c.misses, 1);
+    event("MISS");
+  }
   if (s.attackAge >= r.attackWindup + r.attackActive + r.attackRecovery)
     s.attackAge = -1;
   if (s.grounded) {
@@ -168,6 +206,11 @@ export function step(
   }
   if (actions.includes("ATTACK") && !sliding && s.attackAge < 0) {
     s.attackAge = 0;
+    if (c && cr) {
+      c.attackHit = false;
+      c.attackPerfect = false;
+      c.attackArmed = c.concentration === cr.concentrationCap;
+    }
     event("ATTACK");
   }
   const [dx, xrem] = divideStep(r.speed, s.xRemainder);
@@ -259,7 +302,13 @@ export function step(
       s.attackAge < r.attackWindup + r.attackActive
     ) {
       for (const e of world.entities) {
-        if (e.kind !== "ENEMY" || s.resolved.some((v) => v.id === e.id))
+        if (
+          e.kind !== "ENEMY" ||
+          s.resolved.some((v) => v.id === e.id) ||
+          (c &&
+            e.vulnerability &&
+            (tick < e.vulnerability.start || tick >= e.vulnerability.end))
+        )
           continue;
         if (
           overlap(sword, {
@@ -272,10 +321,60 @@ export function step(
           s.resolved.push({ id: e.id, end: add(e.x, e.width) });
           s.kills = add(s.kills, 1);
           event("HIT", e.id);
-          if (
+          const perfect =
             e.idealTick !== undefined &&
-            Math.abs(tick - e.idealTick) <= r.perfectTicks
-          ) {
+            Math.abs(tick - e.idealTick) <= r.perfectTicks;
+          if (c && cr) {
+            if (perfect && !c.attackPerfect) {
+              c.combo = add(c.combo, 1);
+              c.bestCombo = Math.max(c.bestCombo, c.combo);
+              c.attackPerfect = true;
+            } else if (!perfect && !c.attackHit && cr.normalBreaksCombo)
+              c.combo = 0;
+            c.attackHit = true;
+            if (c.attackArmed) {
+              c.attackArmed = false;
+              c.concentration = 0;
+              c.specials = add(c.specials, 1);
+              c.specialUntil = add(tick, cr.specialFxTicks);
+              event("SPECIAL", e.id);
+              const area = {
+                ...sword,
+                right: add(body.right, cr.specialReach),
+              };
+              for (const extra of world.entities) {
+                if (
+                  extra.kind !== "ENEMY" ||
+                  extra.specialEligible === false ||
+                  s.resolved.some((v) => v.id === extra.id) ||
+                  (extra.vulnerability &&
+                    (tick < extra.vulnerability.start ||
+                      tick >= extra.vulnerability.end))
+                )
+                  continue;
+                if (
+                  !overlap(area, {
+                    left: extra.x,
+                    right: add(extra.x, extra.width),
+                    top: extra.top,
+                    bottom: extra.bottom,
+                  })
+                )
+                  continue;
+                s.resolved.push({
+                  id: extra.id,
+                  end: add(extra.x, extra.width),
+                });
+                s.kills = add(s.kills, 1);
+                event("SPECIAL_HIT", extra.id);
+              }
+            } else if (c.specialUntil <= tick)
+              c.concentration = Math.min(
+                cr.concentrationCap,
+                c.concentration + (perfect ? cr.perfectGain : cr.normalGain),
+              );
+          }
+          if (perfect) {
             s.perfects = add(s.perfects, 1);
             event("PERFECT", e.id);
           }

@@ -1,6 +1,6 @@
 import Phaser from "phaser";
+import { drawRig, poseFor } from "./rig.ts";
 import { RULES_V1 } from "@ronin/runner-core";
-import type { Rules } from "@ronin/runner-core";
 import type { RunSession } from "./session.ts";
 export interface SceneOptions {
   session: () => RunSession | undefined;
@@ -126,76 +126,6 @@ export function mountRunner(parent: HTMLElement, options: SceneOptions) {
         }
       }
     }
-    private ronin(
-      x: number,
-      feet: number,
-      tick: number,
-      slide: boolean,
-      attackAge: number,
-      hurt: boolean,
-      rules: Rules,
-    ) {
-      const g = this.foreground,
-        sx =
-          (slide ? rules.slideWidth : rules.bodyWidth) /
-          rules.scale /
-          (slide ? 54 : 44),
-        sy =
-          (slide ? rules.slideHeight : rules.bodyHeight) /
-          rules.scale /
-          (slide ? 44 : 88);
-      g.save();
-      g.translateCanvas(x, feet);
-      g.scaleCanvas(sx, sy);
-      x = 0;
-      feet = 0;
-      const reach = rules.swordReach / rules.scale / sx;
-      const motion = options.reducedMotion() ? 0 : Math.sin(tick * 0.33),
-        top = slide ? feet - 44 : feet - 88;
-      g.lineStyle(6, 0x2a2528);
-      g.lineBetween(x - 10, feet - 22, x - 18 - motion * 8, feet - 2);
-      g.lineBetween(x + 8, feet - 22, x + 14 + motion * 8, feet - 2);
-      g.fillStyle(0x2a2528);
-      g.fillTriangle(x - 15, top + 25, x + 12, top + 23, x + 25, feet - 18);
-      g.fillTriangle(x - 15, top + 25, x - 23, feet - 18, x + 25, feet - 18);
-      g.fillStyle(0xa64340);
-      g.fillTriangle(
-        x - 16,
-        top + 28,
-        x - 52 - motion * 6,
-        top + 19,
-        x - 30,
-        top + 37,
-      );
-      g.fillRect(x - 16, top + 24, 30, 7);
-      g.fillStyle(0xb99763);
-      g.fillCircle(x + 2, top + 15, 10);
-      g.fillStyle(0x2a2528);
-      g.fillTriangle(x - 30, top + 9, x + 3, top - 9, x + 33, top + 11);
-      g.lineStyle(2, 0x2a2528);
-      g.lineBetween(x - 30, top + 11, x + 32, top + 13);
-      g.lineStyle(5, 0x2a2528);
-      g.lineBetween(x + 3, top + 32, x + 21, top + 49);
-      const active =
-        attackAge >= rules.attackWindup &&
-        attackAge < rules.attackWindup + rules.attackActive;
-      if (active) {
-        g.lineStyle(5, 0xa64340, 0.8);
-        g.beginPath();
-        g.arc(x + 22, top + 47, reach, -0.65, 0.55);
-        g.strokePath();
-        g.lineStyle(2, 0xf2e7ce);
-        g.lineBetween(x + 21, top + 49, x + 22 + reach, top + 20);
-      } else {
-        g.lineStyle(3, 0x6b8768);
-        g.lineBetween(x + 21, top + 49, x + 61, top + 11);
-      }
-      if (hurt) {
-        g.lineStyle(2, 0xb74c47, 0.85);
-        g.strokeCircle(x, top + 45, 52);
-      }
-      g.restore();
-    }
     private draw() {
       const session = options.session(),
         state = session?.state,
@@ -272,6 +202,16 @@ export function mountRunner(parent: HTMLElement, options: SceneOptions) {
             g.lineBetween(x + 8, top + 9, x + w - 9, top + 7);
             g.lineBetween(x + 9, top + 16, x + 12, this.ground);
           } else {
+            if (e.idealTick !== undefined) {
+              const ideal = Math.abs(tick - e.idealTick) <= rules.perfectTicks;
+              g.lineStyle(
+                ideal ? 3 : 1,
+                ideal ? 0xa64340 : 0x2a2528,
+                ideal ? 1 : 0.55,
+              );
+              g.strokeCircle(x + w / 2, top - 12, ideal ? 10 : 6);
+              g.lineBetween(x + w / 2 - 4, top - 12, x + w / 2 + 4, top - 12);
+            }
             g.fillStyle(0x2a2528);
             g.fillCircle(x + w / 2, top + 12, 11);
             g.fillTriangle(
@@ -289,17 +229,38 @@ export function mountRunner(parent: HTMLElement, options: SceneOptions) {
           }
         }
       }
-      const slide =
-        !!state && state.slideUntil > 0 && state.tick <= state.slideUntil;
-      this.ronin(
-        324,
-        this.ground + (state?.y ?? 0) / scale,
-        tick,
-        slide,
-        (state?.attackAge ?? -1) - 1,
-        !!state && state.tick < state.invulnerableUntil,
+      g.save();
+      g.translateCanvas(324, this.ground + (state?.y ?? 0) / scale);
+      const pose = poseFor(state, rules, session?.recentEvents ?? []);
+      parent.dataset["pose"] = pose.locomotion;
+      parent.dataset["action"] = pose.action;
+      drawRig(
+        {
+          line(points, color, width, alpha = 1) {
+            g.lineStyle(width, color, alpha);
+            g.beginPath();
+            points.forEach(([x, y], i) =>
+              i ? g.lineTo(x, y) : g.moveTo(x, y),
+            );
+            g.strokePath();
+          },
+          polygon(points, color, alpha = 1) {
+            g.fillStyle(color, alpha);
+            g.fillPoints(
+              points.map(([x, y]) => new Phaser.Math.Vector2(x, y)),
+              true,
+            );
+          },
+          circle(x, y, r, color, alpha = 1) {
+            g.fillStyle(color, alpha);
+            g.fillCircle(x, y, r);
+          },
+        },
+        pose,
         rules,
+        options.reducedMotion(),
       );
+      g.restore();
       // Foreground brush accents are cosmetic and never enter the world RNG.
       g.lineStyle(1, 0x2a2528, 0.3);
       for (let i = 0; i < 28; i++) {
