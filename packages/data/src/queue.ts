@@ -1,4 +1,5 @@
 import type { Pool, PoolClient } from "pg";
+import { loadManifest, regionsReached } from "@ronin/content/runner-manifest";
 import type { RunnerManifest } from "@ronin/content/runner-manifest";
 import { Fault, transaction, serverTime } from "./runtime.ts";
 import type { Clock } from "./runtime.ts";
@@ -226,6 +227,22 @@ export class VerificationQueue {
           weekly,
         ],
       );
+      const stored = (
+        await db.query<{ manifest: RunnerManifest }>(
+          "SELECT manifest FROM rules_versions WHERE manifest_hash=$1",
+          [run.rules_hash],
+        )
+      ).rows[0]!;
+      const reached = regionsReached(
+        await loadManifest(stored.manifest, run.rules_hash),
+        run.starting_region,
+        result.distance,
+      );
+      for (const region of reached)
+        await db.query(
+          "INSERT INTO player_regions(player_id,region_id) VALUES($1,$2) ON CONFLICT DO NOTHING",
+          [run.player_id, region],
+        );
       await db.query(
         "INSERT INTO outbox_events(event_key,run_id,type,payload,created_at) VALUES($1,$2,'RUN_VERIFIED',$3,$4)",
         [

@@ -1,4 +1,6 @@
 import Phaser from "phaser";
+import { biomeTheme, paintBackdrop, paintProps, paintEnemy } from "./biomes.ts";
+import type { Theme } from "./biomes.ts";
 import { drawRig, poseFor } from "./rig.ts";
 import { RULES_V1 } from "@ronin/runner-core";
 import type { RunSession } from "./session.ts";
@@ -15,17 +17,23 @@ export function mountRunner(parent: HTMLElement, options: SceneOptions) {
     readyResolve = resolve;
     readyReject = reject;
   });
-  class BambooScene extends Phaser.Scene {
+  class RunnerScene extends Phaser.Scene {
     private ground = 548;
+    private theme: Theme = biomeTheme("BAMBOO", 0);
+    private themeKey = "BAMBOO:0";
+    private previousTheme: Theme | undefined;
+    private transitionDistance = 0;
+    private fadeBackdrop!: Phaser.GameObjects.Graphics;
     private viewHeight = 720;
     private backdrop!: Phaser.GameObjects.Graphics;
     private forest!: Phaser.GameObjects.Graphics;
     private foreground!: Phaser.GameObjects.Graphics;
     constructor() {
-      super({ key: "bamboo-runner" });
+      super({ key: "ronin-runner-world" });
     }
     create() {
       this.backdrop = this.add.graphics();
+      this.fadeBackdrop = this.add.graphics();
       this.forest = this.add.graphics();
       this.foreground = this.add.graphics();
       this.background();
@@ -45,54 +53,15 @@ export function mountRunner(parent: HTMLElement, options: SceneOptions) {
       this.draw();
     }
     private background() {
-      const g = this.backdrop;
-      g.fillStyle(0xf2e7ce);
-      g.fillRect(0, 0, 1280, this.viewHeight);
-      for (let i = 0; i < 30; i++) {
-        g.fillStyle(0xd7ddc8, 0.018 + i * 0.001);
-        g.fillRect(0, Math.max(0, this.ground - 368) + i * 12, 1280, 12);
-      }
-      g.fillStyle(0xb74c47, 0.76);
-      g.fillCircle(
-        967,
-        Math.max(98, this.ground - 382),
-        this.viewHeight < 500 ? 75 : 99,
-      );
-      g.lineStyle(1, 0x2a2528, 0.065);
-      for (let i = 0; i < 80; i++) {
-        const x = (i * 157) % 1280,
-          y = (i * 73) % this.viewHeight;
-        g.lineBetween(x, y, x + 40 + (i % 30), y + 1);
-      }
-      g.fillStyle(0x6b8768, 0.12);
-      g.fillPoints(
-        [
-          { x: 0, y: 365 },
-          { x: 260, y: 270 },
-          { x: 500, y: 350 },
-          { x: 740, y: 290 },
-          { x: 1050, y: 360 },
-          { x: 1280, y: 290 },
-          { x: 1280, y: 565 },
-          { x: 0, y: 565 },
-        ].map((p) => new Phaser.Math.Vector2(p.x, p.y + this.ground - 548)),
-        true,
-      );
-      g.fillStyle(0x6b8768, 0.13);
-      g.fillPoints(
-        [
-          { x: 0, y: 430 },
-          { x: 310, y: 360 },
-          { x: 610, y: 430 },
-          { x: 900, y: 370 },
-          { x: 1280, y: 440 },
-          { x: 1280, y: 570 },
-          { x: 0, y: 570 },
-        ].map((p) => new Phaser.Math.Vector2(p.x, p.y + this.ground - 548)),
-        true,
-      );
-      g.lineStyle(1, 0x2a2528, 0.09);
-      g.lineBetween(50, this.viewHeight - 45, 1230, this.viewHeight - 45);
+      paintBackdrop(this.backdrop, this.viewHeight, this.ground, this.theme);
+      if (this.previousTheme)
+        paintBackdrop(
+          this.fadeBackdrop,
+          this.viewHeight,
+          this.ground,
+          this.previousTheme,
+        );
+      else this.fadeBackdrop.clear();
     }
     private bamboo(
       x: number,
@@ -133,34 +102,70 @@ export function mountRunner(parent: HTMLElement, options: SceneOptions) {
         scale = rules.scale,
         distance = (state?.distance ?? 0) / scale,
         tick = state?.tick ?? 0;
+      const journey = state?.journey,
+        key = `${journey?.region ?? "BAMBOO"}:${journey?.corruption ?? 0}`;
+      if (key !== this.themeKey) {
+        this.previousTheme = journey ? this.theme : undefined;
+        this.transitionDistance = state?.distance ?? 0;
+        this.themeKey = key;
+        this.theme = biomeTheme(
+          journey?.region ?? "BAMBOO",
+          journey?.corruption ?? 0,
+        );
+        this.background();
+      }
+      const blend = options.reducedMotion()
+        ? 1
+        : Math.min(
+            1,
+            Math.max(
+              0,
+              ((state?.distance ?? 0) - this.transitionDistance) / 240000,
+            ),
+          );
+      this.fadeBackdrop.setAlpha(this.previousTheme ? 1 - blend : 0);
+      parent.dataset["region"] = journey?.region ?? "BAMBOO";
+      parent.dataset["cycle"] = String(journey?.cycle ?? 1);
+      parent.dataset["speed"] = String(journey?.speed ?? rules.speed);
+      const world = session?.renderWorld;
       const f = this.forest;
       f.clear();
-      for (let i = -1; i < 12; i++) {
-        const x =
-          i * 145 - ((options.reducedMotion() ? 0 : distance * 0.18) % 145);
-        this.bamboo(
-          x,
-          this.ground,
-          300 + ((i * 59 + 600) % 160),
-          9,
-          0x6b8768,
-          0.22,
-        );
+      if (this.theme.region === "BAMBOO") {
+        for (let i = -1; i < 12; i++) {
+          const x =
+            i * 145 - ((options.reducedMotion() ? 0 : distance * 0.18) % 145);
+          this.bamboo(
+            x,
+            this.ground,
+            300 + ((i * 59 + 600) % 160),
+            9,
+            0x6b8768,
+            0.22,
+          );
+        }
+        for (let i = -1; i < 9; i++) {
+          const x =
+            i * 200 +
+            62 -
+            ((options.reducedMotion() ? 0 : distance * 0.33) % 200);
+          this.bamboo(
+            x,
+            this.ground,
+            360 + ((i * 71 + 600) % 170),
+            13,
+            0x486343,
+            0.34,
+          );
+        }
       }
-      for (let i = -1; i < 9; i++) {
-        const x =
-          i * 200 +
-          62 -
-          ((options.reducedMotion() ? 0 : distance * 0.33) % 200);
-        this.bamboo(
-          x,
-          this.ground,
-          360 + ((i * 71 + 600) % 170),
-          13,
-          0x486343,
-          0.34,
-        );
-      }
+      paintProps(
+        f,
+        distance,
+        tick,
+        this.ground,
+        this.theme,
+        options.reducedMotion(),
+      );
       const g = this.foreground;
       g.clear();
       g.fillStyle(0x2a2528);
@@ -168,28 +173,32 @@ export function mountRunner(parent: HTMLElement, options: SceneOptions) {
       g.fillStyle(0x6b8768, 0.14);
       g.fillRect(0, this.ground + 12, 1280, 60);
       if (session) {
-        for (const gap of session.world.gaps) {
+        for (const gap of world!.gaps) {
           const x = 324 + (gap.start - state!.distance) / scale,
             w = (gap.end - gap.start) / scale;
           if (x + w < 0 || x > 1280) continue;
           g.fillStyle(0x272d27);
-          g.fillRect(x, this.ground, w, 105);
-          g.fillStyle(0xf2e7ce, 0.35);
-          g.fillTriangle(
+          g.fillRect(x, this.ground, w, this.viewHeight - this.ground + 40);
+          g.fillStyle(this.theme.ink, 0.45);
+          g.fillRect(
             x,
-            this.ground + 104,
-            x + w * 0.6,
-            this.ground + 122,
-            x + w,
-            this.ground + 104,
+            this.ground,
+            Math.min(10, w / 8),
+            this.viewHeight - this.ground + 40,
+          );
+          g.fillRect(
+            x + w - Math.min(10, w / 8),
+            this.ground,
+            Math.min(10, w / 8),
+            this.viewHeight - this.ground + 40,
           );
           g.lineStyle(2, 0xa64340, 0.8);
           g.lineBetween(x - 8, this.ground - 2, x, this.ground - 14);
           g.lineBetween(x + w, this.ground - 14, x + w + 8, this.ground - 2);
         }
         const resolved = new Set(state!.resolved.map((e) => e.id));
-        for (const e of session.world.entities) {
-          if (resolved.has(e.id)) continue;
+        for (const e of world!.entities) {
+          if (resolved.has(e.id) || e.hidden) continue;
           const x = 324 + (e.x - state!.distance) / scale,
             w = e.width / scale,
             top = this.ground + e.top / scale,
@@ -202,30 +211,22 @@ export function mountRunner(parent: HTMLElement, options: SceneOptions) {
             g.lineBetween(x + 8, top + 9, x + w - 9, top + 7);
             g.lineBetween(x + 9, top + 16, x + 12, this.ground);
           } else {
-            if (e.idealTick !== undefined) {
-              const ideal = Math.abs(tick - e.idealTick) <= rules.perfectTicks;
-              g.lineStyle(
-                ideal ? 3 : 1,
-                ideal ? 0xa64340 : 0x2a2528,
-                ideal ? 1 : 0.55,
-              );
-              g.strokeCircle(x + w / 2, top - 12, ideal ? 10 : 6);
-              g.lineBetween(x + w / 2 - 4, top - 12, x + w / 2 + 4, top - 12);
+            if (
+              e.idealTick !== undefined &&
+              Math.abs(tick - e.idealTick) <= rules.perfectTicks
+            ) {
+              g.lineStyle(2, this.theme.accent);
+              g.strokeCircle(x + w / 2, top - 12, 10);
             }
-            g.fillStyle(0x2a2528);
-            g.fillCircle(x + w / 2, top + 12, 11);
-            g.fillTriangle(
-              x + 6,
+            paintEnemy(
+              g,
+              e,
+              x,
               this.ground,
-              x + w / 2,
-              top + 22,
-              x + w - 4,
-              this.ground,
+              scale,
+              this.theme,
+              world!.entities.find((v) => v.hidden && v.damageOwner === e.id),
             );
-            g.lineStyle(4, 0x2a2528);
-            g.lineBetween(x + 5, top + 34, x + w + 5, top + 40);
-            g.lineStyle(2, 0xa64340);
-            g.lineBetween(x + w / 2 - 8, top + 12, x + w / 2 + 8, top + 12);
           }
         }
       }
@@ -265,11 +266,17 @@ export function mountRunner(parent: HTMLElement, options: SceneOptions) {
       g.lineStyle(1, 0x2a2528, 0.3);
       for (let i = 0; i < 28; i++) {
         const x = (i * 97 - distance * 0.8) % 1360;
-        g.lineBetween(x, this.ground + 12, x + 22, this.ground + 15);
+        if (
+          !world?.gaps.some((gap) => {
+            const left = 324 + (gap.start - (state?.distance ?? 0)) / scale;
+            return x + 22 > left && x < left + (gap.end - gap.start) / scale;
+          })
+        )
+          g.lineBetween(x, this.ground + 12, x + 22, this.ground + 15);
       }
     }
   }
-  const scene = new BambooScene();
+  const scene = new RunnerScene();
   const game = new Phaser.Game({
     type: Phaser.CANVAS,
     width: 1280,

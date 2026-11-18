@@ -89,17 +89,22 @@ export class RunnerApi {
     this.playerId = value.player_id;
     return value;
   }
-  async start(key: string, mode: "FULL" | "REGIONAL" = "FULL") {
+  async start(
+    key: string,
+    mode: "FULL" | "REGIONAL" = "FULL",
+    region: RunTicket["starting_region_id"] = "BAMBOO",
+  ) {
     const ticket = (await this.request(
       "/runs/start",
       "POST",
       "RunTicket",
-      JSON.stringify(
-        mode === "FULL" ? { mode } : { mode, region_id: "BAMBOO" },
-      ),
+      JSON.stringify(mode === "FULL" ? { mode } : { mode, region_id: region }),
       { "content-type": "application/json", "idempotency-key": key },
     )) as RunTicket;
-    if (ticket.mode !== mode || ticket.starting_region_id !== "BAMBOO")
+    if (
+      ticket.mode !== mode ||
+      ticket.starting_region_id !== (mode === "FULL" ? "BAMBOO" : region)
+    )
       throw new ClientError("RULES_MISMATCH");
     return ticket;
   }

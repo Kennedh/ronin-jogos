@@ -953,6 +953,31 @@ export const definitions = {
         minimum: 1,
         maximum: 60,
       },
+      bambooMeters: {
+        type: "integer",
+        minimum: 1,
+        maximum: 9007199254740991,
+      },
+      templeMeters: {
+        type: "integer",
+        minimum: 1,
+        maximum: 9007199254740991,
+      },
+      mountainMeters: {
+        type: "integer",
+        minimum: 1,
+        maximum: 9007199254740991,
+      },
+      castleMeters: {
+        type: "integer",
+        minimum: 1,
+        maximum: 9007199254740991,
+      },
+      cycleSpeedStep: {
+        type: "integer",
+        minimum: 1,
+        maximum: 9007199254740991,
+      },
     },
   },
   RunnerManifest: {
@@ -994,6 +1019,23 @@ export const definitions = {
       },
       physics: {
         $ref: "#/$defs/PhysicsRules",
+      },
+    },
+  },
+  RegionUnlocks: {
+    type: "object",
+    additionalProperties: false,
+    required: ["unlocked_regions"],
+    properties: {
+      unlocked_regions: {
+        type: "array",
+        minItems: 1,
+        maxItems: 4,
+        uniqueItems: true,
+        items: {
+          type: "string",
+          enum: ["BAMBOO", "TEMPLE", "MOUNTAINS", "CASTLE"],
+        },
       },
     },
   },

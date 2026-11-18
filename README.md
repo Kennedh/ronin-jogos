@@ -2,7 +2,7 @@
 
 Plataforma de jogos gratuitos para navegador, desenvolvida com tecnologias web.
 
-## Ronin Runner — combate e rig da parte 2 em desenvolvimento
+## Ronin Runner — mundo procedural da parte 3 em desenvolvimento
 
 O Ronin Runner concluiu a fase de especificação de baseline (v0.18). **O proprietário autorizou em 11/11/2026 o início da implementação com Codex**. A primeira versão pública deverá ser **completa** (sem mini-MVP descartável), com desenvolvimento incremental sobre a arquitetura definitiva. As partes 1A–1D têm implementação e testes: a primeira corrida Bambu já liga Phaser, teclado/gestos e resultado à API e ao verificador reais. Isso é uma fundação interna, ainda sem o escopo completo nem homologação pública.
 
@@ -95,3 +95,9 @@ A regressão usa bundle de produção, Chromium desktop/mobile emulado, PostgreS
 Novas partidas usam regras major 2: concentração (perfeito +12/comum +3, máximo 100), sequência perfeita, golpe vazio e especial automático no próximo acerto quando carregado. O especial tem alcance frontal curto, não cura e não protege de abismos. O círculo sobre o inimigo indica a janela de precisão. Replay/servidor continuam autoritativos e a major 1 permanece executável.
 
 A faixa sob a cena mostra concentração/combo/feedback PT-BR/EN. Antes de jogar, é possível remapear teclas e abrir **Estudo de animação do personagem** para animar/congelar poses, conferir ataque aéreo, deslize, dano, especial e pivôs. A prévia usa o mesmo rig da corrida. É uma amostra para revisão visual; criador/inventário/arte final são etapas posteriores. Implementação e decisões: [ADR008](docs/adr/ADR-008-COMBATE-E-RIG.md). Próxima parte: diretor/quatro regiões/ciclos (3), após pedido do proprietário.
+
+## Parte 3 — regiões, ciclos e abismos maiores
+
+Novas partidas usam major 3: Bambu → Templo → Montanhas → Castelo, repetindo com corrupção e dificuldade limitadas. O gerador escolhe padrões determinísticos e nove comportamentos de inimigo; abismos têm 190/280 unidades, com aviso antecipado. Transições não restauram vidas nem concentração. O visual continua estudo original; a arte final será nanquim colorido conforme referência aceita, na parte 6B.
+
+Ao alcançar uma região e concluir o envio/verificação, ela fica disponível em Expedição Regional. O servidor confere o desbloqueio; a expedição começa em zero metros reais. Perfil de movimento, segurança do gerador, provas e limites: [ADR009](docs/adr/ADR-009-DIRETOR-E-REGIOES.md). Próxima parte 4: chefes, após novo pedido. Nenhum deploy decorre desta entrega.

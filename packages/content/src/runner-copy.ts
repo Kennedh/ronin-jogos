@@ -1,5 +1,18 @@
 import type { Locale } from "./index.ts";
 const en = {
+  abyssAhead: "Gap ahead · prepare your jump",
+  regionLabel: "Starting region",
+  region_BAMBOO: "Bamboo Forest",
+  region_TEMPLE: "Forgotten Temple",
+  region_MOUNTAINS: "Frozen Mountains",
+  region_CASTLE: "Eclipse Castle",
+  locked: "locked",
+  cycle: "Cycle",
+  directorHelp:
+    "Full Journey crosses all four regions. Expeditions start in a region unlocked by a verified run; only distance actually travelled counts.",
+  directorScope:
+    "Four regions and endless cycles are available in this development build. Bosses, final art, customization and public leaderboards are still in development.",
+
   concentration: "Concentration",
   combo: "Perfect streak",
   specialReady: "Ink slash ready · land your next attack",
@@ -167,6 +180,19 @@ const en = {
     "The start could not be confirmed. Reconnect and retry; the same request will be reused.",
 };
 const pt: Record<keyof typeof en, string> = {
+  abyssAhead: "Abismo adiante · prepare o salto",
+  regionLabel: "Região de partida",
+  region_BAMBOO: "Floresta de Bambu",
+  region_TEMPLE: "Templo Esquecido",
+  region_MOUNTAINS: "Montanhas Geladas",
+  region_CASTLE: "Castelo do Eclipse",
+  locked: "bloqueada",
+  cycle: "Ciclo",
+  directorHelp:
+    "A Jornada Completa atravessa as quatro regiões. Expedições começam em regiões alcançadas em uma corrida verificada; só conta a distância realmente percorrida.",
+  directorScope:
+    "Quatro regiões e ciclos infinitos estão disponíveis nesta versão de desenvolvimento. Chefes, arte final, personalização e rankings públicos seguem em desenvolvimento.",
+
   concentration: "Concentração",
   combo: "Sequência perfeita",
   specialReady: "Corte de tinta pronto · acerte o próximo golpe",

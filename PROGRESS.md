@@ -1,42 +1,41 @@
 # Ronin Runner — continuidade
 
-## Estado atual — parte 2
+## Estado atual — parte 3
 
-Pedido “Iniciar parte 2” executado em branch `feat/runner-combat-2`, base `ffe946c`/PR #5 (1D), em 17/11/2026. PRs #2–#5 continuam empilhados e abertos; a parte 2 deve apontar à branch 1D. Não fazer merge automático, fechar Issue #1 ou publicar o jogo. Domínio confirmado play.ronin.dev.br/roninrunner; rotas /roninrunner/pt-br e /roninrunner/en. Infraestrutura/DNS/VPS/serviços existentes continuam fora desta autorização.
+Implementada em `feat/runner-director-3`, base `3174bd7`/PR #6, em 18/11/2026. O proprietário aceitou a revisão funcional da parte 2, enviou referência de nanquim colorido/camadas/silhuetas, pediu apenas ampliar os abismos por ora e autorizou seguir. Arte final continua 6B; hitbox e demolição/tropeço não foram alterados nesta rodada. PRs anteriores continuam empilhados, sem merge automático/fechar Issue #1. Produção/VPS/DNS e outros sites continuam fora do escopo.
 
-Implementação técnica e regressão local aprovadas. **Amostra de rig pronta para revisão estética do proprietário**; o critério “amostra visual aprovada” do plano não pode ser declarado atendido somente pelos testes. O restante do catálogo/arte final pertence à parte 6. CI do commit final deve ser consultada no PR; não inferir CI verde pelo gate local.
+## Entregue e decisões
 
-## Entregue
+- Major 3 / physics rr-physics-0.3.0 / generator rr-director-3 / assets rr-four-biomes-study-3. V1/v2 executáveis e sem mudança de estado/trace; dispatch histórico por manifest no cliente e worker. Codec e fórmula de score preservados.
+- Quatro regiões e ciclos sem fim, baseline 1500+2000+2500+2000 m, tiers 360/440/520/600 u/s e corrupção limitada a 3. Sem recuperar HP/concentração/tempo ou reset de score. Regional usa offset para ambiente e conta somente metros reais.
+- Diretor por seed/índice, 16 padrões, até três perigos/bloco, corredores de respiro/transição e reserva de encontro futuro. Seleção estável entre janelas; candidato inválido vira REST. Nove comportamentos com fases/armas/vulnerabilidade/projéteis inteiros e deflexão sem kill/score.
+- Abismos de 190/280 u (antes 90), geometria real e visual maior/profundo; travessia certificada com salto/duplo salto. Aviso PT/EN fora da cena dá antecedência antes da decisão na velocidade máxima.
+- Regiões concedidas atomicamente somente em VERIFIED, junto de outcome/outbox; QUIT pode confirmar percurso cumulativo, sem ranking. GET /me/regions próprio e seletor autorizado, retry fixa modo/região. Demais missões/carreira/ranking continuam parte 7.
+- Quatro estudos visuais originais, props/paletas/camadas/transições/corrupção e HUD PT/EN de região/ciclo. Nenhuma arte/IP copiada da referência; acabamento/som final permanecem 6B.
 
-- Major 2 com physics rr-physics-0.2.0, generator rr-combat-course-2 e assets rr-rig-2. Concentração 0–100 (+12 perfeito/+3 comum), sequência perfeita/melhor sequência, golpe vazio e especial armado somente para o próximo ataque bem-sucedido. Alcance curto, entidades únicas/elegíveis/vulneráveis, sem cura/imunidade ou novo botão.
-- V1 permanece executável com forma exata do estado/score, sem trocar fixtures antigas. API usa major 2 para novas runs; cliente e worker escolhem a implementação pelo manifest histórico. Registry/manifests/replays antigos preservados. Nenhuma migration nova ou edição de migrations anteriores.
-- Telegraph de perfect derivado de posição/velocidade/tick inteiro, estável entre janelas. Geometria ainda é curso primitivo Bambu; diretor/quatro regiões/ciclos/arquétipos continuam parte 3 e chefes parte 4.
-- HUD PT-BR/EN com barra, combo, especial pronto e feedback de combate. Atalhos remapeáveis/persistidos com validação de duplicatas/teclas reservadas; botões e gestos da 1D preservados, sem vantagem de tempo.
-- Rig original vetorial em camadas e pivôs, compartilhado por Phaser na corrida e Canvas2D na amostra. Locomoção/ação separadas; salto aéreo+ataque, slide, dano/morte e efeitos. Prévia real anima/congela/troca pose/mostra pivôs e limpa canvas/RAF, com restauração persistida pelo histórico. Sem inventário ou personalização falsos.
-- OpenAPI 0.22 e contracts gerados atualizados. CSP/standalone sem unsafe-eval preservados. Preferências e estudo escondidos durante corrida; paleta e responsividade revistas em capturas.
+Leia [ADR009](docs/adr/ADR-009-DIRETOR-E-REGIOES.md), [ADR008](docs/adr/ADR-008-COMBATE-E-RIG.md) e ADR001–007 antes de continuar. Plano e especificações preservam o lançamento público completo. Nenhuma migration anterior foi editada; schema existente comporta manifest/region unlocks.
 
-Decisões detalhadas: [ADR008](docs/adr/ADR-008-COMBATE-E-RIG.md). Fundação: ADR001–007; sessões/quotas/worker no [ADR006](docs/adr/ADR-006-FUNDACAO-1C.md), cliente/rede no [ADR007](docs/adr/ADR-007-FUNDACAO-1D.md). Ativos: [FOUNDATION_ASSETS](docs/FOUNDATION_ASSETS.md). O escopo público completo do plano permanece obrigatório.
+## Evidências
 
-## Validação e evidência
+`npm ci` e `npm run verify` aprovados localmente: **90 unitários/integração +28 browser**, zero falhas/skips, contrato/geração/typecheck/lint/formato/build. Logs privados artifacts/phase-3-install-clean.log e phase-3-verify-final.log; gate anterior phase-3-verify-clean.log precede o aviso de abismo. CI Windows/Linux precisa ser consultada no commit final e registrada no PR, não presumida pelo teste local.
 
-`npm ci` e `npm run verify` aprovados localmente: **79 testes unitários/integração e 20 de navegador**, zero falhas/skips; contratos, tipos, lint, formato e build aprovados. São 11 testes novos de core/controles/rig/DB e 5 testes browser adicionais, preservando todas as suítes anteriores. Logs privados: artifacts/phase-2-install-clean.log e phase-2-verify.log. As fixtures API/browser de fundação usam explicitamente o manifest v1; novas suítes exercitam major 2 com os mesmos serviços reais.
+- Templates: 16×2 variantes×4 velocidades×3 deslocamentos; cada candidato executado no core e confirmado com ±3 ticks. Busca limitada de macros fornece testemunho positivo, não prova exaustiva. Comandos em artifacts/phase-3/pattern-witnesses.json.
+- 10 mil seeds, quatro regiões/cinco ciclos/três amostras =600 mil decisões, gates/densidade/repouso/diversidade/janelas. As seeds são amostradas estruturalmente; provas dos templates e replay concatenado são verificações separadas.
+- Cinco ciclos padrão/40 km: 267 blocos, 197893 ticks e 55 segmentos; cliente e worker concordam no state_hash/score. Teste real injeta falha de outbox: nenhum score/unlock parcial; retry atômico e idempotente. Replay falso/start bloqueado recusados. Native Postgres é efêmero/local.
+- Nove inimigos/duas variantes têm fases/eliminação única verificadas; histórico de 100 abates mantém IDs podados, parry não concede kill/concentração. Regiões e ciclos não curam; pausa congela o core.
+- Paridade V1: 0481dd7bcf1f468aca5e64a1013903cc631e4a3aad91377fbc7016a8d47733cc; V2: 9c7d64bf83fa2b6427def78d3c2accf0e8ca4ce9c374a9b947501fd3265251ef; V3: f2eb7c113e7d876b63a049628f54b0dc48d755fb2e41c9d5b4f670121dcd613f. V3 compara 3600 estados em 30/60/120; Chromium local 157.
+- Browser usa dist/CSP/API/worker/DB reais, inicia em cada região com zero metros, confere outcome/hash e autorização PT/EN/mobile. Capturas region-bamboo/temple/mountains/castle.png. Void-bamboo-1.png e void-castle-4.png vêm de fixture privada de render, com prefixo alcançável, sem submissão de score. Pixels após pintura confirmam void até o fundo. Regressão 1D/2 de rede, pausa, controles, preview e cores preservada.
 
-Core: ganho/teto, miss, opção comum manter/interromper combo, uma sequência por ataque, especial só no próximo sucesso, alcance frontal/vertical/elegibilidade/janela [start,end), não duplicar prêmio, dano/abismo/pausa, identidade/versionamento, telegraph por janelas, remapping e rig sem mutar core. PostgreSQL/API/worker: comandos legais acumulam 100 e disparam especial antes de QUIT; o state_hash/score do outcome coincide com o cliente, sem confiar em estatísticas enviadas.
+Auditoria runtime sem ocorrências em artifacts/phase-3-runtime-audit.json. Picomatch dev segue ADR004. OpenAPI 0.23 válido com 19 avisos explícitos e chunk lazy Phaser ~1376 kB/361 kB gzip; controlador ~273 kB/40 kB gzip, shell ~27 kB/10 kB gzip. Sem esconder avisos ou alegar budget/FPS universal. Capturas e hashes do artefato testado ficam privados em artifacts; não reconstruir depois do gate e chamar o novo build de aprovado.
 
-Chromium/Node: 600 estados por cenário a 30/60/120. Trace legado **0481dd7bcf1f468aca5e64a1013903cc631e4a3aad91377fbc7016a8d47733cc** preservado. Novo trace de combate **9c7d64bf83fa2b6427def78d3c2accf0e8ca4ce9c374a9b947501fd3265251ef**. Isso não mede FPS em hardware físico.
+## Limites / próxima etapa
 
-Browser usa dist exato com CSP/API/Postgres/worker reais. Novo fluxo ganha perfeito por teclado/PT e gestos/EN, confere concentração/feedback/pausa e outcome; prévia comprova pixels animados/congelados, troca de pose, limpeza/reabertura/BFCache e remapping persistido/recusa de duplicata. Regressão 1D inclui rede/ACK perdido/antes de sair, worker atrasado, QUIT/morte, fullscreen negado, retrato/rotação, idiomas e cores. Capturas revistas em artifacts/phase-2: combat-desktop-pt.png, combat-mobile-en.png, rig-study.png e rig-special.png. Logs/dados são sintéticos e ignorados; clusters/processos QA são encerrados no fim.
+Testes locais/emulação não homologam Safari/aparelhos físicos, latência humana ou arte/áudio finais. Perfis físicos fora do certificado são recusados até recertificação/versionamento. A referência de nanquim colorido foi aceita como direção; o visual atual continua estudo. Balanceamento ainda é baseline de playtest. Não há quatro chefes prontos, Ronin ID completo, Creator/inventário, missões/rankings/semanas completas, offline durável/retention nem operação pública homologada.
 
-Auditoria runtime: zero ocorrências reportadas em artifacts/phase-2-runtime-audit.json. Pendência dev picomatch continua ADR004. OpenAPI válido com 20 avisos mantidos, sem ocultar futuras rotas/licença/oneOf/codec. Chunk lazy Phaser ~1372 kB/359 kB gzip; controlador/contratos ~251 kB/35 kB gzip, shell ~25 kB/9 kB gzip e CSS ~15 kB/4 kB gzip. Vite mantém aviso de chunk; orçamento/carga/dispositivos serão medidos antes do público.
-
-## Limites e próximo passo
-
-Amostra precisa de revisão estética; não afirmar arte final, Creator/catálogos aprovados ou homologação em Safari/iPhone/Android físicos. Concentração/alcance/gestos são baseline de playtest, não equilíbrio definitivo aprovado. Contagens de combate são auditáveis por replay/hash; concessões de missão/carreira/ranking não são simuladas antes da parte 7.
-
-Próxima parte autorizável **3**, após pedido do proprietário: diretor procedural, quatro regiões/ciclos, transições e arquétipos baseline; solver/concatenações/seeds/FOV e teto de dificuldade. Continuam depois chefes, Ronin ID completo, Creator/arte, progressão/rankings/semanas, offline durável/retention, aparelhos reais, operação/carga/restore e homologação pública. Não reduzir o lançamento a esta fundação.
+**Próxima parte autorizável: 4**, somente após novo pedido: quatro chefes com janelas de combate/retirada sem bloquear corrida, instâncias únicas, selos/bônus verificados e zero cura. Ler AGENTS/PROGRESS/ADR001–009, especificações de chefes/recompensas e conferir branches/PRs. Não iniciar Google/SMTP/DNS/produção nem divulgar jogo completo.
 
 ## Comandos
 
-`npm ci`; `npm run verify`. Para jogar, quatro terminais no checkout: `npm run db:dev` (aguardar pronto), `npm run dev:api`, `npm run dev:verifier`, `npm run dev`. Abrir http://127.0.0.1:5173/roninrunner/pt-br ou /roninrunner/en; não alternar localhost. Antes de iniciar, abrir “Estudo de animação do personagem” para revisar o rig. API 3001, DB sintético 15432. Ctrl+C preserva dados do dev; `node scripts/dev-db.ts --check` diagnostica/migra/encerra sem apagar.
+`npm ci`; `npm run verify`. Para jogar, quatro terminais: `npm run db:dev` (aguardar pronto), `npm run dev:api`, `npm run dev:verifier`, `npm run dev`. http://127.0.0.1:5173/roninrunner/pt-br ou /roninrunner/en; não alternar localhost. Região fechada só abre após um replay verificado que a alcance. API 3001, DB sintético 15432. Ctrl+C preserva dados dev; QA para/remove somente seus próprios clusters.
 
-Após OpenAPI: `npm run contracts:generate`. Testes dirigidos: `node --test tests/combat.test.ts tests/combat-runtime.test.ts`; browser requer `npm run build` antes de `npm run test:browser` (verify já respeita). Sem Chrome: `npx playwright install chromium`, Linux pode exigir --with-deps. Não reconstruir depois do gate e tratar o artefato como já testado; preservar hash/commit do dist aprovado. A parte 2 não publicou nenhuma aplicação nem iniciou parte 3.
+Após OpenAPI: `npm run contracts:generate`. Testes dirigidos: `node --test tests/director.test.ts tests/director-runtime.test.ts`. Browser exige build antes de test:browser; verify já faz isso. Sem Chrome: `npx playwright install chromium` (Linux pode exigir --with-deps). Nenhum comando desta etapa publica o jogo.

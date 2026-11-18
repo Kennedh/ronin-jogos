@@ -358,6 +358,12 @@ export function createApi(options?: ApiOptions) {
           ),
         ),
   );
+  api.get("/api/v1/me/regions", async (request) =>
+    checked("RegionUnlocks", {
+      unlocked_regions: (await sessions.summary(session(request)))
+        .region_unlocks,
+    }),
+  );
   api.get<{ Params: { run_id: string } }>(
     "/api/v1/runs/:run_id",
     async (request) =>
