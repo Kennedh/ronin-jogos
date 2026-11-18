@@ -91,7 +91,7 @@ test(
               }
             }
             let captured = false;
-            for (const c of witness.commands) {
+            for (const [commandIndex, c] of witness.commands.entries()) {
               await until(c.tick);
               await page.keyboard.press(
                 c.action === "JUMP"
@@ -102,9 +102,21 @@ test(
               );
               if (
                 !captured &&
+                (witness.commands[commandIndex + 1]?.tick ?? Infinity) -
+                  c.tick >
+                  20 &&
                 (await page.locator("#surface").getAttribute("data-boss")) ===
                   "B01"
               ) {
+                // Consume the queued action, then inspect in a safe input gap.
+                // Real screenshot latency must not skip later witness commands.
+                await until(c.tick + 2);
+                await page.locator("#pause").click();
+                await expect(page.locator("#surface")).toHaveAttribute(
+                  "data-phase",
+                  "paused",
+                );
+                const captureTick = await tick();
                 await expect(page.locator("#boss-hud")).toBeVisible();
                 const rawBefore = await page
                   .locator("canvas")
@@ -205,7 +217,27 @@ test(
                     "native-clock page screenshot must contain the rendered guardian scene",
                   );
                 }
+                assert.equal(await tick(), captureTick);
                 captured = true;
+                await page.locator("#resume").click();
+                if (virtual) {
+                  for (
+                    let n = 0;
+                    n < 190 &&
+                    (await page
+                      .locator("#surface")
+                      .getAttribute("data-phase")) !== "running";
+                    n++
+                  )
+                    await page.clock.runFor(17);
+                }
+                await page.waitForFunction(
+                  () =>
+                    document.getElementById("surface")!.dataset["phase"] ===
+                    "running",
+                  undefined,
+                  { polling: "raf" },
+                );
               }
             }
             await until(witness.state.tick);
