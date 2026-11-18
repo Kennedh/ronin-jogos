@@ -21,9 +21,11 @@ export function harness(
   clock: () => Date,
   policy?: ApiOptions["policy"],
   manifest: RunnerManifest = FOUNDATION_MANIFEST,
+  authMailKey?: Buffer,
 ) {
   const api = createApi({
     pool,
+    ...(authMailKey ? { authMailKey } : {}),
     clock,
     manifest,
     origin: "https://play.ronin.dev.br",

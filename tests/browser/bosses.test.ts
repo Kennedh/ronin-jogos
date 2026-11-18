@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { chromium, expect } from "@playwright/test";
+import type { Request } from "@playwright/test";
 import { portalFixture } from "../helpers/portal.ts";
 import { BOSS_MANIFEST } from "@ronin/content/runner-manifest";
 import { RULES_V4 } from "@ronin/runner-core";
@@ -33,6 +34,35 @@ test(
             }),
             page = await context.newPage(),
             errors: string[] = [];
+          const apiRequests = new Set<Request>();
+          page.on("request", (request) => {
+            if (request.url().startsWith(fixture.origin + "/api/"))
+              apiRequests.add(request);
+          });
+          page.on("requestfinished", (request) => apiRequests.delete(request));
+          page.on("requestfailed", (request) => apiRequests.delete(request));
+          async function drainApi() {
+            const deadline = Date.now() + 15000;
+            while (apiRequests.size) {
+              if (Date.now() >= deadline)
+                throw new Error("qa_api_request_did_not_settle_in_15s");
+              await new Promise((resolve) => setTimeout(resolve, 20));
+            }
+          }
+          async function advanceVirtual(milliseconds: number) {
+            // Client timeouts are virtual; HTTP and Postgres use real time.
+            // Never spend virtual request deadlines while real I/O is pending.
+            await drainApi();
+            await page.clock.runFor(milliseconds);
+            await drainApi();
+          }
+          if (language === "en")
+            await page.route("**/api/v1/runs/*/finish", async (route) => {
+              // A real 3s response is inside the 15s client timeout. Advancing
+              // virtual polling over it used to invent a network failure in CI.
+              await new Promise((resolve) => setTimeout(resolve, 3000));
+              await route.continue();
+            });
           page.on("pageerror", (e) => errors.push(e.message));
           await page.addInitScript(() =>
             document.addEventListener("securitypolicyviolation", (e) => {
@@ -68,7 +98,7 @@ test(
               new Date(ticket.started_at).getTime() +
               Math.ceil((witness.state.tick / 60) * 1000) +
               5000;
-            if (virtual) await page.clock.runFor(34);
+            if (virtual) await advanceVirtual(34);
             const tick = async () =>
               Number(await page.locator("#surface").getAttribute("data-tick"));
             async function until(target: number) {
@@ -85,13 +115,13 @@ test(
               }
               while ((await tick()) < target) {
                 const left = target - (await tick());
-                await page.clock.runFor(
+                await advanceVirtual(
                   Math.max(17, Math.min(5000, ((left - 1) * 1000) / 60)),
                 );
               }
             }
             let captured = false;
-            for (const c of witness.commands) {
+            for (const [commandIndex, c] of witness.commands.entries()) {
               await until(c.tick);
               await page.keyboard.press(
                 c.action === "JUMP"
@@ -102,9 +132,21 @@ test(
               );
               if (
                 !captured &&
+                (witness.commands[commandIndex + 1]?.tick ?? Infinity) -
+                  c.tick >
+                  20 &&
                 (await page.locator("#surface").getAttribute("data-boss")) ===
                   "B01"
               ) {
+                // Consume the queued action, then inspect in a safe input gap.
+                // Real screenshot latency must not skip later witness commands.
+                await until(c.tick + 2);
+                await page.locator("#pause").click();
+                await expect(page.locator("#surface")).toHaveAttribute(
+                  "data-phase",
+                  "paused",
+                );
+                const captureTick = await tick();
                 await expect(page.locator("#boss-hud")).toBeVisible();
                 const rawBefore = await page
                   .locator("canvas")
@@ -156,7 +198,7 @@ test(
                       return n;
                     }, expectedSwatch);
                 for (let settle = 0; settle < 5; settle++) {
-                  if (virtual) await page.clock.runFor(34);
+                  if (virtual) await advanceVirtual(34);
                   if ((await backdropPixels()) > 1000) break;
                 }
                 assert.ok(
@@ -164,48 +206,65 @@ test(
                   "live guardian canvas must paint its approved background palette",
                 );
                 await new Promise((resolve) => setTimeout(resolve, 50));
-                const composite = await page.screenshot({
+                await page.screenshot({
                   path: virtual
                     ? `artifacts/phase-4/virtual-ui-${language}-diagnostic.png`
-                    : `artifacts/phase-4/live-boss-${language}.png`,
+                    : `artifacts/phase-4/paused-boss-${language}.png`,
                   fullPage: true,
                 });
                 if (!virtual) {
-                  const bounds = await page.locator("canvas").boundingBox();
-                  assert.ok(bounds);
-                  const colors = await page.evaluate(
-                    async ({ encoded, bounds }) => {
-                      const bytes = Uint8Array.from(atob(encoded), (c) =>
-                          c.charCodeAt(0),
-                        ),
-                        bitmap = await createImageBitmap(
-                          new Blob([bytes], { type: "image/png" }),
-                        ),
-                        surface = document.createElement("canvas");
-                      surface.width = bitmap.width;
-                      surface.height = bitmap.height;
-                      const ctx = surface.getContext("2d")!;
-                      ctx.drawImage(bitmap, 0, 0);
-                      bitmap.close();
-                      const d = ctx.getImageData(
-                          Math.floor(bounds.x),
-                          Math.floor(bounds.y),
-                          Math.floor(bounds.width),
-                          Math.floor(bounds.height),
-                        ).data,
-                        palette = new Set();
-                      for (let i = 0; i < d.length; i += 64)
-                        palette.add(`${d[i]},${d[i + 1]},${d[i + 2]}`);
-                      return palette.size;
-                    },
-                    { encoded: composite.toString("base64"), bounds },
-                  );
+                  // The pause UI deliberately hides the world. Validate the
+                  // actual native-clock canvas PNG, not the covering dialog.
+                  const colors = await page.evaluate(async (encoded) => {
+                    const bytes = Uint8Array.from(atob(encoded), (c) =>
+                        c.charCodeAt(0),
+                      ),
+                      bitmap = await createImageBitmap(
+                        new Blob([bytes], { type: "image/png" }),
+                      ),
+                      surface = document.createElement("canvas");
+                    surface.width = bitmap.width;
+                    surface.height = bitmap.height;
+                    const ctx = surface.getContext("2d")!;
+                    ctx.drawImage(bitmap, 0, 0);
+                    bitmap.close();
+                    const d = ctx.getImageData(
+                        0,
+                        0,
+                        surface.width,
+                        surface.height,
+                      ).data,
+                      palette = new Set();
+                    for (let i = 0; i < d.length; i += 64)
+                      palette.add(`${d[i]},${d[i + 1]},${d[i + 2]}`);
+                    return palette.size;
+                  }, rawAfter.split(",")[1]!);
                   assert.ok(
                     colors > 8,
-                    "native-clock page screenshot must contain the rendered guardian scene",
+                    "native-clock canvas PNG must contain the rendered guardian scene",
                   );
                 }
+                assert.equal(await tick(), captureTick);
                 captured = true;
+                await page.locator("#resume").click();
+                if (virtual) {
+                  for (
+                    let n = 0;
+                    n < 190 &&
+                    (await page
+                      .locator("#surface")
+                      .getAttribute("data-phase")) !== "running";
+                    n++
+                  )
+                    await advanceVirtual(17);
+                }
+                await page.waitForFunction(
+                  () =>
+                    document.getElementById("surface")!.dataset["phase"] ===
+                    "running",
+                  undefined,
+                  { polling: "raf" },
+                );
               }
             }
             await until(witness.state.tick);
@@ -224,7 +283,7 @@ test(
                 "VERIFIED";
               n++
             ) {
-              if (virtual) await page.clock.runFor(300);
+              if (virtual) await advanceVirtual(300);
               await new Promise((r) => setTimeout(r, 40));
             }
             await expect(page.locator("#result")).toHaveAttribute(

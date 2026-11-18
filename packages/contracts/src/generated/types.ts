@@ -16,6 +16,40 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/auth/verify-email/resend": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Reenviar confirmacao com cooldown */
+    post: operations["resendEmail"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/auth/reauth": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Confirmar senha para operacoes sensiveis */
+    post: operations["reauthEmail"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/auth/register": {
     parameters: {
       query?: never;
@@ -25,8 +59,8 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Registrar conta por email e senha */
-    post: operations["post_auth_register"];
+    /** Solicitar cadastro sem enumeracao de contas */
+    post: operations["registerEmail"];
     delete?: never;
     options?: never;
     head?: never;
@@ -42,8 +76,11 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Login email/senha */
-    post: operations["post_auth_login"];
+    /**
+     * Entrar com email e senha verificados
+     * @description Origin exata, JSON e header X-Ronin-Auth 1 obrigatorios; nao aceita formulario cross-site.
+     */
+    post: operations["loginEmail"];
     delete?: never;
     options?: never;
     head?: never;
@@ -76,8 +113,8 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Confirmar email por token de uso unico */
-    post: operations["post_auth_verify_email"];
+    /** Confirmar email no contexto do cadastro */
+    post: operations["verifyEmail"];
     delete?: never;
     options?: never;
     head?: never;
@@ -93,8 +130,11 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Pedir redefinicao de senha sem revelar se conta existe */
-    post: operations["post_auth_password_forgot"];
+    /**
+     * Pedir recuperacao sem enumeracao
+     * @description Origin exata, JSON e header X-Ronin-Auth 1 obrigatorios; nao aceita formulario cross-site.
+     */
+    post: operations["forgotPassword"];
     delete?: never;
     options?: never;
     head?: never;
@@ -110,8 +150,11 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Redefinir senha com token de uso unico */
-    post: operations["post_auth_password_reset"];
+    /**
+     * Redefinir senha e revogar sessoes, sem login automatico
+     * @description Origin exata, JSON e header X-Ronin-Auth 1 obrigatorios; nao aceita formulario cross-site.
+     */
+    post: operations["resetPassword"];
     delete?: never;
     options?: never;
     head?: never;
@@ -127,8 +170,11 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Revogar sessao atual */
-    post: operations["post_auth_logout"];
+    /**
+     * Encerrar sessao atual
+     * @description Exige Origin autorizado, JSON e X-Ronin-Auth 1; sessao valida tambem exige CSRF. Cookie ausente ou expirado e limpo sem autenticar.
+     */
+    post: operations["logoutEmail"];
     delete?: never;
     options?: never;
     head?: never;
@@ -193,8 +239,8 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Sessoes ativas e autenticacoes recentes resumidas */
-    get: operations["get_me_sessions"];
+    /** Listar sessoes proprias com autenticacao recente */
+    get: operations["listSessions"];
     put?: never;
     post?: never;
     delete?: never;
@@ -213,8 +259,8 @@ export interface paths {
     get?: never;
     put?: never;
     post?: never;
-    /** Revogar sessao do proprio usuario */
-    delete: operations["delete_me_sessions_session_id"];
+    /** Revogar sessao propria com autenticacao recente */
+    delete: operations["revokeAccountSession"];
     options?: never;
     head?: never;
     patch?: never;
@@ -659,6 +705,10 @@ export interface components {
     /** @enum {string} */
     RunMode: "FULL" | "REGIONAL";
     PlayerSummary: {
+      /** @enum {string} */
+      account_status?: "GUEST" | "EMAIL_PENDING" | "REGISTERED";
+      /** Format: email */
+      email?: string | null;
       /** Format: uuid */
       player_id: string;
       /** @enum {string} */
@@ -670,6 +720,8 @@ export interface components {
       region_unlocks?: string[];
     };
     RegisterRequest: {
+      /** @enum {string} */
+      locale?: "pt-BR" | "en";
       /** Format: email */
       email: string;
       password: string;
@@ -969,6 +1021,42 @@ export interface components {
         | "DISPELLED_ECLIPSE"
       )[];
     };
+    ResendEmailRequest: {
+      /** @enum {string} */
+      locale?: "pt-BR" | "en";
+    };
+    EmptyRequest: Record<string, never>;
+    AuthAccepted: {
+      /** @constant */
+      status: "ACCEPTED";
+    };
+    AuthTokenRequest: {
+      token: string;
+    };
+    ForgotPasswordRequest: {
+      /** Format: email */
+      email: string;
+    };
+    ResetPasswordRequest: {
+      token: string;
+      new_password: string;
+    };
+    ReauthRequest: {
+      password: string;
+    };
+    AccountSessions: {
+      sessions: {
+        /** Format: uuid */
+        session_id: string;
+        /** Format: date-time */
+        created_at: string;
+        /** Format: date-time */
+        last_seen_at: string;
+        /** Format: date-time */
+        expires_at: string;
+        current: boolean;
+      }[];
+    };
   };
   responses: {
     /** @description Corpo ou formato invalido */
@@ -1174,7 +1262,61 @@ export interface operations {
       };
     };
   };
-  post_auth_register: {
+  resendEmail: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ResendEmailRequest"];
+      };
+    };
+    responses: {
+      /** @description Resposta de identidade */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AuthAccepted"];
+        };
+      };
+      401: components["responses"]["Unauthorized"];
+      403: components["responses"]["Forbidden"];
+      422: components["responses"]["InvalidState"];
+      429: components["responses"]["RateLimited"];
+    };
+  };
+  reauthEmail: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ReauthRequest"];
+      };
+    };
+    responses: {
+      /** @description Resposta de identidade */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      401: components["responses"]["Unauthorized"];
+      403: components["responses"]["Forbidden"];
+      422: components["responses"]["InvalidState"];
+      429: components["responses"]["RateLimited"];
+    };
+  };
+  registerEmail: {
     parameters: {
       query?: never;
       header?: never;
@@ -1187,18 +1329,22 @@ export interface operations {
       };
     };
     responses: {
-      /** @description Confirmacao solicitada sem enumeracao de contas */
+      /** @description Resposta de identidade */
       202: {
         headers: {
           [name: string]: unknown;
         };
-        content?: never;
+        content: {
+          "application/json": components["schemas"]["AuthAccepted"];
+        };
       };
-      400: components["responses"]["BadRequest"];
+      401: components["responses"]["Unauthorized"];
+      403: components["responses"]["Forbidden"];
+      422: components["responses"]["InvalidState"];
       429: components["responses"]["RateLimited"];
     };
   };
-  post_auth_login: {
+  loginEmail: {
     parameters: {
       query?: never;
       header?: never;
@@ -1211,7 +1357,7 @@ export interface operations {
       };
     };
     responses: {
-      /** @description Sessao autenticada emitida em cookie seguro */
+      /** @description Resposta de identidade */
       200: {
         headers: {
           [name: string]: unknown;
@@ -1221,6 +1367,8 @@ export interface operations {
         };
       };
       401: components["responses"]["Unauthorized"];
+      403: components["responses"]["Forbidden"];
+      422: components["responses"]["InvalidState"];
       429: components["responses"]["RateLimited"];
     };
   };
@@ -1253,7 +1401,7 @@ export interface operations {
       429: components["responses"]["RateLimited"];
     };
   };
-  post_auth_verify_email: {
+  verifyEmail: {
     parameters: {
       query?: never;
       header?: never;
@@ -1262,84 +1410,11 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": {
-          token: string;
-        };
+        "application/json": components["schemas"]["AuthTokenRequest"];
       };
     };
     responses: {
-      /** @description Endereco confirmado */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      422: components["responses"]["InvalidState"];
-    };
-  };
-  post_auth_password_forgot: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          /** Format: email */
-          email: string;
-        };
-      };
-    };
-    responses: {
-      /** @description Pedido recebido; resposta neutra */
-      202: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      429: components["responses"]["RateLimited"];
-    };
-  };
-  post_auth_password_reset: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          token: string;
-          new_password: string;
-        };
-      };
-    };
-    responses: {
-      /** @description Senha atualizada, sessoes rotacionadas */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      422: components["responses"]["InvalidState"];
-    };
-  };
-  post_auth_logout: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Sessao encerrada */
+      /** @description Resposta de identidade */
       204: {
         headers: {
           [name: string]: unknown;
@@ -1347,6 +1422,89 @@ export interface operations {
         content?: never;
       };
       401: components["responses"]["Unauthorized"];
+      403: components["responses"]["Forbidden"];
+      422: components["responses"]["InvalidState"];
+      429: components["responses"]["RateLimited"];
+    };
+  };
+  forgotPassword: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ForgotPasswordRequest"];
+      };
+    };
+    responses: {
+      /** @description Resposta de identidade */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AuthAccepted"];
+        };
+      };
+      401: components["responses"]["Unauthorized"];
+      403: components["responses"]["Forbidden"];
+      422: components["responses"]["InvalidState"];
+      429: components["responses"]["RateLimited"];
+    };
+  };
+  resetPassword: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ResetPasswordRequest"];
+      };
+    };
+    responses: {
+      /** @description Resposta de identidade */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      401: components["responses"]["Unauthorized"];
+      403: components["responses"]["Forbidden"];
+      422: components["responses"]["InvalidState"];
+      429: components["responses"]["RateLimited"];
+    };
+  };
+  logoutEmail: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["EmptyRequest"];
+      };
+    };
+    responses: {
+      /** @description Resposta de identidade */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      401: components["responses"]["Unauthorized"];
+      403: components["responses"]["Forbidden"];
+      422: components["responses"]["InvalidState"];
+      429: components["responses"]["RateLimited"];
     };
   };
   post_auth_merge_preview: {
@@ -1443,7 +1601,7 @@ export interface operations {
       409: components["responses"]["Conflict"];
     };
   };
-  get_me_sessions: {
+  listSessions: {
     parameters: {
       query?: never;
       header?: never;
@@ -1452,27 +1610,22 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description Dispositivos sem dados sensiveis */
+      /** @description Resposta de identidade */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": {
-            sessions?: {
-              session_id: string;
-              /** Format: date-time */
-              created_at: string;
-              current: boolean;
-              /** Format: date-time */
-              last_seen_at?: string | null;
-            }[];
-          };
+          "application/json": components["schemas"]["AccountSessions"];
         };
       };
+      401: components["responses"]["Unauthorized"];
+      403: components["responses"]["Forbidden"];
+      422: components["responses"]["InvalidState"];
+      429: components["responses"]["RateLimited"];
     };
   };
-  delete_me_sessions_session_id: {
+  revokeAccountSession: {
     parameters: {
       query?: never;
       header?: never;
@@ -1483,13 +1636,14 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description Sessao revogada */
+      /** @description Sessao encerrada */
       204: {
         headers: {
           [name: string]: unknown;
         };
         content?: never;
       };
+      401: components["responses"]["Unauthorized"];
       403: components["responses"]["Forbidden"];
     };
   };

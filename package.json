@@ -14,6 +14,7 @@
   ],
   "scripts": {
     "dev": "npm run dev --workspace=@ronin/portal",
+    "dev:mail": "node scripts/dev-mail.ts",
     "dev:api": "node apps/api/src/main.ts",
     "contracts:generate": "node scripts/generate-contracts.mjs",
     "contracts:check": "redocly lint docs/openapi.ronin-runner.v1.yaml && node scripts/generate-contracts.mjs --check",

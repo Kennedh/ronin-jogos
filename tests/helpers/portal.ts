@@ -13,6 +13,7 @@ import type { RunnerManifest } from "@ronin/content/runner-manifest";
 export async function portalFixture(
   manifest: RunnerManifest = FOUNDATION_MANIFEST,
   clock?: Clock,
+  authMailKey?: Buffer,
 ) {
   const db = await testPostgres();
   await migrate(db.pool);
@@ -53,6 +54,8 @@ export async function portalFixture(
           "/roninrunner/",
           "/roninrunner/pt-br",
           "/roninrunner/en",
+          "/account/pt-br",
+          "/account/en",
         ].includes(url.pathname);
         const path = entry
           ? resolve(dist, "index.html")
@@ -94,6 +97,7 @@ export async function portalFixture(
   const origin = `http://127.0.0.1:${address.port}`;
   const api = createApi({
     pool: db.pool,
+    ...(authMailKey ? { authMailKey } : {}),
     clock,
     manifest,
     origin,

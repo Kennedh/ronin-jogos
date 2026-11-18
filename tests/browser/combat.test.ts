@@ -114,6 +114,16 @@ test(
                 "data-concentration",
                 "12",
               );
+              // Freeze the earned state before screenshot/HUD reads: capture latency
+              // must not let the live runner reach the next hazard or auto-pause.
+              await page.locator("#pause").click();
+              await expect(page.locator("#surface")).toHaveAttribute(
+                "data-phase",
+                "paused",
+              );
+              const tick = await page
+                .locator("#surface")
+                .getAttribute("data-tick");
               await expect(page.locator("#concentration")).toHaveJSProperty(
                 "value",
                 12,
@@ -135,10 +145,6 @@ test(
                 ),
                 false,
               );
-              await page.locator("#pause").click();
-              const tick = await page
-                .locator("#surface")
-                .getAttribute("data-tick");
               await page.waitForTimeout(120);
               assert.equal(
                 await page.locator("#surface").getAttribute("data-tick"),

@@ -8,6 +8,14 @@ export const definitions = {
     type: "object",
     required: ["player_id", "account_type", "nickname", "locale"],
     properties: {
+      account_status: {
+        type: "string",
+        enum: ["GUEST", "EMAIL_PENDING", "REGISTERED"],
+      },
+      email: {
+        type: ["string", "null"],
+        format: "email",
+      },
       player_id: {
         type: "string",
         format: "uuid",
@@ -38,9 +46,14 @@ export const definitions = {
     type: "object",
     required: ["email", "password"],
     properties: {
+      locale: {
+        type: "string",
+        enum: ["pt-BR", "en"],
+      },
       email: {
         type: "string",
         format: "email",
+        maxLength: 254,
       },
       password: {
         type: "string",
@@ -62,9 +75,12 @@ export const definitions = {
       email: {
         type: "string",
         format: "email",
+        maxLength: 254,
       },
       password: {
         type: "string",
+        minLength: 1,
+        maxLength: 256,
       },
     },
     additionalProperties: false,
@@ -1112,6 +1128,125 @@ export const definitions = {
             "TAMED_WIND",
             "DISPELLED_ECLIPSE",
           ],
+        },
+      },
+    },
+  },
+  ResendEmailRequest: {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      locale: {
+        type: "string",
+        enum: ["pt-BR", "en"],
+      },
+    },
+  },
+  EmptyRequest: {
+    type: "object",
+    additionalProperties: false,
+  },
+  AuthAccepted: {
+    type: "object",
+    additionalProperties: false,
+    required: ["status"],
+    properties: {
+      status: {
+        type: "string",
+        const: "ACCEPTED",
+      },
+    },
+  },
+  AuthTokenRequest: {
+    type: "object",
+    additionalProperties: false,
+    required: ["token"],
+    properties: {
+      token: {
+        type: "string",
+        pattern: "^[A-Za-z0-9_-]{43}$",
+      },
+    },
+  },
+  ForgotPasswordRequest: {
+    type: "object",
+    additionalProperties: false,
+    required: ["email"],
+    properties: {
+      email: {
+        type: "string",
+        format: "email",
+        maxLength: 254,
+      },
+    },
+  },
+  ResetPasswordRequest: {
+    type: "object",
+    additionalProperties: false,
+    required: ["token", "new_password"],
+    properties: {
+      token: {
+        type: "string",
+        pattern: "^[A-Za-z0-9_-]{43}$",
+      },
+      new_password: {
+        type: "string",
+        minLength: 12,
+        maxLength: 256,
+      },
+    },
+  },
+  ReauthRequest: {
+    type: "object",
+    additionalProperties: false,
+    required: ["password"],
+    properties: {
+      password: {
+        type: "string",
+        minLength: 1,
+        maxLength: 256,
+      },
+    },
+  },
+  AccountSessions: {
+    type: "object",
+    additionalProperties: false,
+    required: ["sessions"],
+    properties: {
+      sessions: {
+        type: "array",
+        maxItems: 20,
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: [
+            "session_id",
+            "created_at",
+            "last_seen_at",
+            "expires_at",
+            "current",
+          ],
+          properties: {
+            session_id: {
+              type: "string",
+              format: "uuid",
+            },
+            created_at: {
+              type: "string",
+              format: "date-time",
+            },
+            last_seen_at: {
+              type: "string",
+              format: "date-time",
+            },
+            expires_at: {
+              type: "string",
+              format: "date-time",
+            },
+            current: {
+              type: "boolean",
+            },
+          },
         },
       },
     },

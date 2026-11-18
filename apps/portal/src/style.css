@@ -1222,3 +1222,67 @@ footer a {
     gap: 0.2rem 0.6rem;
   }
 }
+
+.account-page {
+  max-width: 1050px;
+  margin: 2.5rem auto;
+  padding: 0 1.2rem;
+}
+.account-heading h1 {
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  margin: 0.6rem 0;
+}
+.account-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.2rem;
+}
+.account-card,
+.account-summary {
+  border: 1px solid var(--line);
+  padding: 1.4rem;
+  margin: 1.2rem 0;
+  background: #f6edd9;
+  min-width: 0;
+}
+.account-page form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+.account-page input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.6rem;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+}
+.account-page button {
+  margin-top: 0.6rem;
+  white-space: normal;
+}
+.account-page p {
+  overflow-wrap: anywhere;
+}
+.account-page [hidden] {
+  display: none !important;
+}
+.account-page article {
+  border-top: 1px solid var(--line);
+  padding: 0.6rem 0;
+}
+#account-error {
+  color: #873633;
+}
+@media (max-width: 700px) {
+  .account-grid {
+    grid-template-columns: 1fr;
+  }
+  .account-page {
+    margin: 1.5rem auto;
+  }
+  .top-nav {
+    flex-wrap: wrap;
+  }
+}

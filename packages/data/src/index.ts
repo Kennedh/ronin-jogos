@@ -24,3 +24,8 @@ export { Runs, wallTime } from "./runs.ts";
 export type { RunRow } from "./runs.ts";
 export { VerificationQueue, LeaseLost, weekWindow } from "./queue.ts";
 export type { VerifiedResult } from "./queue.ts";
+
+export { Accounts } from "./accounts.ts";
+export { PasswordHasher, passwordPolicy } from "./passwords.ts";
+export { deliverAuthMail } from "./auth-mail.ts";
+export type { AuthMail, MailTransport } from "./auth-mail.ts";
