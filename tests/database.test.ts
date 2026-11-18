@@ -28,7 +28,7 @@ test(
         "127.0.0.1",
       );
       const files = await migrationFiles();
-      assert.equal(files.length, 4);
+      assert.equal(files.length, 5);
       assert.deepEqual(await migrate(db.pool, files.slice(0, 1)), ["001_runs"]);
       const player = randomUUID(),
         other = randomUUID(),
@@ -41,7 +41,7 @@ test(
       const invalid = [
         ...files,
         {
-          id: "005_bad",
+          id: "006_bad",
           sql: "CREATE TABLE must_rollback(id int); SELECT invalid_column;",
         },
       ];
@@ -65,6 +65,7 @@ test(
         "002_verification",
         "003_runtime",
         "004_bosses",
+        "005_email_accounts",
       ]);
       assert.deepEqual(await migrate(db.pool), []);
       await assert.rejects(

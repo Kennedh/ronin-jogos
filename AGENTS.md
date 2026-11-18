@@ -99,3 +99,7 @@ O proprietário aceitou a revisão funcional da parte 2, esclareceu que a arte f
 ## Atualização — parte 4 (18/11/2026)
 
 O proprietário autorizou “Iniciar parte 4”. Branch `feat/runner-bosses-4`, base `390dab9`/PR #7, sem merge automático. Ler ADR010/PROGRESS e regras de chefes/recompensas antes de continuar. Major 4 acrescenta encontros/selos e mantém majors 1–3 executáveis. Migration 004 nova, anteriores intocadas. Bônus/selos/Aurora somente após replay VERIFIED e na mesma transação, incluindo concorrência. Gate npm ci + npm run verify e revisão de pixels/capturas reais; arte/áudio finais e equipamento cosmético continuam 6A/6B. Parte 5A depende de novo pedido; SMTP/Google/produção/DNS não foram autorizados.
+
+## Atualização — parte 5A
+
+O proprietário autorizou “Iniciar 5A”. Conta por e-mail, confirmação/reset, sessões/reauth e transporte LOCAL privado estão em `feat/runner-email-5a`, sobre `2cd2c79`/PR #8 ainda aberto. Ler ADR011 e PROGRESS. Migration 005 é aditiva; senhas nativas Argon2id exigem Node 24.14.0 fixado. Comprovação mantém player_id/progresso e login não faz merge silencioso. Interface/e-mails PT-BR/EN e regressão completa de jogo/segurança são obrigatórios em `npm ci` + `npm run verify`. Mensagens/chave locais em artifacts/dev-auth são privadas, fora do Git/dist/log; não criar inbox público. Não iniciar 5B (Google/vínculo/merge), SMTP externo, produção/VPS/DNS ou fechar Issue #1 por inferência. Arte e escopo público completo continuam pendentes.

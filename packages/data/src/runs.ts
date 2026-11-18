@@ -116,7 +116,12 @@ export class Runs {
       limits: run.resource_policy,
     };
   }
-  async start(playerId: string, input: unknown, key: string) {
+  async start(
+    playerId: string,
+    input: unknown,
+    key: string,
+    sessionId?: string,
+  ) {
     if (!validate("RunStart", input)) throw new Fault(422, "INVALID_REQUEST");
     if (typeof key !== "string" || !/^[A-Za-z0-9_-]{16,100}$/.test(key))
       throw new Fault(422, "IDEMPOTENCY_KEY_REQUIRED");
@@ -129,6 +134,16 @@ export class Runs {
         playerId,
       ]);
       const now = await serverTime(db, this.clock);
+      if (
+        sessionId &&
+        !(
+          await db.query(
+            "SELECT 1 FROM sessions WHERE id=$1 AND player_id=$2 AND revoked_at IS NULL AND expires_at>$3",
+            [sessionId, playerId, now],
+          )
+        ).rowCount
+      )
+        throw new Fault(401, "SESSION_REQUIRED");
       const prior = (
         await db.query<{ request_hash: string; run_id: string }>(
           "SELECT * FROM run_start_keys WHERE player_id=$1 AND key_digest=$2",

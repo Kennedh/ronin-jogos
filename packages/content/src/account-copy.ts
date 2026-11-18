@@ -1,0 +1,117 @@
+import type { Locale } from "./index.ts";
+const en = {
+  newGuest: "Continue as a new guest",
+  title: "Ronin ID",
+  intro: "Keep your journey, seals and rewards with your account.",
+  back: "Back to the game",
+  guest: "Guest",
+  pending: "Email confirmation pending",
+  registered: "Email confirmed",
+  email: "Email",
+  password: "Password",
+  newPassword: "New password",
+  nickname: "Nickname",
+  register: "Create an account",
+  registerHint:
+    "Use at least 12 characters. A password manager or a passphrase is welcome.",
+  login: "Sign in",
+  loginHint: "Signing in never merges profiles automatically.",
+  forgot: "Forgot password",
+  forgotAction: "Request reset link",
+  sent: "If the request can be completed, instructions will arrive by email. Allow 60 seconds before requesting again.",
+  verify: "Confirm email",
+  verifyHint:
+    "Confirm in the browser where you started registration. Opening the link alone does not confirm your account.",
+  resend: "Resend confirmation",
+  verified: "Your email is confirmed. Your journey stays with this Ronin ID.",
+  reset: "Set new password",
+  resetHint:
+    "This link can be used once within 30 minutes. Resetting signs out previous sessions.",
+  resetDone: "Password updated. Sign in with your new password.",
+  logout: "Sign out",
+  sessions: "Active sessions",
+  refresh: "Refresh sessions",
+  current: "This session",
+  other: "Other session",
+  expires: "Expires",
+  revoke: "Sign out this session",
+  revoked: "The selected session was signed out.",
+  reauth: "Confirm your password",
+  reauthHint:
+    "For your security, session management requires recent authentication.",
+  reauthDone: "Password confirmed.",
+  loading: "Working…",
+  ready: "Account details",
+  continueGuest:
+    "You can keep playing as a guest. Creating an account does not reset your progress.",
+  accountError:
+    "Could not load this session. You can sign in with your verified email.",
+  loadError: "The account interface could not load. Please reload the page.",
+  retry: "Reload account",
+  signedOut: "You are signed out.",
+  registrationTitle: "Save this guest's progress",
+  passwordMismatch: "Check your password.",
+  invalidLink: "This link is invalid or expired. Request a new link.",
+  identityChanged:
+    "The session changed. Reload account details before continuing.",
+};
+const pt: Record<keyof typeof en, string> = {
+  newGuest: "Continuar como novo visitante",
+  title: "Ronin ID",
+  intro: "Guarde sua jornada, selos e recompensas com sua conta.",
+  back: "Voltar ao jogo",
+  guest: "Visitante",
+  pending: "Confirmação de e-mail pendente",
+  registered: "E-mail confirmado",
+  email: "E-mail",
+  password: "Senha",
+  newPassword: "Nova senha",
+  nickname: "Apelido",
+  register: "Criar conta",
+  registerHint:
+    "Use pelo menos 12 caracteres. Você pode usar um gerenciador de senhas ou uma frase.",
+  login: "Entrar",
+  loginHint: "Entrar nunca une perfis automaticamente.",
+  forgot: "Esqueci minha senha",
+  forgotAction: "Pedir link de recuperação",
+  sent: "Se for possível concluir a solicitação, as instruções chegarão por e-mail. Aguarde 60 segundos antes de pedir novamente.",
+  verify: "Confirmar e-mail",
+  verifyHint:
+    "Confirme no navegador em que iniciou o cadastro. Abrir o link sozinho não confirma sua conta.",
+  resend: "Reenviar confirmação",
+  verified: "E-mail confirmado. Sua jornada continua neste Ronin ID.",
+  reset: "Definir nova senha",
+  resetHint:
+    "Este link pode ser usado uma vez em até 30 minutos. A redefinição encerra as sessões anteriores.",
+  resetDone: "Senha atualizada. Entre com sua nova senha.",
+  logout: "Sair da conta",
+  sessions: "Sessões ativas",
+  refresh: "Atualizar sessões",
+  current: "Esta sessão",
+  other: "Outra sessão",
+  expires: "Expira",
+  revoke: "Encerrar esta sessão",
+  revoked: "A sessão selecionada foi encerrada.",
+  reauth: "Confirme sua senha",
+  reauthHint:
+    "Para sua segurança, gerenciar sessões exige autenticação recente.",
+  reauthDone: "Senha confirmada.",
+  loading: "Aguarde…",
+  ready: "Dados da conta",
+  continueGuest:
+    "Você pode continuar jogando como visitante. Criar conta não reinicia seu progresso.",
+  accountError:
+    "Não foi possível carregar esta sessão. Você pode entrar com seu e-mail confirmado.",
+  loadError: "Não foi possível carregar a área da conta. Recarregue a página.",
+  retry: "Recarregar conta",
+  signedOut: "Você saiu da conta.",
+  registrationTitle: "Guardar o progresso deste visitante",
+  passwordMismatch: "Confira sua senha.",
+  invalidLink: "Este link é inválido ou expirou. Solicite um novo link.",
+  identityChanged:
+    "A sessão mudou. Recarregue os dados da conta antes de continuar.",
+};
+export type AccountTextKey = keyof typeof en;
+export function accountCopy(locale: Locale) {
+  return locale === "pt-BR" ? pt : en;
+}

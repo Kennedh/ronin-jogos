@@ -5,7 +5,7 @@ import {
   createHmac,
   timingSafeEqual,
 } from "node:crypto";
-import type { Pool } from "pg";
+import type { Pool, PoolClient } from "pg";
 import { Fault, transaction, serverTime } from "./runtime.ts";
 import type { Clock } from "./runtime.ts";
 export const digest = (value: string) =>
@@ -42,8 +42,9 @@ export class Sessions {
           csrf_digest: Buffer | null;
           expires_at: Date;
           locale: Session["locale"];
+          status: string;
         }>(
-          "SELECT s.*,p.locale FROM sessions s JOIN players p ON p.id=s.player_id WHERE s.id=$1 AND s.revoked_at IS NULL AND s.expires_at>$2 AND p.status NOT IN ('DELETION_PENDING','ANONYMIZED') FOR UPDATE OF s",
+          "SELECT s.*,p.locale,p.status FROM sessions s JOIN players p ON p.id=s.player_id WHERE s.id=$1 AND s.revoked_at IS NULL AND s.expires_at>$2 AND p.status NOT IN ('DELETION_PENDING','ANONYMIZED') FOR UPDATE OF s",
           [match[1], now],
         )
       ).rows[0];
@@ -55,14 +56,19 @@ export class Sessions {
         !timingSafeEqual(row.csrf_digest, digest(csrfToken))
       )
         throw new Fault(401, "SESSION_REQUIRED");
-      const expiresAt = new Date(now.getTime() + 90 * 86400000);
-      if (row.expires_at.getTime() - now.getTime() < 89 * 86400000) {
+      const days = row.status === "REGISTERED" ? 30 : 90;
+      const expiresAt = new Date(now.getTime() + days * 86400000);
+      if (row.expires_at.getTime() - now.getTime() < (days - 1) * 86400000) {
         await db.query("UPDATE sessions SET expires_at=$2 WHERE id=$1", [
           row.id,
           expiresAt,
         ]);
         row.expires_at = expiresAt;
       }
+      await db.query(
+        "UPDATE sessions SET last_seen_at=$2 WHERE id=$1 AND last_seen_at<$3",
+        [row.id, now, new Date(now.getTime() - 60000)],
+      );
       return {
         playerId: row.player_id,
         sessionId: row.id,
@@ -89,7 +95,7 @@ export class Sessions {
         [playerId],
       );
       await db.query(
-        "INSERT INTO sessions(id,player_id,verifier_digest,csrf_digest,created_at,expires_at) VALUES($1,$2,$3,$4,$5,$6)",
+        "INSERT INTO sessions(id,player_id,verifier_digest,csrf_digest,created_at,last_seen_at,expires_at) VALUES($1,$2,$3,$4,$5,$5,$6)",
         [
           sessionId,
           playerId,
@@ -110,14 +116,48 @@ export class Sessions {
       "SELECT region_id FROM player_regions WHERE player_id=$1 ORDER BY region_id",
       [session.playerId],
     );
+    const p = (
+      await this.pool.query(
+        "SELECT p.nickname,p.status,a.email AS verified_email,r.email AS pending_email FROM players p LEFT JOIN email_accounts a ON a.player_id=p.id LEFT JOIN email_registrations r ON r.player_id=p.id WHERE p.id=$1",
+        [session.playerId],
+      )
+    ).rows[0];
     return {
       player_id: session.playerId,
-      account_type: "GUEST" as const,
-      nickname: null,
+      account_type:
+        p.status === "GUEST" ? ("GUEST" as const) : ("EMAIL" as const),
+      account_status: p.status as "GUEST" | "EMAIL_PENDING" | "REGISTERED",
+      nickname: p.nickname,
       locale: session.locale,
+      email: p.verified_email ?? p.pending_email ?? null,
+      email_verified: p.status === "REGISTERED",
       region_unlocks: regions.rows.map((r) => r.region_id),
     };
   }
+  async issue(
+    db: PoolClient,
+    playerId: string,
+    locale: Session["locale"],
+    now: Date,
+  ) {
+    const sessionId = randomUUID(),
+      secret = randomBytes(32).toString("base64url"),
+      csrfToken = csrf(secret),
+      expiresAt = new Date(now.getTime() + 30 * 86400000);
+    await db.query(
+      "INSERT INTO sessions(id,player_id,verifier_digest,csrf_digest,created_at,last_seen_at,expires_at,authenticated_at) VALUES($1,$2,$3,$4,$5,$5,$6,$5)",
+      [sessionId, playerId, digest(secret), digest(csrfToken), now, expiresAt],
+    );
+    await db.query(
+      "UPDATE sessions SET revoked_at=$2 WHERE player_id=$1 AND revoked_at IS NULL AND id IN (SELECT id FROM sessions WHERE player_id=$1 AND revoked_at IS NULL AND id<>$3 ORDER BY created_at DESC,id DESC OFFSET 19)",
+      [playerId, now, sessionId],
+    );
+    return {
+      token: sessionId + "." + secret,
+      session: { playerId, sessionId, csrfToken, expiresAt, locale },
+    };
+  }
+
   checkCsrf(session: Session, value: string | undefined) {
     if (
       !value ||

@@ -1,6 +1,58 @@
 import type { Locale } from "./index.ts";
 /** Same message_key contract in both locales; technical/private diagnostics stay server-side. */
 export const API_ERRORS = {
+  AUTH_CONTEXT_REQUIRED: [
+    "Reabra a página da conta e tente novamente.",
+    "Reopen the account page and try again.",
+  ],
+  AUTH_TOKEN_INVALID: [
+    "O link é inválido, expirou ou já foi usado. Peça outro link.",
+    "This link is invalid, expired or already used. Request a new link.",
+  ],
+  AUTH_TOKEN_CONTEXT: [
+    "Confirme no navegador em que iniciou o cadastro.",
+    "Confirm in the browser where you started registration.",
+  ],
+  EMAIL_ALREADY_LINKED: [
+    "Este e-mail já tem conta. Entre para acessá-la; este visitante permanece separado.",
+    "This email already has an account. Sign in to access it; this guest remains separate.",
+  ],
+  PASSWORD_POLICY: [
+    "Use uma senha de 12 a 256 caracteres, evitando senhas muito comuns.",
+    "Use a password of 12 to 256 characters and avoid very common passwords.",
+  ],
+  INVALID_CREDENTIALS: [
+    "E-mail ou senha inválidos. Confirme seu cadastro antes de entrar.",
+    "Invalid email or password. Confirm registration before signing in.",
+  ],
+  REAUTH_REQUIRED: [
+    "Confirme sua senha novamente para gerenciar sessões.",
+    "Confirm your password again to manage sessions.",
+  ],
+  SESSION_FORBIDDEN: [
+    "Esta sessão não pode ser encerrada por esta conta.",
+    "This session cannot be ended by this account.",
+  ],
+  NICKNAME_UNAVAILABLE: [
+    "Este apelido não está disponível. Escolha outro.",
+    "This nickname is unavailable. Choose another.",
+  ],
+  INVALID_NICKNAME: [
+    "Use um apelido de 3 a 20 caracteres com letras, números, espaços, hífen ou sublinhado.",
+    "Use a nickname of 3 to 20 characters with letters, numbers, spaces, hyphens or underscores.",
+  ],
+  GUEST_PROGRESS_REQUIRES_LINK: [
+    "Este visitante tem progresso. Ele foi preservado; continue nele para manter seu acesso.",
+    "This guest has progress. It was preserved; keep using it to retain access.",
+  ],
+  ACCOUNT_UNAVAILABLE: [
+    "O serviço de contas está indisponível. Tente novamente mais tarde.",
+    "The account service is unavailable. Try again later.",
+  ],
+  AUTH_BUSY: [
+    "Há muitas autenticações em andamento. Aguarde e tente novamente.",
+    "Too many authentication requests are in progress. Wait and try again.",
+  ],
   SESSION_REQUIRED: [
     "Sua sessão expirou ou não é válida. Reconecte a mesma identidade para continuar.",
     "Your session expired or is invalid. Reconnect the same identity to continue.",

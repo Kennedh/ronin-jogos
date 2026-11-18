@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Ronin Runner API - contrato preliminar de design
-  version: 0.24.0-foundation-draft
+  version: 0.25.0-foundation-draft
   description: |-
     API de fundação em desenvolvimento. Guest e runs implementados na1C; conta/Google/ranking/weekly permanecem contratos futuros. Prefixo /api/v1. Score somente após replay verificado; implantação não autorizada.
 servers:
@@ -119,13 +119,59 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/GuestRequest"
+  /auth/verify-email/resend:
+    post:
+      operationId: resendEmail
+      tags: [Auth]
+      summary: Reenviar confirmacao com cooldown
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResendEmailRequest"
+      responses:
+        "202":
+          description: Resposta de identidade
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthAccepted"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/InvalidState"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+  /auth/reauth:
+    post:
+      operationId: reauthEmail
+      tags: [Auth]
+      summary: Confirmar senha para operacoes sensiveis
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReauthRequest"
+      responses:
+        "204":
+          description: Resposta de identidade
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/InvalidState"
+        "429":
+          $ref: "#/components/responses/RateLimited"
   /auth/register:
     post:
-      operationId: post_auth_register
-      tags:
-        - Auth
-      summary: Registrar conta por email e senha
-      security: []
+      operationId: registerEmail
+      tags: [Auth]
+      summary: Solicitar cadastro sem enumeracao de contas
       requestBody:
         required: true
         content:
@@ -134,18 +180,26 @@ paths:
               $ref: "#/components/schemas/RegisterRequest"
       responses:
         "202":
-          description: Confirmacao solicitada sem enumeracao de contas
-        "400":
-          $ref: "#/components/responses/BadRequest"
+          description: Resposta de identidade
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthAccepted"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/InvalidState"
         "429":
           $ref: "#/components/responses/RateLimited"
   /auth/login:
     post:
-      operationId: post_auth_login
-      tags:
-        - Auth
-      summary: Login email/senha
+      operationId: loginEmail
+      tags: [Auth]
+      summary: Entrar com email e senha verificados
       security: []
+      description: Origin exata, JSON e header X-Ronin-Auth 1 obrigatorios; nao aceita formulario cross-site.
       requestBody:
         required: true
         content:
@@ -154,13 +208,17 @@ paths:
               $ref: "#/components/schemas/EmailLoginRequest"
       responses:
         "200":
-          description: Sessao autenticada emitida em cookie seguro
+          description: Resposta de identidade
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/PlayerSummary"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/InvalidState"
         "429":
           $ref: "#/components/responses/RateLimited"
   /auth/google:
@@ -200,93 +258,102 @@ paths:
           $ref: "#/components/responses/RateLimited"
   /auth/verify-email:
     post:
-      operationId: post_auth_verify_email
-      tags:
-        - Auth
-      summary: Confirmar email por token de uso unico
-      security: []
+      operationId: verifyEmail
+      tags: [Auth]
+      summary: Confirmar email no contexto do cadastro
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - token
-              properties:
-                token:
-                  type: string
-              additionalProperties: false
+              $ref: "#/components/schemas/AuthTokenRequest"
       responses:
         "204":
-          description: Endereco confirmado
+          description: Resposta de identidade
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
         "422":
           $ref: "#/components/responses/InvalidState"
+        "429":
+          $ref: "#/components/responses/RateLimited"
   /auth/password/forgot:
     post:
-      operationId: post_auth_password_forgot
-      tags:
-        - Auth
-      summary: Pedir redefinicao de senha sem revelar se conta existe
+      operationId: forgotPassword
+      tags: [Auth]
+      summary: Pedir recuperacao sem enumeracao
       security: []
+      description: Origin exata, JSON e header X-Ronin-Auth 1 obrigatorios; nao aceita formulario cross-site.
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - email
-              properties:
-                email:
-                  type: string
-                  format: email
-              additionalProperties: false
+              $ref: "#/components/schemas/ForgotPasswordRequest"
       responses:
         "202":
-          description: Pedido recebido; resposta neutra
+          description: Resposta de identidade
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthAccepted"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/InvalidState"
         "429":
           $ref: "#/components/responses/RateLimited"
   /auth/password/reset:
     post:
-      operationId: post_auth_password_reset
-      tags:
-        - Auth
-      summary: Redefinir senha com token de uso unico
+      operationId: resetPassword
+      tags: [Auth]
+      summary: Redefinir senha e revogar sessoes, sem login automatico
+      security: []
+      description: Origin exata, JSON e header X-Ronin-Auth 1 obrigatorios; nao aceita formulario cross-site.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPasswordRequest"
+      responses:
+        "204":
+          description: Resposta de identidade
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/InvalidState"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+  /auth/logout:
+    post:
+      operationId: logoutEmail
+      tags: [Auth]
+      summary: Encerrar sessao atual
+      description: Exige Origin autorizado, JSON e X-Ronin-Auth 1; sessao valida tambem exige CSRF. Cookie ausente ou expirado e limpo sem autenticar.
       security: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - token
-                - new_password
-              properties:
-                token:
-                  type: string
-                new_password:
-                  type: string
-                  minLength: 12
-                  maxLength: 256
-              additionalProperties: false
+              $ref: "#/components/schemas/EmptyRequest"
       responses:
         "204":
-          description: Senha atualizada, sessoes rotacionadas
-        "422":
-          $ref: "#/components/responses/InvalidState"
-  /auth/logout:
-    post:
-      operationId: post_auth_logout
-      tags:
-        - Auth
-      summary: Revogar sessao atual
-      responses:
-        "204":
-          description: Sessao encerrada
+          description: Resposta de identidade
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/InvalidState"
+        "429":
+          $ref: "#/components/responses/RateLimited"
   /auth/merge/preview:
     post:
       operationId: post_auth_merge_preview
@@ -398,56 +465,38 @@ paths:
           $ref: "#/components/responses/Conflict"
   /me/sessions:
     get:
-      operationId: get_me_sessions
-      tags:
-        - Auth
-      summary: Sessoes ativas e autenticacoes recentes resumidas
+      operationId: listSessions
+      tags: [Auth]
+      summary: Listar sessoes proprias com autenticacao recente
       responses:
         "200":
-          description: Dispositivos sem dados sensiveis
+          description: Resposta de identidade
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  sessions:
-                    type: array
-                    items:
-                      type: object
-                      required:
-                        - session_id
-                        - created_at
-                        - current
-                      properties:
-                        session_id:
-                          type: string
-                        created_at:
-                          type: string
-                          format: date-time
-                        current:
-                          type: boolean
-                        last_seen_at:
-                          type:
-                            - string
-                            - "null"
-                          format: date-time
+                $ref: "#/components/schemas/AccountSessions"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/InvalidState"
+        "429":
+          $ref: "#/components/responses/RateLimited"
   /me/sessions/{session_id}:
     delete:
-      operationId: delete_me_sessions_session_id
-      tags:
-        - Auth
-      summary: Revogar sessao do proprio usuario
+      operationId: revokeAccountSession
+      tags: [Auth]
+      summary: Revogar sessao propria com autenticacao recente
       parameters:
         - name: session_id
           in: path
           required: true
-          schema:
-            type: string
+          schema: {type: string, format: uuid}
       responses:
-        "204":
-          description: Sessao revogada
-        "403":
-          $ref: "#/components/responses/Forbidden"
+        "204": {description: Sessao encerrada}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
   /me/preferences:
     patch:
       operationId: patch_me_preferences
@@ -1376,6 +1425,13 @@ components:
         - nickname
         - locale
       properties:
+        account_status:
+          type: string
+          enum: [GUEST, EMAIL_PENDING, REGISTERED]
+        email:
+          type: [string, "null"]
+          format: email
+
         player_id:
           type: string
           format: uuid
@@ -1407,9 +1463,13 @@ components:
         - email
         - password
       properties:
+        locale:
+          type: string
+          enum: [pt-BR, en]
         email:
           type: string
           format: email
+          maxLength: 254
         password:
           type: string
           minLength: 12
@@ -1428,8 +1488,11 @@ components:
         email:
           type: string
           format: email
+          maxLength: 254
         password:
           type: string
+          minLength: 1
+          maxLength: 256
       additionalProperties: false
     CharacterPart:
       type: object
@@ -2253,6 +2316,65 @@ components:
           items:
             type: string
             enum: [AURORA_TRAIL, FOUR_PATHS_GUARDIAN, PATH_LEGEND, BROKEN_ROOTS, SILENCED_BELL, TAMED_WIND, DISPELLED_ECLIPSE]
+
+    ResendEmailRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        locale: {type: string, enum: [pt-BR, en]}
+
+    EmptyRequest:
+      type: object
+      additionalProperties: false
+    AuthAccepted:
+      type: object
+      additionalProperties: false
+      required: [status]
+      properties:
+        status: {type: string, const: ACCEPTED}
+    AuthTokenRequest:
+      type: object
+      additionalProperties: false
+      required: [token]
+      properties:
+        token: {type: string, pattern: "^[A-Za-z0-9_-]{43}$"}
+    ForgotPasswordRequest:
+      type: object
+      additionalProperties: false
+      required: [email]
+      properties:
+        email: {type: string, format: email, maxLength: 254}
+    ResetPasswordRequest:
+      type: object
+      additionalProperties: false
+      required: [token, new_password]
+      properties:
+        token: {type: string, pattern: "^[A-Za-z0-9_-]{43}$"}
+        new_password: {type: string, minLength: 12, maxLength: 256}
+    ReauthRequest:
+      type: object
+      additionalProperties: false
+      required: [password]
+      properties:
+        password: {type: string, minLength: 1, maxLength: 256}
+    AccountSessions:
+      type: object
+      additionalProperties: false
+      required: [sessions]
+      properties:
+        sessions:
+          type: array
+          maxItems: 20
+          items:
+            type: object
+            additionalProperties: false
+            required: [session_id, created_at, last_seen_at, expires_at, current]
+            properties:
+              session_id: {type: string, format: uuid}
+              created_at: {type: string, format: date-time}
+              last_seen_at: {type: string, format: date-time}
+              expires_at: {type: string, format: date-time}
+              current: {type: boolean}
 
   responses:
     BadRequest:

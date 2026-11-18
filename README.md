@@ -2,7 +2,7 @@
 
 Plataforma de jogos gratuitos para navegador, desenvolvida com tecnologias web.
 
-## Ronin Runner — encontros de chefes da parte 4 em desenvolvimento
+## Ronin Runner — contas por e-mail da parte 5A em desenvolvimento
 
 O Ronin Runner concluiu a fase de especificação de baseline (v0.18). **O proprietário autorizou em 11/11/2026 o início da implementação com Codex**. A primeira versão pública deverá ser **completa** (sem mini-MVP descartável), com desenvolvimento incremental sobre a arquitetura definitiva. As partes 1A–1D têm implementação e testes: a primeira corrida Bambu já liga Phaser, teclado/gestos e resultado à API e ao verificador reais. Isso é uma fundação interna, ainda sem o escopo completo nem homologação pública.
 
@@ -80,7 +80,7 @@ A API escuta `http://127.0.0.1:3001`; `PORTAL_ORIGIN` configura a origem exata d
 
 Fluxo executável: `POST /api/v1/auth/guest` com `{}` → cookie HttpOnly e header `X-CSRF-Token` → `POST /api/v1/runs/start` com `Idempotency-Key` → `GET /api/v1/runs/{id}/manifest` → `PUT /api/v1/runs/{id}/segments/{index}` em identity/gzip → `POST /api/v1/runs/{id}/finish` → consultar `GET /api/v1/runs/{id}`. Mutações exigem `Origin` exata e token CSRF sincronizado à sessão. O upload usa o codec e headers do OpenAPI; ACK significa persistido, e não pontuação aceita.
 
-O verificador reexecuta comandos e comprova HP_ZERO, ABYSS ou QUIT no core. Somente VERIFIED expõe score ao dono da run; QUIT não ranqueia. Outcome/outbox são transacionais, com lease/heartbeat/generation para concorrência e retry. Não há ainda projeção pública de ranking, recompensas ou conta e-mail/Google. O curso primitivo versionado permite integração real da fundação, mas não substitui o diretor completo/quatro regiões/chefes das partes 3/4.
+O verificador reexecuta comandos e comprova HP_ZERO, ABYSS ou QUIT no core. Somente VERIFIED expõe score ao dono da run; QUIT não ranqueia. Outcome/outbox são transacionais, com lease/heartbeat/generation para concorrência e retry. Este trecho descreve a fundação 1C; selos/recompensas iniciais e conta por e-mail estão implementados nas partes 4/5A abaixo. Ranking público e Google seguem pendentes. O curso primitivo versionado permite integração real da fundação, mas não substitui o diretor completo/quatro regiões/chefes das partes 3/4.
 
 Detalhes, limites, testes e operação: [ADR006](docs/adr/ADR-006-FUNDACAO-1C.md). O gate de fundação continua `npm run verify`; o gate de lançamento público completo pertence às etapas finais.
 
@@ -106,4 +106,25 @@ Ao alcançar uma região e concluir o envio/verificação, ela fica disponível 
 
 Novas partidas usam major 4: Raiz Negra, Guardião do Sino, Espírito da Nevasca e Senhor do Eclipse têm avisos, ataques, janelas de katana e retirada em movimento. É possível só esquivar e continuar. Não há cura; vencer os quatro concede 2250 de bônus por ciclo, sem contar chefe como inimigo comum. Selos, conquistas iniciais e Traço da Aurora são persistidos somente após o replay verificado; quatro selos podem vir de sessões diferentes. O rastro é cosmético e seu equipamento no Creator chega na 6A.
 
-HUD e resultados PT/EN mostram energia, aberturas e bônus confirmados; “Atualizar selos” consulta o progresso privado. Avisos sonoros opcionais acompanham sinais visuais. Regras anteriores seguem executáveis. Banco dev recebe migration 004 ao iniciar db:dev. Ver [ADR010](docs/adr/ADR-010-CHEFES-E-SELOS.md) e [PROGRESS](PROGRESS.md) para evidências/limites. Arte atual continua estudo; próxima parte é 5A, conta e-mail com transporte local de teste, após novo pedido.
+HUD e resultados PT/EN mostram energia, aberturas e bônus confirmados; “Atualizar selos” consulta o progresso privado. Avisos sonoros opcionais acompanham sinais visuais. Regras anteriores seguem executáveis. Banco dev recebe migration 004 ao iniciar db:dev. Ver [ADR010](docs/adr/ADR-010-CHEFES-E-SELOS.md) e [PROGRESS](PROGRESS.md) para evidências/limites. Arte atual continua estudo; conta e-mail da parte 5A está descrita abaixo.
+
+
+## Parte 5A — Ronin ID por e-mail
+
+Conta real em `/account/pt-br` e `/account/en`, pelo link Ronin ID no portal/jogo. Cadastro, confirmação, login, recuperação/reset de senha, reautenticação e lista/revogação de sessões. O visitante conserva player_id e progresso ao confirmar o cadastro; jogar continua sem login. Não há merge automático por e-mail. Login em outra conta é bloqueado se descartaria acesso a progresso de visitante: vínculo/merge seguro é parte 5B.
+
+Inicie, em terminais separados:
+
+```powershell
+npm run db:dev
+npm run dev:api
+npm run dev:verifier
+npm run dev:mail
+npm run dev
+```
+
+Aguarde migration 005 e banco pronto antes dos consumidores. Use `http://127.0.0.1:5173/account/pt-br` ou `/account/en`; não alterne com localhost (cookie/contexto de confirmação). `dev:mail` NÃO envia para endereços reais: entrega arquivos privados em `artifacts/dev-auth/inbox`. Abra o JSON localmente, copie apenas o link para a mesma sessão de navegador e confirme explicitamente. Links são do ambiente local e o token fica no fragmento, limpo da URL pela aplicação. Reenvio tem cooldown 60s. `npm run dev:mail -- --once` consome no máximo uma tentativa.
+
+Mensagens e chave `artifacts/dev-auth/mail.key` ficam ignoradas, fora do dist/Git, com permissões privadas. Não publicar, colar ou anexar esses arquivos/tokens; perder a chave impede processar entregas pendentes. Senhas são Argon2id; reset vence em 30min e encerra sessões anteriores. Lista/revogação exige senha recente (10min). Não recuperar visitante por nickname.
+
+Testes dirigidos: `node --test tests/accounts.test.ts tests/auth-mail.test.ts`; UI exige build antes de `node --test tests/browser/accounts.test.ts`. Gate completo continua `npm ci` e `npm run verify`. Ver [ADR011](docs/adr/ADR-011-CONTAS-EMAIL-E-SESSOES.md) e [PROGRESS](PROGRESS.md). SMTP/entregabilidade, Google/vínculo/merge, moderação pública, privacidade/retention completas e homologação pública continuam pendentes; nenhuma mudança em VPS/DNS nesta etapa.

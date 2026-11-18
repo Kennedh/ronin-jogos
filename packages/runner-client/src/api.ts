@@ -26,7 +26,7 @@ export class RunnerApi {
   private async request(
     path: string,
     method: string,
-    schema: SchemaName,
+    schema: SchemaName | undefined,
     body?: BodyInit,
     headers: Record<string, string> = {},
   ) {
@@ -63,8 +63,11 @@ export class RunnerApi {
           ),
         );
       }
+      const refreshedCsrf = response.headers.get("x-csrf-token");
+      if (refreshedCsrf) this.csrf = refreshedCsrf;
+      if (response.status === 204) return undefined;
       const value: unknown = await response.json();
-      if (!validate(schema, value))
+      if (!schema || !validate(schema, value))
         throw new ClientError("INVALID_SERVER_RESPONSE");
       const csrf = response.headers.get("x-csrf-token");
       if (csrf) this.csrf = csrf;
@@ -76,13 +79,110 @@ export class RunnerApi {
       clearTimeout(timeout);
     }
   }
-  async guest() {
+  async profile() {
+    return (await this.request(
+      "/me",
+      "GET",
+      "PlayerSummary",
+    )) as components["schemas"]["PlayerSummary"];
+  }
+  async register(input: components["schemas"]["RegisterRequest"]) {
+    await this.request(
+      "/auth/register",
+      "POST",
+      "AuthAccepted",
+      JSON.stringify(input),
+      { "content-type": "application/json" },
+    );
+  }
+  async resendEmail(locale?: "pt-BR" | "en") {
+    await this.request(
+      "/auth/verify-email/resend",
+      "POST",
+      "AuthAccepted",
+      JSON.stringify(locale ? { locale } : {}),
+      { "content-type": "application/json" },
+    );
+  }
+  async verifyEmail(token: string) {
+    await this.request(
+      "/auth/verify-email",
+      "POST",
+      undefined,
+      JSON.stringify({ token }),
+      { "content-type": "application/json" },
+    );
+  }
+  async login(email: string, password: string) {
+    const value = (await this.request(
+      "/auth/login",
+      "POST",
+      "PlayerSummary",
+      JSON.stringify({ email, password }),
+      { "content-type": "application/json", "x-ronin-auth": "1" },
+    )) as components["schemas"]["PlayerSummary"];
+    this.playerId = value.player_id;
+    return value;
+  }
+  async forgot(email: string) {
+    await this.request(
+      "/auth/password/forgot",
+      "POST",
+      "AuthAccepted",
+      JSON.stringify({ email }),
+      { "content-type": "application/json", "x-ronin-auth": "1" },
+    );
+  }
+  async resetPassword(token: string, new_password: string) {
+    await this.request(
+      "/auth/password/reset",
+      "POST",
+      undefined,
+      JSON.stringify({ token, new_password }),
+      { "content-type": "application/json", "x-ronin-auth": "1" },
+    );
+  }
+  async reauth(password: string) {
+    await this.request(
+      "/auth/reauth",
+      "POST",
+      undefined,
+      JSON.stringify({ password }),
+      { "content-type": "application/json" },
+    );
+  }
+  async accountSessions() {
+    return (await this.request(
+      "/me/sessions",
+      "GET",
+      "AccountSessions",
+    )) as components["schemas"]["AccountSessions"];
+  }
+  async revokeSession(id: string) {
+    await this.request(
+      "/me/sessions/" + encodeURIComponent(id),
+      "DELETE",
+      undefined,
+    );
+  }
+  async logout() {
+    await this.request("/auth/logout", "POST", undefined, "{}", {
+      "content-type": "application/json",
+      "x-ronin-auth": "1",
+    });
+    this.playerId = "";
+    this.csrf = "";
+  }
+  async guest(locale?: "pt-BR" | "en") {
     const value = (await this.request(
       "/auth/guest",
       "POST",
       "PlayerSummary",
       "{}",
-      { "content-type": "application/json" },
+      {
+        "content-type": "application/json",
+        ...(locale ? { "accept-language": locale } : {}),
+      },
     )) as components["schemas"]["PlayerSummary"];
     if (this.playerId && this.playerId !== value.player_id)
       throw new ClientError("SESSION_CHANGED", 401);

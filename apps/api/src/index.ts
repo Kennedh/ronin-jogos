@@ -11,12 +11,13 @@ import {
   TransportError,
 } from "@ronin/contracts/node-transport";
 import { preferredLocale } from "@ronin/content";
-import { Runs, Sessions, Fault, rateLimit } from "@ronin/data";
+import { Runs, Sessions, Fault, rateLimit, Accounts } from "@ronin/data";
 import type { Session, Clock, ResourcePolicy } from "@ronin/data";
 import { CURRENT_MANIFEST } from "@ronin/content/runner-manifest";
 import type { RunnerManifest } from "@ronin/content/runner-manifest";
 export interface ApiOptions {
   manifest?: RunnerManifest;
+  authMailKey?: Buffer;
   pool: Pool;
   origin: string;
   clock?: Clock;
@@ -86,6 +87,34 @@ export function createApi(options?: ApiOptions) {
       options.policy,
       options.manifest ?? CURRENT_MANIFEST,
     );
+  const accounts = options.authMailKey
+    ? new Accounts(
+        options.pool,
+        options.authMailKey,
+        options.origin,
+        options.clock,
+      )
+    : undefined;
+  const account = () => {
+    if (!accounts) throw new Fault(503, "ACCOUNT_UNAVAILABLE");
+    return accounts;
+  };
+  const publicAuth = new Set([
+    "/api/v1/auth/logout",
+    "/api/v1/auth/login",
+    "/api/v1/auth/password/forgot",
+    "/api/v1/auth/password/reset",
+  ]);
+  const uniform = async <T>(work: () => Promise<T>) => {
+    const started = performance.now();
+    try {
+      return await work();
+    } finally {
+      await new Promise((resolve) =>
+        setTimeout(resolve, Math.max(0, 100 - (performance.now() - started))),
+      );
+    }
+  };
   const cookieName = origin.protocol === "https:" ? "__Host-rr_sid" : "rr_sid";
   const readCookie = (request: FastifyRequest) => cookie(request, cookieName);
   const auths = new WeakMap<FastifyRequest, Session>();
@@ -95,10 +124,12 @@ export function createApi(options?: ApiOptions) {
     return value;
   };
   const setCookie = (reply: FastifyReply, token: string, auth: Session) =>
-    reply.header(
-      "Set-Cookie",
-      `${cookieName}=${token}; Path=/; HttpOnly; SameSite=Lax; Expires=${auth.expiresAt.toUTCString()}${origin.protocol === "https:" ? "; Secure" : ""}`,
-    );
+    reply
+      .removeHeader("Set-Cookie")
+      .header(
+        "Set-Cookie",
+        `${cookieName}=${token}; Path=/; HttpOnly; SameSite=Lax; Expires=${auth.expiresAt.toUTCString()}${origin.protocol === "https:" ? "; Secure" : ""}`,
+      );
   api.removeContentTypeParser("application/json");
   api.addContentTypeParser(
     "application/json",
@@ -156,6 +187,34 @@ export function createApi(options?: ApiOptions) {
       if (token) auths.set(request, await sessions.read(token));
       return;
     }
+    if (publicAuth.has(route)) {
+      if (
+        request.headers["x-ronin-auth"] !== "1" ||
+        request.headers["content-type"]?.split(";")[0] !== "application/json"
+      )
+        throw new Fault(403, "AUTH_CONTEXT_REQUIRED");
+      await rateLimit(
+        options.pool,
+        "public-auth",
+        createHmac("sha256", rateSecret).update(request.ip).digest(),
+        30,
+        options.clock,
+      );
+      const token = readCookie(request);
+      if (token) {
+        try {
+          auths.set(request, await sessions.read(token));
+        } catch (error) {
+          if (!(error instanceof Fault && error.status === 401)) throw error;
+        }
+      }
+      if (route === "/api/v1/auth/logout" && auths.has(request))
+        sessions.checkCsrf(
+          auths.get(request)!,
+          request.headers["x-csrf-token"] as string | undefined,
+        );
+      return;
+    }
     const token = readCookie(request);
     if (!token) throw new Fault(401, "SESSION_REQUIRED");
     const auth = await sessions.read(token);
@@ -164,6 +223,14 @@ export function createApi(options?: ApiOptions) {
       sessions.checkCsrf(
         auth,
         request.headers["x-csrf-token"] as string | undefined,
+      );
+    if (route.startsWith("/api/v1/auth/"))
+      await rateLimit(
+        options.pool,
+        "authenticated-auth",
+        createHmac("sha256", rateSecret).update(auth.playerId).digest(),
+        20,
+        options.clock,
       );
     const scope =
       request.method === "GET"
@@ -271,6 +338,146 @@ export function createApi(options?: ApiOptions) {
         .send(checked("PlayerSummary", await sessions.summary(auth)));
     },
   );
+  const clearCookie = (reply: FastifyReply) =>
+    reply
+      .removeHeader("Set-Cookie")
+      .header(
+        "Set-Cookie",
+        `${cookieName}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${origin.protocol === "https:" ? "; Secure" : ""}`,
+      );
+  const checkedBody = (name: SchemaName, request: FastifyRequest) => {
+    if (!validate(name, request.body)) throw new Fault(422, "INVALID_REQUEST");
+    return request.body as Record<string, string>;
+  };
+  api.get("/api/v1/me", async (request) =>
+    checked("PlayerSummary", await sessions.summary(session(request))),
+  );
+  api.post(
+    "/api/v1/auth/register",
+    { bodyLimit: 8192 },
+    async (request, reply) => {
+      const body = checkedBody("RegisterRequest", request);
+      await uniform(() =>
+        account().register(session(request), {
+          email: body["email"]!,
+          password: body["password"]!,
+          ...(body["nickname"] ? { nickname: body["nickname"] } : {}),
+          ...(body["locale"]
+            ? { locale: body["locale"] as "pt-BR" | "en" }
+            : {}),
+        }),
+      );
+      return reply
+        .status(202)
+        .send(checked("AuthAccepted", { status: "ACCEPTED" }));
+    },
+  );
+  api.post(
+    "/api/v1/auth/verify-email/resend",
+    { bodyLimit: 8192 },
+    async (request, reply) => {
+      const body = checkedBody("ResendEmailRequest", request);
+      await uniform(() =>
+        account().resend(
+          session(request),
+          body["locale"] as "pt-BR" | "en" | undefined,
+        ),
+      );
+      return reply
+        .status(202)
+        .send(checked("AuthAccepted", { status: "ACCEPTED" }));
+    },
+  );
+  api.post(
+    "/api/v1/auth/verify-email",
+    { bodyLimit: 8192 },
+    async (request, reply) => {
+      const body = checkedBody("AuthTokenRequest", request),
+        result = await account().verifyEmail(session(request), body["token"]!);
+      setCookie(reply, result.token, result.session);
+      reply.header("X-CSRF-Token", result.session.csrfToken);
+      return reply.status(204).send();
+    },
+  );
+  api.post(
+    "/api/v1/auth/login",
+    { bodyLimit: 8192 },
+    async (request, reply) => {
+      const body = checkedBody("EmailLoginRequest", request);
+      await rateLimit(
+        options.pool,
+        "password-login",
+        createHmac("sha256", rateSecret)
+          .update(body["email"]!.trim().toLowerCase())
+          .digest(),
+        10,
+        options.clock,
+      );
+      const result = await uniform(() =>
+        account().login(body["email"]!, body["password"]!, auths.get(request)),
+      );
+      setCookie(reply, result.token, result.session);
+      reply.header("X-CSRF-Token", result.session.csrfToken);
+      return checked("PlayerSummary", await sessions.summary(result.session));
+    },
+  );
+  api.post(
+    "/api/v1/auth/password/forgot",
+    { bodyLimit: 8192 },
+    async (request, reply) => {
+      const body = checkedBody("ForgotPasswordRequest", request);
+      await uniform(() => account().forgot(body["email"]!));
+      return reply
+        .status(202)
+        .send(checked("AuthAccepted", { status: "ACCEPTED" }));
+    },
+  );
+  api.post(
+    "/api/v1/auth/password/reset",
+    { bodyLimit: 8192 },
+    async (request, reply) => {
+      const body = checkedBody("ResetPasswordRequest", request);
+      await uniform(() =>
+        account().reset(body["token"]!, body["new_password"]!),
+      );
+      return reply.status(204).send();
+    },
+  );
+  api.post(
+    "/api/v1/auth/reauth",
+    { bodyLimit: 8192 },
+    async (request, reply) => {
+      const body = checkedBody("ReauthRequest", request);
+      await uniform(() =>
+        account().reauth(session(request), body["password"]!),
+      );
+      return reply.status(204).send();
+    },
+  );
+  api.post(
+    "/api/v1/auth/logout",
+    { bodyLimit: 8192 },
+    async (request, reply) => {
+      checkedBody("EmptyRequest", request);
+      if (auths.has(request)) await account().logout(session(request));
+      clearCookie(reply);
+      return reply.status(204).send();
+    },
+  );
+  api.get("/api/v1/me/sessions", async (request) =>
+    checked("AccountSessions", await account().list(session(request))),
+  );
+  api.delete<{ Params: { session_id: string } }>(
+    "/api/v1/me/sessions/:session_id",
+    async (request, reply) => {
+      if (!uuid.test(request.params.session_id))
+        throw new Fault(422, "INVALID_REQUEST");
+      await account().revoke(session(request), request.params.session_id);
+      if (request.params.session_id === session(request).sessionId)
+        clearCookie(reply);
+      return reply.status(204).send();
+    },
+  );
   api.post(
     "/api/v1/runs/start",
     { bodyLimit: 8192 },
@@ -279,6 +486,7 @@ export function createApi(options?: ApiOptions) {
         session(request).playerId,
         request.body,
         (request.headers["idempotency-key"] as string) ?? "",
+        session(request).sessionId,
       );
       return reply
         .status(result.created ? 201 : 200)
