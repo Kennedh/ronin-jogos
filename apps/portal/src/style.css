@@ -1084,3 +1084,106 @@ footer a {
 .touch-device .touch-help {
   display: block;
 }
+
+.combat-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 20px;
+  border-top: 1px solid var(--line);
+  font-size: 11px;
+  min-height: 30px;
+}
+.combat-strip progress {
+  width: 100px;
+  height: 9px;
+  accent-color: var(--red);
+}
+#combat-feedback {
+  margin-left: auto;
+  font-weight: 600;
+}
+.control-study {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  padding: 26px 0;
+  border-top: 1px solid var(--line);
+}
+.control-study h2,
+.rig-lab summary {
+  font:
+    22px Georgia,
+    serif;
+}
+.control-study p {
+  font-size: 13px;
+  max-width: 65ch;
+  margin: 12px 0;
+  line-height: 1.6;
+}
+.key-settings label {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin: 8px 0;
+}
+.key-settings input {
+  width: 135px;
+  border: 1px solid var(--line);
+  background: #f6edd9;
+  color: var(--ink);
+  padding: 10px;
+}
+#binding-error {
+  color: var(--red);
+}
+.rig-lab label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0;
+}
+.rig-lab canvas {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--line);
+  max-width: 640px;
+}
+@media (max-width: 650px) {
+  .control-study {
+    grid-template-columns: 1fr;
+  }
+  .combat-strip {
+    font-size: 10px;
+    padding: 5px 10px;
+    gap: 6px;
+  }
+  .combat-strip progress {
+    width: 65px;
+  }
+  #combo {
+    flex-basis: 100%;
+  }
+  .combat-strip label {
+    max-width: 85px;
+  }
+}
+@media (max-height: 520px) and (orientation: landscape) {
+  .run-active .viewport {
+    height: calc(100svh - 165px);
+  }
+  .combat-strip {
+    padding: 4px 12px;
+    font-size: 9px;
+    min-height: 26px;
+  }
+  .combat-strip progress {
+    width: 65px;
+  }
+}
+
+.run-active .control-study {
+  display: none;
+}

@@ -923,6 +923,36 @@ export const definitions = {
         minimum: 1,
         maximum: 9007199254740991,
       },
+      concentrationCap: {
+        type: "integer",
+        minimum: 100,
+        maximum: 100,
+      },
+      perfectGain: {
+        type: "integer",
+        minimum: 1,
+        maximum: 100,
+      },
+      normalGain: {
+        type: "integer",
+        minimum: 1,
+        maximum: 100,
+      },
+      normalBreaksCombo: {
+        type: "integer",
+        minimum: 0,
+        maximum: 1,
+      },
+      specialReach: {
+        type: "integer",
+        minimum: 1,
+        maximum: 1000000,
+      },
+      specialFxTicks: {
+        type: "integer",
+        minimum: 1,
+        maximum: 60,
+      },
     },
   },
   RunnerManifest: {

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Ronin Runner API - contrato preliminar de design
-  version: 0.21.0-foundation-draft
+  version: 0.22.0-foundation-draft
   description: |-
     API de fundação em desenvolvimento. Guest e runs implementados na1C; conta/Google/ranking/weekly permanecem contratos futuros. Prefixo /api/v1. Score somente após replay verificado; implantação não autorizada.
 servers:
@@ -2097,6 +2097,30 @@ components:
           type: integer
           minimum: 1
           maximum: 9007199254740991
+        concentrationCap:
+          type: integer
+          minimum: 100
+          maximum: 100
+        perfectGain:
+          type: integer
+          minimum: 1
+          maximum: 100
+        normalGain:
+          type: integer
+          minimum: 1
+          maximum: 100
+        normalBreaksCombo:
+          type: integer
+          minimum: 0
+          maximum: 1
+        specialReach:
+          type: integer
+          minimum: 1
+          maximum: 1000000
+        specialFxTicks:
+          type: integer
+          minimum: 1
+          maximum: 60
     RunnerManifest:
       type: object
       required:

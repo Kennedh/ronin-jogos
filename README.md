@@ -2,7 +2,7 @@
 
 Plataforma de jogos gratuitos para navegador, desenvolvida com tecnologias web.
 
-## Ronin Runner — fundação 1D jogável em desenvolvimento
+## Ronin Runner — combate e rig da parte 2 em desenvolvimento
 
 O Ronin Runner concluiu a fase de especificação de baseline (v0.18). **O proprietário autorizou em 11/11/2026 o início da implementação com Codex**. A primeira versão pública deverá ser **completa** (sem mini-MVP descartável), com desenvolvimento incremental sobre a arquitetura definitiva. As partes 1A–1D têm implementação e testes: a primeira corrida Bambu já liga Phaser, teclado/gestos e resultado à API e ao verificador reais. Isso é uma fundação interna, ainda sem o escopo completo nem homologação pública.
 
@@ -89,3 +89,9 @@ Detalhes, limites, testes e operação: [ADR006](docs/adr/ADR-006-FUNDACAO-1C.md
 Cena Bambu em Canvas2D/Phaser 4 com arte vetorial original, adaptador do mesmo core do verificador, manifest histórico validado pelo hash do ticket, inputs segmentados e envio com ACK. UI PT-BR/EN inclui menu, controles, preferências, pausa opaca, contagem, confirmação de saída e estados de envio/verificação/recusa/rede. O hub carrega Phaser somente ao entrar no jogo. Contratos usam validadores standalone; o build funciona com CSP sem unsafe-eval.
 
 A regressão usa bundle de produção, Chromium desktop/mobile emulado, PostgreSQL real e API/worker reais. Não substitui aparelhos físicos nem aprova a arte final. Veja decisões, evidências, orçamento do bundle e pendências no [ADR007](docs/adr/ADR-007-FUNDACAO-1D.md) e [PROGRESS.md](PROGRESS.md). As próximas partes preservam combate completo, quatro regiões/chefes, criador/identidade, ranking e semanais antes de qualquer lançamento.
+
+## Parte 2 — combate e estudo do personagem
+
+Novas partidas usam regras major 2: concentração (perfeito +12/comum +3, máximo 100), sequência perfeita, golpe vazio e especial automático no próximo acerto quando carregado. O especial tem alcance frontal curto, não cura e não protege de abismos. O círculo sobre o inimigo indica a janela de precisão. Replay/servidor continuam autoritativos e a major 1 permanece executável.
+
+A faixa sob a cena mostra concentração/combo/feedback PT-BR/EN. Antes de jogar, é possível remapear teclas e abrir **Estudo de animação do personagem** para animar/congelar poses, conferir ataque aéreo, deslize, dano, especial e pivôs. A prévia usa o mesmo rig da corrida. É uma amostra para revisão visual; criador/inventário/arte final são etapas posteriores. Implementação e decisões: [ADR008](docs/adr/ADR-008-COMBATE-E-RIG.md). Próxima parte: diretor/quatro regiões/ciclos (3), após pedido do proprietário.

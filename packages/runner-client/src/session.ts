@@ -1,6 +1,6 @@
 import { createState, control, step } from "@ronin/runner-core";
 import type { Action, SimState, SimEvent, World } from "@ronin/runner-core";
-import { primitiveCourse } from "@ronin/content/runner-manifest";
+import { courseFor } from "@ronin/content/runner-manifest";
 import type { RunnerManifest } from "@ronin/content/runner-manifest";
 import type { RunTicket } from "./api.ts";
 import { FixedClock } from "./clock.ts";
@@ -19,6 +19,7 @@ export class RunSession {
   pauseReason: PauseReason = "manual";
   countdown = 3;
   events: readonly SimEvent[] = [];
+  recentEvents: readonly SimEvent[] = [];
   private queued = new Set<Action>();
   private clock = new FixedClock();
   private previousMicros: number | null = null;
@@ -32,13 +33,14 @@ export class RunSession {
     this.manifest = manifest;
     this.state = createState(ticket.seed, manifest.physics);
     this.recorder = new Recorder(ticket);
-    this.course = primitiveCourse(ticket.seed, 0, 2000000);
+    this.course = courseFor(manifest, ticket.seed, 0, 2000000);
     this.courseEnd = 2000000;
   }
   get world() {
     if (this.state.distance > this.courseEnd - 1000000) {
       this.courseEnd = this.state.distance + 2000000;
-      this.course = primitiveCourse(
+      this.course = courseFor(
+        this.manifest,
         this.ticket.seed,
         this.state.distance,
         this.courseEnd,
@@ -129,6 +131,10 @@ export class RunSession {
       );
       this.state = update.state;
       this.events = update.events;
+      this.recentEvents = [
+        ...this.recentEvents.filter((e) => this.state.tick - e.tick < 60),
+        ...update.events,
+      ].slice(-64);
       this.recorder.afterTick(this.state.tick);
       if (this.state.status === "DEAD") this.end();
     });

@@ -8,6 +8,8 @@ import { encodeSegment, segmentHash } from "@ronin/contracts/replay";
 import type { ReplaySegment } from "@ronin/contracts/replay";
 import type { components } from "@ronin/contracts";
 import { validate } from "@ronin/contracts";
+import type { RunnerManifest } from "@ronin/content/runner-manifest";
+import { FOUNDATION_MANIFEST } from "@ronin/content/runner-manifest";
 export type Ticket = components["schemas"]["RunTicket"];
 export interface Client {
   cookie: string;
@@ -18,10 +20,12 @@ export function harness(
   pool: Pool,
   clock: () => Date,
   policy?: ApiOptions["policy"],
+  manifest: RunnerManifest = FOUNDATION_MANIFEST,
 ) {
   const api = createApi({
     pool,
     clock,
+    manifest,
     origin: "https://play.ronin.dev.br",
     rateSecret: Buffer.alloc(32, 7),
     ...(policy ? { policy } : {}),

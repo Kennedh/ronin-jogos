@@ -10,7 +10,7 @@ import {
 import type { ReplaySegment } from "@ronin/contracts/replay";
 import { stateHash } from "@ronin/contracts/canonical";
 import { createState, playSegment, add } from "@ronin/runner-core";
-import { loadManifest, primitiveCourse } from "@ronin/content/runner-manifest";
+import { loadManifest, courseFor } from "@ronin/content/runner-manifest";
 import { verifierBudget } from "./budget.ts";
 class InvalidReplay extends Error {}
 class Cancelled extends Error {}
@@ -98,7 +98,7 @@ export async function verifyLease(
           state = playSegment(
             state,
             slice,
-            primitiveCourse(run.seed, state.distance, reach),
+            courseFor(manifest, run.seed, state.distance, reach),
             undefined,
             manifest.physics,
           );

@@ -1,5 +1,6 @@
 import {
   RULES_V1,
+  RULES_V2,
   compileRules,
   createWorld,
   createRandom,
@@ -26,6 +27,14 @@ export const FOUNDATION_MANIFEST: RunnerManifest = Object.freeze({
   assets_manifest_version: "rr-foundation-no-art-1",
   physics: RULES_V1,
 });
+export const COMBAT_MANIFEST: RunnerManifest = Object.freeze({
+  ...FOUNDATION_MANIFEST,
+  rules_major: 2,
+  generator_version: "rr-combat-course-2",
+  assets_manifest_version: "rr-rig-2",
+  physics: RULES_V2,
+});
+export const CURRENT_MANIFEST = COMBAT_MANIFEST;
 export async function manifestHash(manifest: RunnerManifest): Promise<string> {
   return sha256(new TextEncoder().encode(canonical(manifest)));
 }
@@ -38,10 +47,13 @@ export async function loadManifest(
     !manifest ||
     canonical(Object.keys(manifest).sort()) !==
       canonical(Object.keys(FOUNDATION_MANIFEST).sort()) ||
-    manifest.rules_major !== 1 ||
+    ![1, 2].includes(manifest.rules_major) ||
     !Number.isSafeInteger(manifest.rules_patch) ||
     manifest.rules_patch < 0 ||
-    manifest.generator_version !== "rr-primitive-course-1" ||
+    manifest.generator_version !==
+      (manifest.rules_major === 1
+        ? "rr-primitive-course-1"
+        : "rr-combat-course-2") ||
     manifest.scoring_version !== "rr-score-1" ||
     manifest.replay_protocol_version !== "rr-input-v1" ||
     typeof manifest.assets_manifest_version !== "string" ||
@@ -50,7 +62,10 @@ export async function loadManifest(
     throw new Error("unsupported_manifest");
   const physics = compileRules(manifest.physics);
   // Dispatch old physics versions explicitly; numeric tuning alone cannot change the algorithm.
-  if (physics.version !== RULES_V1.version)
+  if (
+    physics.version !==
+    (manifest.rules_major === 1 ? RULES_V1.version : RULES_V2.version)
+  )
     throw new Error("unsupported_physics");
   if (expectedHash && (await manifestHash(manifest)) !== expectedHash)
     throw new Error("manifest_hash_mismatch");
@@ -96,4 +111,40 @@ export function primitiveCourse(
     });
   }
   return createWorld(gaps, entities);
+}
+
+/** Deterministic telegraph, derived from the same integer speed and contact geometry. */
+export function courseFor(
+  manifest: RunnerManifest,
+  seed: string,
+  distance: number,
+  end: number,
+) {
+  const world = primitiveCourse(seed, distance, end);
+  if (manifest.generator_version === "rr-primitive-course-1") return world;
+  if (manifest.generator_version !== "rr-combat-course-2")
+    throw new Error("unsupported_generator");
+  const r = manifest.physics;
+  return createWorld(
+    world.gaps,
+    world.entities.map((e) =>
+      e.kind !== "ENEMY"
+        ? e
+        : {
+            ...e,
+            idealTick: Math.max(
+              0,
+              Number(
+                ((BigInt(e.x) * 2n -
+                  BigInt(r.bodyWidth) -
+                  BigInt(r.swordReach)) *
+                  60n +
+                  BigInt(r.speed) * 2n -
+                  1n) /
+                  (BigInt(r.speed) * 2n),
+              ) - 1,
+            ),
+          },
+    ),
+  );
 }

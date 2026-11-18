@@ -15,3 +15,21 @@ export type { SessionPhase, PauseReason } from "./session.ts";
 export { Recorder } from "./recorder.ts";
 export { Gestures } from "./gestures.ts";
 export { Submission } from "./submission.ts";
+
+export {
+  poseFor,
+  demoPose,
+  drawRig,
+  canvasBrush,
+  ANIMATIONS,
+  RIG_VERSION,
+} from "./rig.ts";
+export type { Animation, Pose, Brush } from "./rig.ts";
+
+export {
+  DEFAULT_BINDINGS,
+  parseBindings,
+  rebind,
+  actionFor,
+  keyLabel,
+} from "./bindings.ts";
