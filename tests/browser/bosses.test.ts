@@ -176,45 +176,42 @@ test(
                   "live guardian canvas must paint its approved background palette",
                 );
                 await new Promise((resolve) => setTimeout(resolve, 50));
-                const composite = await page.screenshot({
+                await page.screenshot({
                   path: virtual
                     ? `artifacts/phase-4/virtual-ui-${language}-diagnostic.png`
-                    : `artifacts/phase-4/live-boss-${language}.png`,
+                    : `artifacts/phase-4/paused-boss-${language}.png`,
                   fullPage: true,
                 });
                 if (!virtual) {
-                  const bounds = await page.locator("canvas").boundingBox();
-                  assert.ok(bounds);
-                  const colors = await page.evaluate(
-                    async ({ encoded, bounds }) => {
-                      const bytes = Uint8Array.from(atob(encoded), (c) =>
-                          c.charCodeAt(0),
-                        ),
-                        bitmap = await createImageBitmap(
-                          new Blob([bytes], { type: "image/png" }),
-                        ),
-                        surface = document.createElement("canvas");
-                      surface.width = bitmap.width;
-                      surface.height = bitmap.height;
-                      const ctx = surface.getContext("2d")!;
-                      ctx.drawImage(bitmap, 0, 0);
-                      bitmap.close();
-                      const d = ctx.getImageData(
-                          Math.floor(bounds.x),
-                          Math.floor(bounds.y),
-                          Math.floor(bounds.width),
-                          Math.floor(bounds.height),
-                        ).data,
-                        palette = new Set();
-                      for (let i = 0; i < d.length; i += 64)
-                        palette.add(`${d[i]},${d[i + 1]},${d[i + 2]}`);
-                      return palette.size;
-                    },
-                    { encoded: composite.toString("base64"), bounds },
-                  );
+                  // The pause UI deliberately hides the world. Validate the
+                  // actual native-clock canvas PNG, not the covering dialog.
+                  const colors = await page.evaluate(async (encoded) => {
+                    const bytes = Uint8Array.from(atob(encoded), (c) =>
+                        c.charCodeAt(0),
+                      ),
+                      bitmap = await createImageBitmap(
+                        new Blob([bytes], { type: "image/png" }),
+                      ),
+                      surface = document.createElement("canvas");
+                    surface.width = bitmap.width;
+                    surface.height = bitmap.height;
+                    const ctx = surface.getContext("2d")!;
+                    ctx.drawImage(bitmap, 0, 0);
+                    bitmap.close();
+                    const d = ctx.getImageData(
+                        0,
+                        0,
+                        surface.width,
+                        surface.height,
+                      ).data,
+                      palette = new Set();
+                    for (let i = 0; i < d.length; i += 64)
+                      palette.add(`${d[i]},${d[i + 1]},${d[i + 2]}`);
+                    return palette.size;
+                  }, rawAfter.split(",")[1]!);
                   assert.ok(
                     colors > 8,
-                    "native-clock page screenshot must contain the rendered guardian scene",
+                    "native-clock canvas PNG must contain the rendered guardian scene",
                   );
                 }
                 assert.equal(await tick(), captureTick);
