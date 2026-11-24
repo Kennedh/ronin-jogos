@@ -55,6 +55,8 @@ test(
                   (mobile ? "/roninrunner/en" : "/roninrunner/pt-br"),
               );
               await expect(page.locator("#play")).toBeEnabled();
+              await page.clock.install();
+              await page.clock.pauseAt(new Date(Date.now() + 1000));
               // A refused fullscreen still has to preserve this real combat flow.
               await page.locator("#fullscreen").uncheck();
               const response = page.waitForResponse((r) =>
@@ -66,15 +68,22 @@ test(
               const world = courseFor(COMBAT_MANIFEST, ticket.seed, 0, 2000000),
                 obstacle = world.entities.find((e) => e.kind === "OBSTACLE")!,
                 enemy = world.entities.find((e) => e.kind === "ENEMY")!;
-              await page.waitForFunction(
-                (t) =>
-                  Number(
-                    document.querySelector<HTMLElement>("#surface")?.dataset[
-                      "tick"
-                    ],
-                  ) >= t,
-                Math.floor((obstacle.x - 100000) / 6000),
-              );
+              const surface = page.locator("#surface");
+              await expect(surface).toHaveAttribute("data-phase", "running");
+              const tick = async () =>
+                Number(await surface.getAttribute("data-tick"));
+              async function advanceTo(target: number) {
+                for (
+                  let frame = 0;
+                  frame < target + 10 && (await tick()) < target;
+                  frame++
+                )
+                  await page.clock.runFor(16);
+                assert.equal(await tick(), target, "combat input tick");
+              }
+              // Real touch dispatch can take several frames on busy Windows hosts.
+              // Freeze the simulation at the same tick for each CDP/keyboard event.
+              await advanceTo(Math.floor((obstacle.x - 100000) / 6000));
               if (mobile) {
                 const box = (await page.locator("#surface").boundingBox())!,
                   cdp = await context.newCDPSession(page),
@@ -94,15 +103,8 @@ test(
                 });
                 await cdp.detach();
               } else await page.keyboard.press("Space");
-              await page.waitForFunction(
-                (t) =>
-                  Number(
-                    document.querySelector<HTMLElement>("#surface")?.dataset[
-                      "tick"
-                    ],
-                  ) >= t,
-                enemy.idealTick! - 4,
-              );
+              const attackAt = enemy.idealTick! - 4;
+              await advanceTo(attackAt);
               if (mobile) {
                 const box = (await page.locator("#surface").boundingBox())!;
                 await page.touchscreen.tap(
@@ -110,6 +112,7 @@ test(
                   box.y + box.height * 0.5,
                 );
               } else await page.keyboard.press("KeyJ");
+              await advanceTo(attackAt + 16);
               await expect(page.locator("#surface")).toHaveAttribute(
                 "data-concentration",
                 "12",
@@ -121,9 +124,7 @@ test(
                 "data-phase",
                 "paused",
               );
-              const tick = await page
-                .locator("#surface")
-                .getAttribute("data-tick");
+              const pausedTick = await tick();
               await expect(page.locator("#concentration")).toHaveJSProperty(
                 "value",
                 12,
@@ -145,17 +146,15 @@ test(
                 ),
                 false,
               );
-              await page.waitForTimeout(120);
-              assert.equal(
-                await page.locator("#surface").getAttribute("data-tick"),
-                tick,
-              );
+              await page.clock.runFor(120);
+              assert.equal(await tick(), pausedTick);
               assert.equal(
                 await page
                   .locator("#surface")
                   .getAttribute("data-concentration"),
                 "12",
               );
+              await page.clock.resume();
               await done(page);
               const id = await page
                   .locator("#surface")

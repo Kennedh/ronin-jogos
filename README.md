@@ -123,8 +123,16 @@ npm run dev:mail
 npm run dev
 ```
 
-Aguarde migration 005 e banco pronto antes dos consumidores. Use `http://127.0.0.1:5173/account/pt-br` ou `/account/en`; não alterne com localhost (cookie/contexto de confirmação). `dev:mail` NÃO envia para endereços reais: entrega arquivos privados em `artifacts/dev-auth/inbox`. Abra o JSON localmente, copie apenas o link para a mesma sessão de navegador e confirme explicitamente. Links são do ambiente local e o token fica no fragmento, limpo da URL pela aplicação. Reenvio tem cooldown 60s. `npm run dev:mail -- --once` consome no máximo uma tentativa.
+Aguarde a migração mais recente e o banco pronto antes de iniciar os consumidores. Use `http://127.0.0.1:5173/account/pt-br` ou `/account/en`; não alterne com localhost (cookie/contexto de confirmação). `dev:mail` NÃO envia para endereços reais: entrega arquivos privados em `artifacts/dev-auth/inbox`. Abra o JSON localmente, copie apenas o link para a mesma sessão de navegador e confirme explicitamente. Links são do ambiente local e o token fica no fragmento, limpo da URL pela aplicação. Reenvio tem cooldown 60s. `npm run dev:mail -- --once` consome no máximo uma tentativa.
 
 Mensagens e chave `artifacts/dev-auth/mail.key` ficam ignoradas, fora do dist/Git, com permissões privadas. Não publicar, colar ou anexar esses arquivos/tokens; perder a chave impede processar entregas pendentes. Senhas são Argon2id; reset vence em 30min e encerra sessões anteriores. Lista/revogação exige senha recente (10min). Não recuperar visitante por nickname.
 
 Testes dirigidos: `node --test tests/accounts.test.ts tests/auth-mail.test.ts`; UI exige build antes de `node --test tests/browser/accounts.test.ts`. Gate completo continua `npm ci` e `npm run verify`. Ver [ADR011](docs/adr/ADR-011-CONTAS-EMAIL-E-SESSOES.md) e [PROGRESS](PROGRESS.md). SMTP/entregabilidade, Google/vínculo/merge, moderação pública, privacidade/retention completas e homologação pública continuam pendentes; nenhuma mudança em VPS/DNS nesta etapa.
+
+### Google no Ronin ID
+
+Para habilitar no ambiente escolhido, crie um cliente OAuth do tipo **Aplicativo da Web** para o Ronin Play e cadastre a origem JavaScript usada pelo portal. Defina `RONIN_GOOGLE_CLIENT_ID` no processo da API com o ID público `*.apps.googleusercontent.com`. O popup retorna a credencial para a página, que a envia por POST à API. A configuração usa Google Identity Services em botão, sem client secret ou URL de callback. [Configuração oficial do Google](https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid)
+
+No ambiente local, mantenha a origem da API e a URL do navegador iguais ao endereço autorizado no cliente Web. Em staging, confira CSP e, se o popup legado exigir, `Cross-Origin-Opener-Policy: same-origin-allow-popups`. Com o ID ausente, o portal mantém os fluxos de visitante e e-mail. A suíte usa chaves locais e pode ser executada sem cliente Google.
+
+Antes de usar a integração com contas reais, valide o popup, a política de divulgação de dados e as origens do cliente Web no ambiente autorizado. O cronograma de fusão de perfis, exclusão e exportação está no [PROGRESS.md](PROGRESS.md).

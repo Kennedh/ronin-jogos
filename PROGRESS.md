@@ -1,6 +1,14 @@
 # Ronin Runner — continuidade
 
-## Estado atual — parte 5B, perfil do jogador
+## Estado atual — parte 5B, Google e métodos vinculados
+
+Implementação em `feat/runner-google-5b` sobre `fcbc214`/PR #10. O Ronin ID aceita login com Google, converte um visitante no mesmo jogador e associa Google a uma conta por e-mail autenticada. Uma conta criada pelo Google também pode adicionar e-mail e senha após reautenticação e confirmação do endereço. É possível desvincular o Google quando existe senha. A operação revoga sessões e entrega uma sessão nova.
+
+A migração 007 adiciona identidades por `(provider, subject)` e uma prova de cinco minutos vinculada à sessão e à finalidade. O callback do Google Identity Services passa pelo POST de mesma origem com CSRF. O servidor verifica RS256, emissor, destinatário, validade, idade e nonce. Consome o nonce na transação de login, vínculo ou reautenticação. O e-mail e o nome recebidos do Google ficam fora do perfil. Progresso de visitante que entra em outro perfil precisa do fluxo explícito de fusão.
+
+Consulte o README para a configuração do cliente Web. A QA usa chaves locais e JWTs assinados, com a interface exercitada em Chromium. A homologação com conta e cliente Google reais depende das origens autorizadas. A próxima fatia da 5B cobre fusão explícita de perfis com prova dupla. Exportação, exclusão e moderação seguem pendentes.
+
+## Parte 5B — perfil do jogador
 
 A retomada parte da 5A (`5e7260f`) em `feat/runner-profile-5b`. O Ronin ID permite ao visitante ou à conta autenticada escolher o apelido e guardar sua preferência de visibilidade. Apelidos usam normalização NFKC e reserva única sem distinção de maiúsculas. A primeira escolha é imediata. A troca seguinte fica disponível após 30 dias, com a data exibida na tela de conta. O cadastro por e-mail conserva o apelido já escolhido e o mesmo jogador.
 
@@ -8,7 +16,7 @@ A migração 006 é aditiva. Perfis existentes começam privados. Para os apelid
 
 A regressão de chefes passou a usar o relógio controlado do navegador nos dois idiomas. A suíte confere o tick exato de cada comando de teclado, verifica os pixels do canvas e mantém as checagens de três vidas, selo e hash do servidor. A API e o PostgreSQL usam tempo real durante o teste.
 
-A fatia seguinte cobre Google, vínculo e fusão com prova dupla. Exportação, exclusão e moderação continuam na 5B. A homologação de credenciais e origens do Google depende de configuração externa própria.
+O perfil foi entregue antes da integração com Google documentada acima.
 
 ### Referência da parte 5A
 

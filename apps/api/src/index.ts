@@ -15,7 +15,11 @@ import { Runs, Sessions, Fault, rateLimit, Accounts } from "@ronin/data";
 import type { Session, Clock, ResourcePolicy } from "@ronin/data";
 import { CURRENT_MANIFEST } from "@ronin/content/runner-manifest";
 import type { RunnerManifest } from "@ronin/content/runner-manifest";
+import { googleVerifier } from "./google.ts";
+import type { GoogleConfig } from "./google.ts";
+
 export interface ApiOptions {
+  google?: GoogleConfig;
   manifest?: RunnerManifest;
   authMailKey?: Buffer;
   pool: Pool;
@@ -94,6 +98,11 @@ export function createApi(options?: ApiOptions) {
         options.origin,
         options.clock,
       )
+    : undefined;
+  if (options.google && !accounts)
+    throw new Error("google_requires_account_config");
+  const verifyGoogle = options.google
+    ? googleVerifier(options.google, options.clock)
     : undefined;
   const account = () => {
     if (!accounts) throw new Fault(503, "ACCOUNT_UNAVAILABLE");
@@ -232,6 +241,17 @@ export function createApi(options?: ApiOptions) {
         20,
         options.clock,
       );
+    if (
+      request.method !== "GET" &&
+      (route.startsWith("/api/v1/auth/google") || route === "/api/v1/auth/link")
+    )
+      await rateLimit(
+        options.pool,
+        "google-auth-ip",
+        createHmac("sha256", rateSecret).update(request.ip).digest(),
+        60,
+        options.clock,
+      );
     const scope =
       request.method === "GET"
         ? "status"
@@ -363,6 +383,53 @@ export function createApi(options?: ApiOptions) {
       ),
     );
   });
+
+  api.get("/api/v1/auth/google/config", async () =>
+    checked("GoogleConfig", { client_id: options.google?.clientId ?? null }),
+  );
+  api.post(
+    "/api/v1/auth/google/challenge",
+    { bodyLimit: 8192 },
+    async (request) => {
+      if (!verifyGoogle) throw new Fault(503, "GOOGLE_UNAVAILABLE");
+      const body = checkedBody("GoogleChallengeRequest", request);
+      const purpose = body[
+        "purpose"
+      ] as components["schemas"]["GoogleChallengeRequest"]["purpose"];
+      return checked("GoogleChallenge", {
+        nonce: await account().googleChallenge(session(request), purpose),
+      });
+    },
+  );
+  const useRotatedSession = async (
+    reply: FastifyReply,
+    result: Awaited<ReturnType<Sessions["issue"]>>,
+  ) => {
+    setCookie(reply, result.token, result.session);
+    reply.header("X-CSRF-Token", result.session.csrfToken);
+    return checked("PlayerSummary", await sessions.summary(result.session));
+  };
+  for (const [path, purpose] of [
+    ["/api/v1/auth/google", "SIGN_IN"],
+    ["/api/v1/auth/link", "LINK"],
+    ["/api/v1/auth/google/reauth", "REAUTH"],
+  ] as const) {
+    api.post(path, { bodyLimit: 8192 }, async (request, reply) => {
+      if (!verifyGoogle) throw new Fault(503, "GOOGLE_UNAVAILABLE");
+      const body = checkedBody("GoogleCredential", request);
+      const result = await account().google(
+        session(request),
+        purpose,
+        await verifyGoogle(body["id_token"]!),
+      );
+      return result
+        ? useRotatedSession(reply, result)
+        : reply.status(204).send();
+    });
+  }
+  api.delete("/api/v1/auth/google/link", async (request, reply) =>
+    useRotatedSession(reply, await account().unlinkGoogle(session(request))),
+  );
   api.post(
     "/api/v1/auth/register",
     { bodyLimit: 8192 },

@@ -4,6 +4,8 @@ import { accountCopy } from "@ronin/content/account-copy";
 import type { AccountTextKey } from "@ronin/content/account-copy";
 import { apiErrorMessage, runnerPath } from "@ronin/content";
 import type { Locale } from "@ronin/content";
+import { renderGoogleButton } from "./google-sign-in.ts";
+
 export async function initializeAccount(
   root: HTMLElement,
   context: { locale: () => Locale; setRedraw: (fn: () => void) => void },
@@ -18,29 +20,61 @@ export async function initializeAccount(
   let profile: components["schemas"]["PlayerSummary"] | undefined,
     profileInForm: typeof profile,
     list: components["schemas"]["AccountSessions"] | undefined,
+    googleClientId: string | null = null,
+    googleRequest: { playerId: string } | undefined,
     busy = true,
     reauth = false,
     message: AccountTextKey | "" = "",
     error: ClientError | undefined,
     bootstrapError = false;
   const copy = () => accountCopy(context.locale());
+  function clearGoogleButton() {
+    googleRequest = undefined;
+    get("account-google-button").replaceChildren();
+  }
   function render() {
     const t = copy();
     for (const e of root.querySelectorAll<HTMLElement>("[data-account-copy]"))
       e.textContent = t[e.dataset["accountCopy"] as AccountTextKey];
     get<HTMLAnchorElement>("account-back").href = runnerPath(context.locale());
     const registered = profile?.account_status === "REGISTERED";
-    get("account-guest").hidden = registered;
+    const googleOnly = profile?.account_type === "GOOGLE";
+    const linkedGoogle = googleOnly || profile?.account_type === "MULTI";
+    get("account-google-panel").hidden =
+      !profile ||
+      (!googleClientId && !linkedGoogle) ||
+      profile.account_status === "EMAIL_PENDING";
+    get("account-google-status").hidden = !linkedGoogle;
+    get("account-google-signin").hidden = registered;
+    get("account-google-link").hidden = !registered || linkedGoogle;
+    get("account-google-reauth").hidden =
+      !linkedGoogle || !reauth || !googleClientId;
+    get("account-google-unlink").hidden = profile?.account_type !== "MULTI";
+    get("account-google-unlink-hint").hidden =
+      profile?.account_type !== "MULTI";
+    get("account-guest").hidden = registered && !googleOnly;
+    get("account-email-login-panel").hidden = registered;
+    get("account-register-title").textContent = googleOnly
+      ? t.addEmail
+      : t.registrationTitle;
+    get("account-register-hint").textContent = googleOnly
+      ? t.addEmailHint
+      : t.continueGuest;
     get("account-logout").hidden = !registered;
     get("account-new-guest").hidden =
       !bootstrapError || error?.code !== "SESSION_REQUIRED";
     get("account-session-panel").hidden = !registered;
-    get("account-resend").hidden = profile?.account_status !== "EMAIL_PENDING";
-    get("account-name").textContent = profile?.nickname ?? t.guest;
+    const emailPending =
+      profile?.account_status === "EMAIL_PENDING" ||
+      (googleOnly && !!profile?.email);
+    get("account-resend").hidden = !emailPending;
+    get("account-name").textContent =
+      profile?.nickname ?? (registered ? t.profileTitle : t.guest);
     get("account-email").textContent = profile?.email ?? "";
     get("account-profile-panel").hidden = !profile;
     const registerNickname = get<HTMLInputElement>("register-nickname");
     registerNickname.readOnly = !!profile?.nickname;
+    registerNickname.required = !googleOnly;
     if (profileInForm !== profile) {
       get<HTMLInputElement>("account-profile-nickname").value =
         profile?.nickname ?? "";
@@ -59,14 +93,18 @@ export async function initializeAccount(
             timeStyle: "short",
           }).format(new Date(available))
         : t.nicknameHint;
-    get("account-state").textContent = registered
-      ? t.registered
-      : profile?.account_status === "EMAIL_PENDING"
-        ? t.pending
+    get("account-state").textContent = emailPending
+      ? t.pending
+      : registered
+        ? googleOnly
+          ? t.googleLinked
+          : t.registered
         : t.guest;
     get("verify-panel").hidden = intent.kind !== "verify";
     get("reset-panel").hidden = intent.kind !== "reset";
-    get("account-reauth-form").hidden = !reauth;
+    get("account-reauth-form").hidden = !reauth || googleOnly;
+    if (googleRequest && googleRequest.playerId !== profile?.player_id)
+      clearGoogleButton();
     const status = busy ? t.loading : message ? t[message] : "";
     get("account-message").textContent = status;
     get("account-error").hidden =
@@ -115,6 +153,8 @@ export async function initializeAccount(
   }
   async function load() {
     profile = await api.guest(context.locale());
+    googleClientId =
+      (await api.googleConfig().catch(() => null))?.client_id ?? null;
     bootstrapError = false;
     if (profile.account_status === "REGISTERED") await loadSessions();
     else list = undefined;
@@ -158,6 +198,63 @@ export async function initializeAccount(
       });
     });
   }
+
+  for (const [id, purpose] of [
+    ["account-google-signin", "SIGN_IN"],
+    ["account-google-link", "LINK"],
+    ["account-google-reauth", "REAUTH"],
+  ] as const) {
+    get(id).addEventListener("click", () => {
+      void run(async () => {
+        if (!googleClientId || !profile) return;
+        clearGoogleButton();
+        const request = { playerId: profile.player_id };
+        const { nonce } = await api.googleChallenge(purpose);
+        googleRequest = request;
+        const slot = get("account-google-button");
+        try {
+          await renderGoogleButton(
+            slot,
+            googleClientId,
+            nonce,
+            context.locale(),
+            (token) => {
+              if (
+                busy ||
+                googleRequest !== request ||
+                profile?.player_id !== request.playerId
+              )
+                return;
+              clearGoogleButton();
+              void run(async () => {
+                const signedIn = await api.googleAuth(purpose, token);
+                if (signedIn) profile = signedIn;
+                await loadSessions();
+                message =
+                  purpose === "LINK"
+                    ? "googleLinkDone"
+                    : purpose === "REAUTH"
+                      ? "googleReauthDone"
+                      : "googleSignInDone";
+              });
+            },
+          );
+          message = "googleContinue";
+        } catch (error) {
+          clearGoogleButton();
+          throw error;
+        }
+      });
+    });
+  }
+  get("account-google-unlink").addEventListener("click", () => {
+    void run(async () => {
+      clearGoogleButton();
+      profile = await api.unlinkGoogle();
+      await loadSessions();
+      message = "googleUnlinkDone";
+    });
+  });
   form("account-profile-form", async (data) => {
     if (!profile) return;
     const nickname = String(data.get("nickname")).trim();
@@ -170,16 +267,18 @@ export async function initializeAccount(
     message = "profileSaved";
   });
   form("account-register-form", async (data) => {
+    const name = String(data.get("nickname")).trim();
     await api.register({
       email: String(data.get("email")),
       password: String(data.get("password")),
-      nickname: String(data.get("nickname")),
+      ...(name ? { nickname: name } : {}),
       locale: context.locale(),
     });
     profile = await api.profile();
     message = "sent";
   });
   form("account-login-form", async (data) => {
+    clearGoogleButton();
     profile = await api.login(
       String(data.get("email")),
       String(data.get("password")),
@@ -236,6 +335,7 @@ export async function initializeAccount(
   });
   get("account-logout").addEventListener("click", () => {
     void run(async () => {
+      clearGoogleButton();
       await api.logout();
       profile = undefined;
       list = undefined;

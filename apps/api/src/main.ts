@@ -6,7 +6,9 @@ const port = Number(process.env["PORT"] ?? 3001);
 if (!Number.isInteger(port) || port < 1024 || port > 65535)
   throw new Error("invalid_port");
 const { key: authMailKey } = await developmentAuthMail();
+const googleClientId = process.env["RONIN_GOOGLE_CLIENT_ID"];
 const api = createApi({
+  ...(googleClientId ? { google: { clientId: googleClientId } } : {}),
   authMailKey,
   pool,
   origin: process.env["PORTAL_ORIGIN"] ?? "http://127.0.0.1:5173",
@@ -15,7 +17,7 @@ api.addHook("onClose", async () => {
   await pool.end();
 });
 try {
-  await pool.query("SELECT authenticated_at FROM sessions LIMIT 0");
+  await pool.query("SELECT provider FROM auth_identities LIMIT 0");
   await api.listen({ host: "127.0.0.1", port });
   console.log(
     `Ronin dev API: http://127.0.0.1:${port}; inicie db:dev e dev:verifier separadamente.`,

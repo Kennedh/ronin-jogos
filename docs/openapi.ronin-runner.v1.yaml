@@ -221,41 +221,79 @@ paths:
           $ref: "#/components/responses/InvalidState"
         "429":
           $ref: "#/components/responses/RateLimited"
-  /auth/google:
+  /auth/google/config:
+    get:
+      operationId: googleConfig
+      tags: [Auth]
+      summary: Identificador público do cliente Google habilitado
+      responses:
+        "200":
+          description: Configuração disponível à sessão atual
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GoogleConfig"
+        "401": {$ref: "#/components/responses/Unauthorized"}
+  /auth/google/challenge:
     post:
-      operationId: post_auth_google
-      tags:
-        - Auth
-      summary: Login com credencial do Google verificada no servidor
-      security: []
+      operationId: googleChallenge
+      tags: [Auth]
+      summary: Criar nonce de uso único vinculado à sessão e à finalidade
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - id_token
-                - csrf_proof
-              properties:
-                id_token:
-                  type: string
-                  minLength: 1
-                csrf_proof:
-                  type: string
-                  minLength: 1
-              additionalProperties: false
+              $ref: "#/components/schemas/GoogleChallengeRequest"
       responses:
         "200":
-          description: Identidade Google autenticada e vinculada ao sub
+          description: Nonce para a credencial Google
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GoogleChallenge"
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "429": {$ref: "#/components/responses/RateLimited"}
+  /auth/google:
+    post:
+      operationId: post_auth_google
+      tags: [Auth]
+      summary: Entrar com Google ou converter o visitante atual em conta Google
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GoogleCredential"
+      responses:
+        "200":
+          description: Sessão autenticada e rotacionada
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/PlayerSummary"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "429":
-          $ref: "#/components/responses/RateLimited"
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "409": {$ref: "#/components/responses/Conflict"}
+  /auth/google/reauth:
+    post:
+      operationId: googleReauth
+      tags: [Auth]
+      summary: Confirmar posse recente do Google já vinculado à conta
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GoogleCredential"
+      responses:
+        "204": {description: Sessão reconfirmada}
+        "401": {$ref: "#/components/responses/Unauthorized"}
   /auth/verify-email:
     post:
       operationId: verifyEmail
@@ -430,39 +468,41 @@ paths:
   /auth/link:
     post:
       operationId: post_auth_link
-      tags:
-        - Auth
-      summary: Vincular Google ou email a identidade autenticada
+      tags: [Auth]
+      summary: Vincular Google ao Ronin ID autenticado com prova recente
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - method
-                - proof
-              properties:
-                method:
-                  type: string
-                  enum:
-                    - EMAIL
-                    - GOOGLE
-                proof:
-                  type: string
-                  description: Prova de posse validada no servidor
-              additionalProperties: false
+              $ref: "#/components/schemas/GoogleCredential"
       responses:
         "200":
-          description: Metodo associado, sessao rotacionada
+          description: Google associado e sessão rotacionada
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/PlayerSummary"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "409":
-          $ref: "#/components/responses/Conflict"
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "409": {$ref: "#/components/responses/Conflict"}
+  /auth/google/link:
+    delete:
+      operationId: unlinkGoogle
+      tags: [Auth]
+      summary: Desvincular Google quando a conta tem senha e autenticação recente
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      responses:
+        "200":
+          description: Sessões anteriores encerradas e sessão atual substituída
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlayerSummary"
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "409": {$ref: "#/components/responses/Conflict"}
   /me/sessions:
     get:
       operationId: listSessions
@@ -1486,6 +1526,38 @@ components:
           type: array
           items:
             type: string
+    GoogleConfig:
+      type: object
+      additionalProperties: false
+      required: [client_id]
+      properties:
+        client_id:
+          type: [string, "null"]
+    GoogleChallengeRequest:
+      type: object
+      additionalProperties: false
+      required: [purpose]
+      properties:
+        purpose:
+          type: string
+          enum: [SIGN_IN, LINK, REAUTH]
+    GoogleChallenge:
+      type: object
+      additionalProperties: false
+      required: [nonce]
+      properties:
+        nonce:
+          type: string
+          pattern: ^[A-Za-z0-9_-]{43}$
+    GoogleCredential:
+      type: object
+      additionalProperties: false
+      required: [id_token]
+      properties:
+        id_token:
+          type: string
+          minLength: 1
+          maxLength: 5500
     UpdateProfileRequest:
       type: object
       additionalProperties: false

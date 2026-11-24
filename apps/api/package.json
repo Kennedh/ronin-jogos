@@ -5,11 +5,11 @@
   "type": "module",
   "exports": "./src/index.ts",
   "dependencies": {
-    "fastify": "5.12.8",
+    "@ronin/content": "0.1.0",
     "@ronin/contracts": "0.1.0",
     "@ronin/data": "0.1.0",
-    "@ronin/content": "0.1.0",
+    "fastify": "5.12.8",
+    "jose": "6.2.18",
     "pg": "8.23.1"
-  },
-  "devDependencies": {}
+  }
 }

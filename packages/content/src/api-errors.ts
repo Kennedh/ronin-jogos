@@ -1,6 +1,30 @@
 import type { Locale } from "./index.ts";
 /** Same message_key contract in both locales; technical/private diagnostics stay server-side. */
 export const API_ERRORS = {
+  GOOGLE_UNAVAILABLE: [
+    "O login com Google está indisponível.",
+    "Google sign-in is unavailable.",
+  ],
+  GOOGLE_CREDENTIAL_INVALID: [
+    "O Google não confirmou esta solicitação. Inicie novamente.",
+    "Google could not confirm this request. Start again.",
+  ],
+  GOOGLE_IDENTITY_CONFLICT: [
+    "Não foi possível vincular esta conta Google. Verifique a conta escolhida.",
+    "This Google account could not be linked. Check the account you selected.",
+  ],
+  GOOGLE_SWITCH_REQUIRES_SIGN_OUT: [
+    "Para usar outra conta, conclua a confirmação de e-mail ou saia da conta atual.",
+    "To use another account, finish confirming your email or sign out first.",
+  ],
+  GOOGLE_ACCOUNT_REQUIRED: [
+    "Este perfil precisa de uma conta vinculada para continuar.",
+    "A linked account is required to continue with this profile.",
+  ],
+  LAST_SIGN_IN_METHOD: [
+    "Mantenha um método de acesso para continuar usando este Ronin ID.",
+    "Keep a sign-in method to continue using this Ronin ID.",
+  ],
   AUTH_CONTEXT_REQUIRED: [
     "Reabra a página da conta e tente novamente.",
     "Reopen the account page and try again.",
@@ -26,8 +50,8 @@ export const API_ERRORS = {
     "Invalid email or password. Confirm registration before signing in.",
   ],
   REAUTH_REQUIRED: [
-    "Confirme sua senha novamente para gerenciar sessões.",
-    "Confirm your password again to manage sessions.",
+    "Confirme sua identidade novamente para continuar.",
+    "Confirm your identity again to continue.",
   ],
   SESSION_FORBIDDEN: [
     "Esta sessão não pode ser encerrada por esta conta.",

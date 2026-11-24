@@ -87,6 +87,40 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/auth/google/config": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Identificador público do cliente Google habilitado */
+    get: operations["googleConfig"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/auth/google/challenge": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Criar nonce de uso único vinculado à sessão e à finalidade */
+    post: operations["googleChallenge"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/auth/google": {
     parameters: {
       query?: never;
@@ -96,8 +130,25 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Login com credencial do Google verificada no servidor */
+    /** Entrar com Google ou converter o visitante atual em conta Google */
     post: operations["post_auth_google"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/auth/google/reauth": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Confirmar posse recente do Google já vinculado à conta */
+    post: operations["googleReauth"];
     delete?: never;
     options?: never;
     head?: never;
@@ -224,9 +275,26 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Vincular Google ou email a identidade autenticada */
+    /** Vincular Google ao Ronin ID autenticado com prova recente */
     post: operations["post_auth_link"];
     delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/auth/google/link": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Desvincular Google quando a conta tem senha e autenticação recente */
+    delete: operations["unlinkGoogle"];
     options?: never;
     head?: never;
     patch?: never;
@@ -722,6 +790,19 @@ export interface components {
       nickname_change_available_at?: string | null;
       email_verified?: boolean;
       region_unlocks?: string[];
+    };
+    GoogleConfig: {
+      client_id: string | null;
+    };
+    GoogleChallengeRequest: {
+      /** @enum {string} */
+      purpose: "SIGN_IN" | "LINK" | "REAUTH";
+    };
+    GoogleChallenge: {
+      nonce: string;
+    };
+    GoogleCredential: {
+      id_token: string;
     };
     UpdateProfileRequest: {
       nickname?: string;
@@ -1380,23 +1461,71 @@ export interface operations {
       429: components["responses"]["RateLimited"];
     };
   };
-  post_auth_google: {
+  googleConfig: {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
+    requestBody?: never;
+    responses: {
+      /** @description Configuração disponível à sessão atual */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["GoogleConfig"];
+        };
+      };
+      401: components["responses"]["Unauthorized"];
+    };
+  };
+  googleChallenge: {
+    parameters: {
+      query?: never;
+      header: {
+        "X-CSRF-Token": components["parameters"]["CsrfToken"];
+      };
+      path?: never;
+      cookie?: never;
+    };
     requestBody: {
       content: {
-        "application/json": {
-          id_token: string;
-          csrf_proof: string;
-        };
+        "application/json": components["schemas"]["GoogleChallengeRequest"];
       };
     };
     responses: {
-      /** @description Identidade Google autenticada e vinculada ao sub */
+      /** @description Nonce para a credencial Google */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["GoogleChallenge"];
+        };
+      };
+      403: components["responses"]["Forbidden"];
+      429: components["responses"]["RateLimited"];
+    };
+  };
+  post_auth_google: {
+    parameters: {
+      query?: never;
+      header: {
+        "X-CSRF-Token": components["parameters"]["CsrfToken"];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["GoogleCredential"];
+      };
+    };
+    responses: {
+      /** @description Sessão autenticada e rotacionada */
       200: {
         headers: {
           [name: string]: unknown;
@@ -1406,7 +1535,32 @@ export interface operations {
         };
       };
       401: components["responses"]["Unauthorized"];
-      429: components["responses"]["RateLimited"];
+      409: components["responses"]["Conflict"];
+    };
+  };
+  googleReauth: {
+    parameters: {
+      query?: never;
+      header: {
+        "X-CSRF-Token": components["parameters"]["CsrfToken"];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["GoogleCredential"];
+      };
+    };
+    responses: {
+      /** @description Sessão reconfirmada */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      401: components["responses"]["Unauthorized"];
     };
   };
   verifyEmail: {
@@ -1581,22 +1735,43 @@ export interface operations {
   post_auth_link: {
     parameters: {
       query?: never;
-      header?: never;
+      header: {
+        "X-CSRF-Token": components["parameters"]["CsrfToken"];
+      };
       path?: never;
       cookie?: never;
     };
     requestBody: {
       content: {
-        "application/json": {
-          /** @enum {string} */
-          method: "EMAIL" | "GOOGLE";
-          /** @description Prova de posse validada no servidor */
-          proof: string;
-        };
+        "application/json": components["schemas"]["GoogleCredential"];
       };
     };
     responses: {
-      /** @description Metodo associado, sessao rotacionada */
+      /** @description Google associado e sessão rotacionada */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PlayerSummary"];
+        };
+      };
+      403: components["responses"]["Forbidden"];
+      409: components["responses"]["Conflict"];
+    };
+  };
+  unlinkGoogle: {
+    parameters: {
+      query?: never;
+      header: {
+        "X-CSRF-Token": components["parameters"]["CsrfToken"];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Sessões anteriores encerradas e sessão atual substituída */
       200: {
         headers: {
           [name: string]: unknown;
