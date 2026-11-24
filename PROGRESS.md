@@ -6,6 +6,8 @@ A retomada parte da 5A (`5e7260f`) em `feat/runner-profile-5b`. O Ronin ID permi
 
 A migração 006 é aditiva. Perfis existentes começam privados. Para os apelidos de cadastro já registrados, usa a data do primeiro evento de cadastro quando disponível para manter o intervalo correto. A preferência será usada na futura apresentação dos perfis públicos.
 
+A regressão de chefes passou a usar o relógio controlado do navegador nos dois idiomas. A suíte confere o tick exato de cada comando de teclado, verifica os pixels do canvas e mantém as checagens de três vidas, selo e hash do servidor. A API e o PostgreSQL usam tempo real durante o teste.
+
 A fatia seguinte cobre Google, vínculo e fusão com prova dupla. Exportação, exclusão e moderação continuam na 5B. A homologação de credenciais e origens do Google depende de configuração externa própria.
 
 ### Referência da parte 5A
