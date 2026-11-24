@@ -6,6 +6,7 @@ import type { Clock } from "@ronin/data";
 import { migrate, VerificationQueue } from "@ronin/data";
 import { runOnce } from "@ronin/verifier";
 import { createApi } from "../../apps/api/src/index.ts";
+import type { GoogleConfig } from "../../apps/api/src/google.ts";
 import { PORTAL_CSP } from "../../apps/portal/security.ts";
 import { FOUNDATION_MANIFEST } from "@ronin/content/runner-manifest";
 import type { RunnerManifest } from "@ronin/content/runner-manifest";
@@ -14,6 +15,7 @@ export async function portalFixture(
   manifest: RunnerManifest = FOUNDATION_MANIFEST,
   clock?: Clock,
   authMailKey?: Buffer,
+  google?: GoogleConfig,
 ) {
   const db = await testPostgres();
   await migrate(db.pool);
@@ -98,6 +100,7 @@ export async function portalFixture(
   const api = createApi({
     pool: db.pool,
     ...(authMailKey ? { authMailKey } : {}),
+    ...(google ? { google } : {}),
     clock,
     manifest,
     origin,

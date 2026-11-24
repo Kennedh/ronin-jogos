@@ -173,14 +173,19 @@ export class Sessions {
     );
     const p = (
       await this.pool.query(
-        "SELECT p.nickname,p.nickname_changed_at,p.public_profile,p.status,a.email AS verified_email,r.email AS pending_email FROM players p LEFT JOIN email_accounts a ON a.player_id=p.id LEFT JOIN email_registrations r ON r.player_id=p.id WHERE p.id=$1",
+        "SELECT p.nickname,p.nickname_changed_at,p.public_profile,p.status,g.player_id IS NOT NULL AS google_linked,a.email AS verified_email,r.email AS pending_email FROM players p LEFT JOIN email_accounts a ON a.player_id=p.id LEFT JOIN email_registrations r ON r.player_id=p.id LEFT JOIN auth_identities g ON g.player_id=p.id AND g.provider='google' WHERE p.id=$1",
         [session.playerId],
       )
     ).rows[0];
     return {
       player_id: session.playerId,
-      account_type:
-        p.status === "GUEST" ? ("GUEST" as const) : ("EMAIL" as const),
+      account_type: p.google_linked
+        ? p.verified_email
+          ? "MULTI"
+          : "GOOGLE"
+        : p.status === "GUEST"
+          ? "GUEST"
+          : "EMAIL",
       account_status: p.status as "GUEST" | "EMAIL_PENDING" | "REGISTERED",
       nickname: p.nickname,
       public_profile: p.public_profile,
@@ -191,7 +196,7 @@ export class Sessions {
         : null,
       locale: session.locale,
       email: p.verified_email ?? p.pending_email ?? null,
-      email_verified: p.status === "REGISTERED",
+      email_verified: !!p.verified_email,
       region_unlocks: regions.rows.map((r) => r.region_id),
     };
   }

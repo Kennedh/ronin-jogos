@@ -23,6 +23,9 @@ export function normalizedEmail(value: string) {
   return email;
 }
 import { nickname, reserveNickname } from "./nicknames.ts";
+
+type GooglePurpose = "SIGN_IN" | "LINK" | "REAUTH";
+
 export class Accounts {
   readonly pool: Pool;
   readonly clock: Clock;
@@ -166,8 +169,16 @@ export class Accounts {
     return transaction(this.pool, async (db) => {
       const now = await serverTime(db, this.clock),
         p = await this.player(db, auth.playerId);
-      await this.live(db, auth, now);
-      if (p.status === "REGISTERED") return;
+      const registered = p.status === "REGISTERED";
+      const addingEmail =
+        registered &&
+        !(
+          await db.query("SELECT 1 FROM email_accounts WHERE player_id=$1", [
+            p.id,
+          ])
+        ).rowCount;
+      await this.live(db, auth, now, addingEmail);
+      if (registered && !addingEmail) return;
       const old = (
         await db.query("SELECT * FROM email_registrations WHERE player_id=$1", [
           p.id,
@@ -181,8 +192,12 @@ export class Accounts {
           input.locale,
         ]);
       }
-      const name = p.nickname ?? nickname(input.nickname ?? "");
-      await reserveNickname(db, p.id, name);
+      const name =
+        p.nickname ??
+        (addingEmail && !input.nickname
+          ? null
+          : nickname(input.nickname ?? ""));
+      if (name) await reserveNickname(db, p.id, name);
       const request = randomUUID();
       await db.query(
         "UPDATE account_tokens SET used_at=$2 WHERE player_id=$1 AND purpose='VERIFY' AND used_at IS NULL",
@@ -202,8 +217,13 @@ export class Accounts {
         ],
       );
       await db.query(
-        "UPDATE players SET status='EMAIL_PENDING',nickname=$2,nickname_changed_at=COALESCE(nickname_changed_at,$3) WHERE id=$1",
-        [p.id, name, now],
+        "UPDATE players SET status=$2,nickname=$3,nickname_changed_at=COALESCE(nickname_changed_at,$4) WHERE id=$1",
+        [
+          p.id,
+          registered ? "REGISTERED" : "EMAIL_PENDING",
+          name,
+          name ? now : null,
+        ],
       );
       if (await this.cooldown(db, email, now))
         await this.send(db, p, email, "VERIFY", request, now);
@@ -214,13 +234,13 @@ export class Accounts {
     return transaction(this.pool, async (db) => {
       const now = await serverTime(db, this.clock),
         p = await this.player(db, auth.playerId);
-      await this.live(db, auth, now);
+      await this.live(db, auth, now, p.status === "REGISTERED");
       const r = (
         await db.query("SELECT * FROM email_registrations WHERE player_id=$1", [
           p.id,
         ])
       ).rows[0];
-      if (p.status !== "EMAIL_PENDING" || !r) return;
+      if (!r) return;
       if (locale) {
         p.locale = locale;
         await db.query("UPDATE players SET locale=$2 WHERE id=$1", [
@@ -259,6 +279,7 @@ export class Accounts {
       ).rows[0];
       if (!r || r.request_id !== t.request_id || r.expires_at <= now)
         throw new Fault(422, "AUTH_TOKEN_INVALID");
+      if (p.status === "REGISTERED") await this.live(db, auth, now, true);
       // Serialize proofs for one email, without ever choosing identity by the address alone.
       await db.query(
         "SELECT pg_advisory_xact_lock(hashtextextended($1,1751))",
@@ -294,7 +315,12 @@ export class Accounts {
         "UPDATE sessions SET revoked_at=$2 WHERE player_id=$1 AND revoked_at IS NULL",
         [p.id, now],
       );
-      await this.audit(db, p.id, "EMAIL_VERIFIED", now);
+      await this.audit(
+        db,
+        p.id,
+        p.status === "REGISTERED" ? "EMAIL_LINKED" : "EMAIL_VERIFIED",
+        now,
+      );
       return this.sessions.issue(db, p.id, p.locale, now);
     });
   }
@@ -366,6 +392,176 @@ export class Accounts {
       return this.sessions.issue(db, p.id, p.locale, now);
     });
   }
+
+  async googleChallenge(auth: Session, purpose: GooglePurpose) {
+    return transaction(this.pool, async (db) => {
+      const now = await serverTime(db, this.clock),
+        p = await this.player(db, auth.playerId);
+      await this.live(db, auth, now, purpose === "LINK");
+      if (purpose !== "SIGN_IN" && p.status !== "REGISTERED")
+        throw new Fault(403, "GOOGLE_ACCOUNT_REQUIRED");
+      const nonce = randomBytes(32).toString("base64url");
+      await db.query(
+        "DELETE FROM google_challenges WHERE session_id IN (SELECT session_id FROM google_challenges WHERE expires_at<=$1 LIMIT 100 FOR UPDATE SKIP LOCKED)",
+        [now],
+      );
+      await db.query(
+        "INSERT INTO google_challenges(session_id,purpose,nonce_digest,expires_at) VALUES($1,$2,$3,$4) ON CONFLICT(session_id) DO UPDATE SET purpose=EXCLUDED.purpose,nonce_digest=EXCLUDED.nonce_digest,expires_at=EXCLUDED.expires_at",
+        [
+          auth.sessionId,
+          purpose,
+          digest(nonce),
+          new Date(now.getTime() + 300_000),
+        ],
+      );
+      return nonce;
+    });
+  }
+
+  async google(
+    auth: Session,
+    purpose: GooglePurpose,
+    credential: { subject: string; nonce: string; expiresAt: Date },
+  ) {
+    return transaction(this.pool, async (db) => {
+      const { subject, nonce, expiresAt } = credential;
+      // Serialize first-time claims for one subject, then lock player rows in UUID order.
+      await db.query(
+        "SELECT pg_advisory_xact_lock(hashtextextended('google:' || $1, 0))",
+        [subject],
+      );
+      const identity = async () =>
+        (
+          await db.query<{ player_id: string }>(
+            "SELECT player_id FROM auth_identities WHERE provider='google' AND subject=$1",
+            [subject],
+          )
+        ).rows[0]?.player_id;
+      const initialOwner = await identity();
+      await db.query(
+        "SELECT id FROM players WHERE id=ANY($1::uuid[]) ORDER BY id FOR UPDATE",
+        [
+          [
+            ...new Set([
+              auth.playerId,
+              ...(initialOwner ? [initialOwner] : []),
+            ]),
+          ],
+        ],
+      );
+      const now = await serverTime(db, this.clock),
+        source = await this.player(db, auth.playerId);
+      await this.live(db, auth, now, purpose === "LINK");
+      if (
+        expiresAt <= now ||
+        !(
+          await db.query(
+            "DELETE FROM google_challenges WHERE session_id=$1 AND purpose=$2 AND nonce_digest=$3 AND expires_at>$4",
+            [auth.sessionId, purpose, digest(nonce), now],
+          )
+        ).rowCount
+      )
+        throw new Fault(401, "GOOGLE_CREDENTIAL_INVALID");
+      const owner = await identity();
+      if (purpose === "REAUTH") {
+        if (source.status !== "REGISTERED" || owner !== source.id)
+          throw new Fault(401, "GOOGLE_CREDENTIAL_INVALID", true);
+        await db.query("UPDATE sessions SET authenticated_at=$2 WHERE id=$1", [
+          auth.sessionId,
+          now,
+        ]);
+        await this.audit(db, source.id, "GOOGLE_REAUTHENTICATED", now);
+        return undefined;
+      }
+      if (
+        purpose === "LINK" &&
+        (source.status !== "REGISTERED" || (owner && owner !== source.id))
+      )
+        throw new Fault(409, "GOOGLE_IDENTITY_CONFLICT", true);
+      if (
+        purpose === "SIGN_IN" &&
+        (source.status === "EMAIL_PENDING" ||
+          (source.status === "REGISTERED" && owner !== source.id))
+      )
+        throw new Fault(409, "GOOGLE_SWITCH_REQUIRES_SIGN_OUT", true);
+
+      const target =
+        owner && owner !== source.id ? await this.player(db, owner) : source;
+      if (
+        target.id !== source.id &&
+        (
+          await db.query("SELECT 1 FROM runs WHERE player_id=$1 LIMIT 1", [
+            source.id,
+          ])
+        ).rowCount
+      )
+        throw new Fault(409, "GUEST_PROGRESS_REQUIRES_LINK", true);
+
+      if (!owner) {
+        if (
+          (
+            await db.query(
+              "SELECT 1 FROM auth_identities WHERE player_id=$1 AND provider='google'",
+              [source.id],
+            )
+          ).rowCount
+        )
+          throw new Fault(409, "GOOGLE_IDENTITY_CONFLICT", true);
+        await db.query(
+          "INSERT INTO auth_identities(provider,subject,player_id,linked_at) VALUES('google',$1,$2,$3)",
+          [subject, source.id, now],
+        );
+        if (source.status === "GUEST")
+          await db.query("UPDATE players SET status='REGISTERED' WHERE id=$1", [
+            source.id,
+          ]);
+      }
+      await db.query("UPDATE sessions SET revoked_at=$2 WHERE id=$1", [
+        auth.sessionId,
+        now,
+      ]);
+      await this.audit(
+        db,
+        target.id,
+        purpose === "LINK" ? "GOOGLE_LINKED" : "GOOGLE_LOGIN",
+        now,
+      );
+      return this.sessions.issue(db, target.id, target.locale, now);
+    });
+  }
+
+  async unlinkGoogle(auth: Session) {
+    return transaction(this.pool, async (db) => {
+      const now = await serverTime(db, this.clock),
+        p = await this.player(db, auth.playerId);
+      await this.live(db, auth, now, true);
+      if (
+        !(
+          await db.query(
+            "SELECT 1 FROM password_credentials WHERE player_id=$1",
+            [p.id],
+          )
+        ).rowCount
+      )
+        throw new Fault(409, "LAST_SIGN_IN_METHOD");
+      if (
+        !(
+          await db.query(
+            "DELETE FROM auth_identities WHERE provider='google' AND player_id=$1",
+            [p.id],
+          )
+        ).rowCount
+      )
+        throw new Fault(409, "GOOGLE_ACCOUNT_REQUIRED");
+      await db.query(
+        "UPDATE sessions SET revoked_at=$2 WHERE player_id=$1 AND revoked_at IS NULL",
+        [p.id, now],
+      );
+      await this.audit(db, p.id, "GOOGLE_UNLINKED", now);
+      return this.sessions.issue(db, p.id, p.locale, now);
+    });
+  }
+
   async forgot(emailValue: string) {
     const email = normalizedEmail(emailValue);
     return transaction(this.pool, async (db) => {

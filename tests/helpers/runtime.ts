@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { gzipSync } from "node:zlib";
 import { createApi } from "../../apps/api/src/index.ts";
 import type { ApiOptions } from "../../apps/api/src/index.ts";
+import type { GoogleConfig } from "../../apps/api/src/google.ts";
 import { encodeSegment, segmentHash } from "@ronin/contracts/replay";
 import type { ReplaySegment } from "@ronin/contracts/replay";
 import type { components } from "@ronin/contracts";
@@ -22,10 +23,12 @@ export function harness(
   policy?: ApiOptions["policy"],
   manifest: RunnerManifest = FOUNDATION_MANIFEST,
   authMailKey?: Buffer,
+  google?: GoogleConfig,
 ) {
   const api = createApi({
     pool,
     ...(authMailKey ? { authMailKey } : {}),
+    ...(google ? { google } : {}),
     clock,
     manifest,
     origin: "https://play.ronin.dev.br",

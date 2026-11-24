@@ -95,6 +95,51 @@ export class RunnerApi {
       { "content-type": "application/json" },
     )) as components["schemas"]["PlayerSummary"];
   }
+
+  async googleConfig() {
+    return (await this.request(
+      "/auth/google/config",
+      "GET",
+      "GoogleConfig",
+    )) as components["schemas"]["GoogleConfig"];
+  }
+  async googleChallenge(
+    purpose: components["schemas"]["GoogleChallengeRequest"]["purpose"],
+  ) {
+    return (await this.request(
+      "/auth/google/challenge",
+      "POST",
+      "GoogleChallenge",
+      JSON.stringify({ purpose }),
+      { "content-type": "application/json" },
+    )) as components["schemas"]["GoogleChallenge"];
+  }
+  async googleAuth(
+    purpose: components["schemas"]["GoogleChallengeRequest"]["purpose"],
+    token: string,
+  ) {
+    const path = {
+      SIGN_IN: "/auth/google",
+      LINK: "/auth/link",
+      REAUTH: "/auth/google/reauth",
+    }[purpose];
+    const profile = (await this.request(
+      path,
+      "POST",
+      "PlayerSummary",
+      JSON.stringify({ id_token: token }),
+      { "content-type": "application/json" },
+    )) as components["schemas"]["PlayerSummary"] | undefined;
+    if (profile) this.playerId = profile.player_id;
+    return profile;
+  }
+  async unlinkGoogle() {
+    return (await this.request(
+      "/auth/google/link",
+      "DELETE",
+      "PlayerSummary",
+    )) as components["schemas"]["PlayerSummary"];
+  }
   async register(input: components["schemas"]["RegisterRequest"]) {
     await this.request(
       "/auth/register",

@@ -49,6 +49,50 @@ export const definitions = {
       },
     },
   },
+  GoogleConfig: {
+    type: "object",
+    additionalProperties: false,
+    required: ["client_id"],
+    properties: {
+      client_id: {
+        type: ["string", "null"],
+      },
+    },
+  },
+  GoogleChallengeRequest: {
+    type: "object",
+    additionalProperties: false,
+    required: ["purpose"],
+    properties: {
+      purpose: {
+        type: "string",
+        enum: ["SIGN_IN", "LINK", "REAUTH"],
+      },
+    },
+  },
+  GoogleChallenge: {
+    type: "object",
+    additionalProperties: false,
+    required: ["nonce"],
+    properties: {
+      nonce: {
+        type: "string",
+        pattern: "^[A-Za-z0-9_-]{43}$",
+      },
+    },
+  },
+  GoogleCredential: {
+    type: "object",
+    additionalProperties: false,
+    required: ["id_token"],
+    properties: {
+      id_token: {
+        type: "string",
+        minLength: 1,
+        maxLength: 5500,
+      },
+    },
+  },
   UpdateProfileRequest: {
     type: "object",
     additionalProperties: false,
