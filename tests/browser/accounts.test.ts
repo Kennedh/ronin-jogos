@@ -110,10 +110,24 @@ test(
               )
             ).json();
             const player = (await before).player_id;
+            const nickname =
+              lang === "pt-br" ? "Ronin Browser PT" : "Ronin Browser EN";
+            await page.locator("#account-profile-nickname").fill(nickname);
+            await page.locator("#account-public-profile").check();
+            await page.locator("#account-profile-form button").click();
+            await expect(page.locator("#account-message")).toHaveText(
+              lang === "pt-br" ? "Perfil salvo." : "Profile saved.",
+            );
+            await expect(page.locator("#account-name")).toHaveText(nickname);
+            await page.reload();
+            await expect(page.locator("#account-profile-nickname")).toHaveValue(
+              nickname,
+            );
+            await expect(page.locator("#account-public-profile")).toBeChecked();
+            await expect(page.locator("#register-nickname")).toHaveValue(
+              nickname,
+            );
             await page.locator("#register-email").fill(email);
-            await page
-              .locator("#register-nickname")
-              .fill(lang === "pt-br" ? "Ronin Browser PT" : "Ronin Browser EN");
             await page.locator("#register-password").fill(password);
             await page.locator("#account-register-form button").click();
             await expect(page.locator("#account-state")).toHaveText(

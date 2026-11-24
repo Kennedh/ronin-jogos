@@ -16,6 +16,7 @@ export async function initializeAccount(
       return e as T;
     };
   let profile: components["schemas"]["PlayerSummary"] | undefined,
+    profileInForm: typeof profile,
     list: components["schemas"]["AccountSessions"] | undefined,
     busy = true,
     reauth = false,
@@ -37,6 +38,27 @@ export async function initializeAccount(
     get("account-resend").hidden = profile?.account_status !== "EMAIL_PENDING";
     get("account-name").textContent = profile?.nickname ?? t.guest;
     get("account-email").textContent = profile?.email ?? "";
+    get("account-profile-panel").hidden = !profile;
+    const registerNickname = get<HTMLInputElement>("register-nickname");
+    registerNickname.readOnly = !!profile?.nickname;
+    if (profileInForm !== profile) {
+      get<HTMLInputElement>("account-profile-nickname").value =
+        profile?.nickname ?? "";
+      get<HTMLInputElement>("account-public-profile").checked =
+        profile?.public_profile ?? false;
+      registerNickname.value = profile?.nickname ?? "";
+      profileInForm = profile;
+    }
+    const available = profile?.nickname_change_available_at;
+    get("account-nickname-hint").textContent =
+      available && new Date(available).getTime() > Date.now()
+        ? t.nicknameAvailable +
+          " " +
+          new Intl.DateTimeFormat(context.locale(), {
+            dateStyle: "medium",
+            timeStyle: "short",
+          }).format(new Date(available))
+        : t.nicknameHint;
     get("account-state").textContent = registered
       ? t.registered
       : profile?.account_status === "EMAIL_PENDING"
@@ -136,6 +158,17 @@ export async function initializeAccount(
       });
     });
   }
+  form("account-profile-form", async (data) => {
+    if (!profile) return;
+    const nickname = String(data.get("nickname")).trim();
+    const isPublic = data.has("public_profile");
+    const update: components["schemas"]["UpdateProfileRequest"] = {};
+    if (nickname && nickname !== profile.nickname) update.nickname = nickname;
+    if (isPublic !== profile.public_profile) update.public_profile = isPublic;
+    if (!Object.keys(update).length) return;
+    profile = await api.updateProfile(update);
+    message = "profileSaved";
+  });
   form("account-register-form", async (data) => {
     await api.register({
       email: String(data.get("email")),

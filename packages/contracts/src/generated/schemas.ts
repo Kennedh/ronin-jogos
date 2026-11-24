@@ -31,6 +31,13 @@ export const definitions = {
         type: "string",
         enum: ["pt-BR", "en"],
       },
+      public_profile: {
+        type: "boolean",
+      },
+      nickname_change_available_at: {
+        type: ["string", "null"],
+        format: "date-time",
+      },
       email_verified: {
         type: "boolean",
       },
@@ -39,6 +46,21 @@ export const definitions = {
         items: {
           type: "string",
         },
+      },
+    },
+  },
+  UpdateProfileRequest: {
+    type: "object",
+    additionalProperties: false,
+    minProperties: 1,
+    properties: {
+      nickname: {
+        type: "string",
+        minLength: 3,
+        maxLength: 20,
+      },
+      public_profile: {
+        type: "boolean",
       },
     },
   },

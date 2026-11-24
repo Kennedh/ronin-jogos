@@ -1,6 +1,14 @@
 # Ronin Runner — continuidade
 
-## Estado atual — parte 5A
+## Estado atual — parte 5B, perfil do jogador
+
+A retomada parte da 5A (`5e7260f`) em `feat/runner-profile-5b`. O Ronin ID permite ao visitante ou à conta autenticada escolher o apelido e guardar sua preferência de visibilidade. Apelidos usam normalização NFKC e reserva única sem distinção de maiúsculas. A primeira escolha é imediata. A troca seguinte fica disponível após 30 dias, com a data exibida na tela de conta. O cadastro por e-mail conserva o apelido já escolhido e o mesmo jogador.
+
+A migração 006 é aditiva. Perfis existentes começam privados. Para os apelidos de cadastro já registrados, usa a data do primeiro evento de cadastro quando disponível para manter o intervalo correto. A preferência será usada na futura apresentação dos perfis públicos.
+
+A fatia seguinte cobre Google, vínculo e fusão com prova dupla. Exportação, exclusão e moderação continuam na 5B. A homologação de credenciais e origens do Google depende de configuração externa própria.
+
+### Referência da parte 5A
 
 Conta por e-mail implementada em `feat/runner-email-5a`, sobre `2cd2c79`/PR #8 (parte 4), em 18/11/2026. Autorização: “Iniciar 5A”. PRs anteriores empilhados, sem merge/fechar Issue #1. Sem SMTP externo, produção, VPS, DNS, Google ou mudanças em Ronin/Arquivos. Arte continua estudo original; direção final é nanquim colorido.
 

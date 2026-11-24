@@ -433,7 +433,8 @@ export interface paths {
     delete?: never;
     options?: never;
     head?: never;
-    patch?: never;
+    /** Alterar apelido ou preferência de visibilidade do perfil */
+    patch: operations["patch_me"];
     trace?: never;
   };
   "/character/catalog": {
@@ -716,8 +717,15 @@ export interface components {
       nickname: string | null;
       /** @enum {string} */
       locale: "pt-BR" | "en";
+      public_profile?: boolean;
+      /** Format: date-time */
+      nickname_change_available_at?: string | null;
       email_verified?: boolean;
       region_unlocks?: string[];
+    };
+    UpdateProfileRequest: {
+      nickname?: string;
+      public_profile?: boolean;
     };
     RegisterRequest: {
       /** @enum {string} */
@@ -1884,6 +1892,37 @@ export interface operations {
         };
       };
       401: components["responses"]["Unauthorized"];
+    };
+  };
+  patch_me: {
+    parameters: {
+      query?: never;
+      header: {
+        "X-CSRF-Token": components["parameters"]["CsrfToken"];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateProfileRequest"];
+      };
+    };
+    responses: {
+      /** @description Perfil persistido */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PlayerSummary"];
+        };
+      };
+      401: components["responses"]["Unauthorized"];
+      403: components["responses"]["Forbidden"];
+      409: components["responses"]["Conflict"];
+      422: components["responses"]["BadRequest"];
+      429: components["responses"]["RateLimited"];
     };
   };
   get_character_catalog: {
