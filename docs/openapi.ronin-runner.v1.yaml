@@ -720,6 +720,30 @@ paths:
                 $ref: "#/components/schemas/PlayerSummary"
         "401":
           $ref: "#/components/responses/Unauthorized"
+    patch:
+      operationId: patch_me
+      tags: [Profile]
+      summary: Alterar apelido ou preferência de visibilidade do perfil
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProfileRequest"
+      responses:
+        "200":
+          description: Perfil persistido
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlayerSummary"
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "409": {$ref: "#/components/responses/Conflict"}
+        "422": {$ref: "#/components/responses/BadRequest"}
+        "429": {$ref: "#/components/responses/RateLimited"}
   /character/catalog:
     get:
       operationId: get_character_catalog
@@ -1451,12 +1475,28 @@ components:
           enum:
             - pt-BR
             - en
+        public_profile:
+          type: boolean
+        nickname_change_available_at:
+          type: [string, "null"]
+          format: date-time
         email_verified:
           type: boolean
         region_unlocks:
           type: array
           items:
             type: string
+    UpdateProfileRequest:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        nickname:
+          type: string
+          minLength: 3
+          maxLength: 20
+        public_profile:
+          type: boolean
     RegisterRequest:
       type: object
       required:

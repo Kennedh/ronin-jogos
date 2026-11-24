@@ -8,6 +8,11 @@ import {
 import type { Pool, PoolClient } from "pg";
 import { Fault, transaction, serverTime } from "./runtime.ts";
 import type { Clock } from "./runtime.ts";
+import {
+  nickname,
+  NICKNAME_CHANGE_INTERVAL,
+  reserveNickname,
+} from "./nicknames.ts";
 export const digest = (value: string) =>
   createHash("sha256").update(value).digest();
 const csrf = (secret: string) =>
@@ -111,6 +116,56 @@ export class Sessions {
       };
     });
   }
+  async updateProfile(
+    auth: Session,
+    input: { nickname?: string; public_profile?: boolean },
+  ) {
+    await transaction(this.pool, async (db) => {
+      const now = await serverTime(db, this.clock);
+      const player = (
+        await db.query<{
+          nickname: string | null;
+          nickname_changed_at: Date | null;
+          public_profile: boolean;
+        }>(
+          "SELECT nickname,nickname_changed_at,public_profile FROM players WHERE id=$1 AND status IN ('GUEST','EMAIL_PENDING','REGISTERED') FOR UPDATE",
+          [auth.playerId],
+        )
+      ).rows[0];
+      const live = await db.query(
+        "SELECT 1 FROM sessions WHERE id=$1 AND player_id=$2 AND revoked_at IS NULL AND expires_at>$3 FOR UPDATE",
+        [auth.sessionId, auth.playerId, now],
+      );
+      if (!player || !live.rowCount) throw new Fault(401, "SESSION_REQUIRED");
+
+      const name =
+        input.nickname === undefined
+          ? player.nickname
+          : nickname(input.nickname);
+      const changedName = name !== player.nickname;
+      const isPublic = input.public_profile ?? player.public_profile;
+      if (changedName && name !== null) {
+        if (
+          player.nickname_changed_at &&
+          now.getTime() <
+            player.nickname_changed_at.getTime() + NICKNAME_CHANGE_INTERVAL
+        )
+          throw new Fault(409, "NICKNAME_CHANGE_COOLDOWN");
+        await reserveNickname(db, auth.playerId, name);
+      }
+      if (!changedName && isPublic === player.public_profile) return;
+      await db.query(
+        "UPDATE players SET nickname=$2,nickname_changed_at=$3,public_profile=$4 WHERE id=$1",
+        [
+          auth.playerId,
+          name,
+          changedName ? now : player.nickname_changed_at,
+          isPublic,
+        ],
+      );
+    });
+    return this.summary(auth);
+  }
   async summary(session: Session) {
     const regions = await this.pool.query<{ region_id: string }>(
       "SELECT region_id FROM player_regions WHERE player_id=$1 ORDER BY region_id",
@@ -118,7 +173,7 @@ export class Sessions {
     );
     const p = (
       await this.pool.query(
-        "SELECT p.nickname,p.status,a.email AS verified_email,r.email AS pending_email FROM players p LEFT JOIN email_accounts a ON a.player_id=p.id LEFT JOIN email_registrations r ON r.player_id=p.id WHERE p.id=$1",
+        "SELECT p.nickname,p.nickname_changed_at,p.public_profile,p.status,a.email AS verified_email,r.email AS pending_email FROM players p LEFT JOIN email_accounts a ON a.player_id=p.id LEFT JOIN email_registrations r ON r.player_id=p.id WHERE p.id=$1",
         [session.playerId],
       )
     ).rows[0];
@@ -128,6 +183,12 @@ export class Sessions {
         p.status === "GUEST" ? ("GUEST" as const) : ("EMAIL" as const),
       account_status: p.status as "GUEST" | "EMAIL_PENDING" | "REGISTERED",
       nickname: p.nickname,
+      public_profile: p.public_profile,
+      nickname_change_available_at: p.nickname_changed_at
+        ? new Date(
+            p.nickname_changed_at.getTime() + NICKNAME_CHANGE_INTERVAL,
+          ).toISOString()
+        : null,
       locale: session.locale,
       email: p.verified_email ?? p.pending_email ?? null,
       email_verified: p.status === "REGISTERED",

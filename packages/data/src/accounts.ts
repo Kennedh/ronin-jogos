@@ -22,25 +22,7 @@ export function normalizedEmail(value: string) {
     throw new Fault(422, "INVALID_REQUEST");
   return email;
 }
-function nickname(value: string) {
-  const name = value.normalize("NFKC").trim().replace(/ +/g, " ");
-  if (
-    Array.from(name).length < 3 ||
-    Array.from(name).length > 20 ||
-    !/^[\p{L}\p{N} _-]+$/u.test(name) ||
-    [
-      "ronin",
-      "admin",
-      "administrator",
-      "administrador",
-      "support",
-      "suporte",
-      "moderator",
-    ].includes(name.toLowerCase())
-  )
-    throw new Fault(422, "INVALID_NICKNAME");
-  return name;
-}
+import { nickname, reserveNickname } from "./nicknames.ts";
 export class Accounts {
   readonly pool: Pool;
   readonly clock: Clock;
@@ -199,24 +181,8 @@ export class Accounts {
           input.locale,
         ]);
       }
-      const name = nickname(p.nickname ?? input.nickname ?? "");
-      const key = name.toLowerCase();
-      await db.query(
-        "INSERT INTO nickname_reservations(normalized_name,player_id) VALUES($1,$2) ON CONFLICT DO NOTHING",
-        [key, p.id],
-      );
-      const reserved = (
-        await db.query(
-          "SELECT player_id FROM nickname_reservations WHERE normalized_name=$1",
-          [key],
-        )
-      ).rows[0];
-      if (!reserved || reserved.player_id !== p.id)
-        throw new Fault(409, "NICKNAME_UNAVAILABLE");
-      await db.query(
-        "DELETE FROM nickname_reservations WHERE player_id=$1 AND normalized_name<>$2",
-        [p.id, key],
-      );
+      const name = p.nickname ?? nickname(input.nickname ?? "");
+      await reserveNickname(db, p.id, name);
       const request = randomUUID();
       await db.query(
         "UPDATE account_tokens SET used_at=$2 WHERE player_id=$1 AND purpose='VERIFY' AND used_at IS NULL",
@@ -236,8 +202,8 @@ export class Accounts {
         ],
       );
       await db.query(
-        "UPDATE players SET status='EMAIL_PENDING',nickname=$2 WHERE id=$1",
-        [p.id, name],
+        "UPDATE players SET status='EMAIL_PENDING',nickname=$2,nickname_changed_at=COALESCE(nickname_changed_at,$3) WHERE id=$1",
+        [p.id, name, now],
       );
       if (await this.cooldown(db, email, now))
         await this.send(db, p, email, "VERIFY", request, now);

@@ -193,37 +193,45 @@ test(
             await page.locator("#rig-lab summary").click();
             const preview = page.locator("#rig-preview canvas");
             await expect(preview).toBeVisible();
-            const image = await preview.evaluate((c) =>
-              (c as HTMLCanvasElement).toDataURL(),
-            );
-            await expect
-              .poll(() =>
-                preview.evaluate((c) => (c as HTMLCanvasElement).toDataURL()),
-              )
-              .not.toBe(image);
+            const pixels = () =>
+              preview.evaluate(async (el) => {
+                const canvas = el as HTMLCanvasElement;
+                const rgba = canvas
+                  .getContext("2d")!
+                  .getImageData(0, 0, canvas.width, canvas.height).data;
+                const digest = await crypto.subtle.digest("SHA-256", rgba);
+                return Array.from(new Uint8Array(digest), (byte) =>
+                  byte.toString(16).padStart(2, "0"),
+                ).join("");
+              });
+            await page.clock.install();
+            await page.clock.pauseAt(new Date(Date.now() + 1000));
+            const image = await pixels();
+            await page.clock.runFor(160);
+            assert.notEqual(await pixels(), image, "the rig must animate");
             await page.locator("#rig-play").uncheck();
-            await page.waitForTimeout(50);
-            const frozen = await preview.evaluate((c) =>
-              (c as HTMLCanvasElement).toDataURL(),
-            );
-            await page.waitForTimeout(150);
+            await page.clock.runFor(32);
+            const frozen = await pixels();
+            const frame = await preview.getAttribute("data-frame");
+            await page.clock.runFor(160);
+            assert.equal(await preview.getAttribute("data-frame"), frame);
             assert.equal(
-              await preview.evaluate((c) =>
-                (c as HTMLCanvasElement).toDataURL(),
-              ),
+              await pixels(),
               frozen,
+              "the paused pose must keep the same pixels",
             );
             await page.locator("#rig-animation").selectOption("ATTACK_ACTIVE");
+            await page.clock.runFor(32);
             await expect(preview).toHaveAttribute(
               "data-animation",
               "ATTACK_ACTIVE",
             );
             assert.notEqual(
-              await preview.evaluate((c) =>
-                (c as HTMLCanvasElement).toDataURL(),
-              ),
+              await pixels(),
               frozen,
+              "changing pose must repaint the canvas",
             );
+            await page.clock.resume();
             await page.locator("#rig-debug").check();
             await page.screenshot({
               path: "artifacts/phase-2/rig-study.png",

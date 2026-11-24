@@ -74,11 +74,11 @@ test(
             await expect(page.locator("#play")).toBeEnabled();
             await page.locator("#fullscreen").uncheck();
             await page.locator("#boss-sound").uncheck();
-            const virtual = language === "en";
-            if (virtual) {
-              await page.clock.install();
-              await page.clock.pauseAt(new Date(Date.now() + 1000));
-            }
+            const mobile = language === "en";
+            // Keep simulation time fixed across each Playwright keyboard call.
+            // The API and verifier continue using real time.
+            await page.clock.install();
+            await page.clock.pauseAt(new Date(Date.now() + 1000));
             await page.locator("#play").click();
             await expect(page.locator("#surface")).toHaveAttribute(
               "data-phase",
@@ -98,27 +98,20 @@ test(
               new Date(ticket.started_at).getTime() +
               Math.ceil((witness.state.tick / 60) * 1000) +
               5000;
-            if (virtual) await advanceVirtual(34);
+            await advanceVirtual(34);
             const tick = async () =>
               Number(await page.locator("#surface").getAttribute("data-tick"));
             async function until(target: number) {
-              if (!virtual) {
-                await page.waitForFunction(
-                  (t) =>
-                    Number(
-                      document.getElementById("surface")!.dataset["tick"],
-                    ) >= Math.max(0, t - 1),
-                  target,
-                  { polling: "raf", timeout: 90000 },
-                );
-                return;
-              }
               while ((await tick()) < target) {
                 const left = target - (await tick());
                 await advanceVirtual(
-                  Math.max(17, Math.min(5000, ((left - 1) * 1000) / 60)),
+                  Math.max(
+                    16,
+                    Math.min(5000, Math.floor(((left - 1) * 1000) / 60)),
+                  ),
                 );
               }
+              assert.equal(await tick(), target, "witness input tick");
             }
             let captured = false;
             for (const [commandIndex, c] of witness.commands.entries()) {
@@ -178,7 +171,7 @@ test(
                     ctx.fillRect(0, 0, 1, 1);
                   }
                   return Array.from(ctx.getImageData(0, 0, 1, 1).data);
-                }, virtual);
+                }, mobile);
                 const backdropPixels = () =>
                   page
                     .locator("canvas")
@@ -198,7 +191,7 @@ test(
                       return n;
                     }, expectedSwatch);
                 for (let settle = 0; settle < 5; settle++) {
-                  if (virtual) await advanceVirtual(34);
+                  await advanceVirtual(34);
                   if ((await backdropPixels()) > 1000) break;
                 }
                 assert.ok(
@@ -207,14 +200,11 @@ test(
                 );
                 await new Promise((resolve) => setTimeout(resolve, 50));
                 await page.screenshot({
-                  path: virtual
-                    ? `artifacts/phase-4/virtual-ui-${language}-diagnostic.png`
-                    : `artifacts/phase-4/paused-boss-${language}.png`,
+                  path: `artifacts/phase-4/paused-boss-${language}.png`,
                   fullPage: true,
                 });
-                if (!virtual) {
-                  // The pause UI deliberately hides the world. Validate the
-                  // actual native-clock canvas PNG, not the covering dialog.
+                {
+                  // Inspect the Phaser canvas PNG beneath the pause dialog.
                   const colors = await page.evaluate(async (encoded) => {
                     const bytes = Uint8Array.from(atob(encoded), (c) =>
                         c.charCodeAt(0),
@@ -241,23 +231,21 @@ test(
                   }, rawAfter.split(",")[1]!);
                   assert.ok(
                     colors > 8,
-                    "native-clock canvas PNG must contain the rendered guardian scene",
+                    "Canvas PNG must contain the rendered guardian scene",
                   );
                 }
                 assert.equal(await tick(), captureTick);
                 captured = true;
                 await page.locator("#resume").click();
-                if (virtual) {
-                  for (
-                    let n = 0;
-                    n < 190 &&
-                    (await page
-                      .locator("#surface")
-                      .getAttribute("data-phase")) !== "running";
-                    n++
-                  )
-                    await advanceVirtual(17);
-                }
+                for (
+                  let n = 0;
+                  n < 190 &&
+                  (await page
+                    .locator("#surface")
+                    .getAttribute("data-phase")) !== "running";
+                  n++
+                )
+                  await advanceVirtual(16);
                 await page.waitForFunction(
                   () =>
                     document.getElementById("surface")!.dataset["phase"] ===
@@ -283,7 +271,7 @@ test(
                 "VERIFIED";
               n++
             ) {
-              if (virtual) await advanceVirtual(300);
+              await advanceVirtual(300);
               await new Promise((r) => setTimeout(r, 40));
             }
             await expect(page.locator("#result")).toHaveAttribute(

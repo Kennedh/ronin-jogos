@@ -37,6 +37,10 @@ export const API_ERRORS = {
     "Este apelido não está disponível. Escolha outro.",
     "This nickname is unavailable. Choose another.",
   ],
+  NICKNAME_CHANGE_COOLDOWN: [
+    "A troca de apelido está disponível a cada 30 dias. Confira a próxima data no perfil.",
+    "You can change your nickname once every 30 days. Check your profile for the next available date.",
+  ],
   INVALID_NICKNAME: [
     "Use um apelido de 3 a 20 caracteres com letras, números, espaços, hífen ou sublinhado.",
     "Use a nickname of 3 to 20 characters with letters, numbers, spaces, hyphens or underscores.",

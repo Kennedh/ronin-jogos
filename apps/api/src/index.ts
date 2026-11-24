@@ -3,7 +3,7 @@ import type { FastifyRequest, FastifyReply } from "fastify";
 import { randomBytes, randomUUID, createHmac } from "node:crypto";
 import type { Pool } from "pg";
 import { schema, validate } from "@ronin/contracts";
-import type { SchemaName } from "@ronin/contracts";
+import type { components, SchemaName } from "@ronin/contracts";
 import { parseJson } from "@ronin/contracts/canonical";
 import { segmentHash } from "@ronin/contracts/replay";
 import {
@@ -352,6 +352,17 @@ export function createApi(options?: ApiOptions) {
   api.get("/api/v1/me", async (request) =>
     checked("PlayerSummary", await sessions.summary(session(request))),
   );
+  api.patch("/api/v1/me", { bodyLimit: 8192 }, async (request) => {
+    if (!validate("UpdateProfileRequest", request.body))
+      throw new Fault(422, "INVALID_REQUEST");
+    return checked(
+      "PlayerSummary",
+      await sessions.updateProfile(
+        session(request),
+        request.body as components["schemas"]["UpdateProfileRequest"],
+      ),
+    );
+  });
   api.post(
     "/api/v1/auth/register",
     { bodyLimit: 8192 },

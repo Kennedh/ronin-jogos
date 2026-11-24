@@ -1250,7 +1250,15 @@ footer a {
   flex-direction: column;
   gap: 0.7rem;
 }
-.account-page input {
+.account-page .profile-visibility {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.profile-visibility input {
+  margin: 0;
+}
+.account-page input:not([type="checkbox"]) {
   width: 100%;
   min-height: 44px;
   padding: 0.6rem;

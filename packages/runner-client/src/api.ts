@@ -86,6 +86,15 @@ export class RunnerApi {
       "PlayerSummary",
     )) as components["schemas"]["PlayerSummary"];
   }
+  async updateProfile(input: components["schemas"]["UpdateProfileRequest"]) {
+    return (await this.request(
+      "/me",
+      "PATCH",
+      "PlayerSummary",
+      JSON.stringify(input),
+      { "content-type": "application/json" },
+    )) as components["schemas"]["PlayerSummary"];
+  }
   async register(input: components["schemas"]["RegisterRequest"]) {
     await this.request(
       "/auth/register",

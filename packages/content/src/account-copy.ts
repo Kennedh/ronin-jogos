@@ -11,6 +11,15 @@ const en = {
   password: "Password",
   newPassword: "New password",
   nickname: "Nickname",
+  profileTitle: "Player profile",
+  nicknameHint:
+    "Use 3 to 20 characters. You can change your nickname once every 30 days.",
+  nicknameAvailable: "Next nickname change available on",
+  publicProfile: "Make my player profile public",
+  visibilityHint:
+    "This preference applies when player profiles become available.",
+  saveProfile: "Save profile",
+  profileSaved: "Profile saved.",
   register: "Create an account",
   registerHint:
     "Use at least 12 characters. A password manager or a passphrase is welcome.",
@@ -67,6 +76,15 @@ const pt: Record<keyof typeof en, string> = {
   password: "Senha",
   newPassword: "Nova senha",
   nickname: "Apelido",
+  profileTitle: "Perfil de jogador",
+  nicknameHint:
+    "Use de 3 a 20 caracteres. Você pode trocar seu apelido a cada 30 dias.",
+  nicknameAvailable: "Próxima troca de apelido disponível em",
+  publicProfile: "Tornar meu perfil de jogador público",
+  visibilityHint:
+    "Esta preferência será aplicada quando os perfis de jogadores estiverem disponíveis.",
+  saveProfile: "Salvar perfil",
+  profileSaved: "Perfil salvo.",
   register: "Criar conta",
   registerHint:
     "Use pelo menos 12 caracteres. Você pode usar um gerenciador de senhas ou uma frase.",
