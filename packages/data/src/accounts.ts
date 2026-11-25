@@ -42,11 +42,11 @@ export class Accounts {
     this.clock = clock;
     this.sessions = new Sessions(pool, clock);
   }
-  private async player(db: PoolClient, id: string) {
+  private async player(db: PoolClient, id: string, pending = false) {
     const p = (
       await db.query(
-        "SELECT * FROM players WHERE id=$1 AND status IN ('GUEST','EMAIL_PENDING','REGISTERED') FOR UPDATE",
-        [id],
+        "SELECT * FROM players WHERE id=$1 AND (status IN ('GUEST','EMAIL_PENDING','REGISTERED') OR ($2 AND status='DELETION_PENDING')) FOR UPDATE",
+        [id, pending],
       )
     ).rows[0];
     if (!p) throw new Fault(401, "SESSION_REQUIRED");
@@ -153,6 +153,7 @@ export class Accounts {
         link: link.href,
       },
       now,
+      p.id,
     );
   }
   async register(
@@ -340,7 +341,11 @@ export class Accounts {
           })
         | undefined;
     const valid = await this.hasher.verify(password, candidate);
-    if (!valid || candidate?.status !== "REGISTERED")
+    if (
+      !valid ||
+      !candidate ||
+      !["REGISTERED", "DELETION_PENDING"].includes(candidate.status)
+    )
       throw new Fault(401, "INVALID_CREDENTIALS");
     return candidate;
   }
@@ -359,7 +364,7 @@ export class Accounts {
           ],
         ],
       );
-      const p = await this.player(db, candidate.player_id),
+      const p = await this.player(db, candidate.player_id, true),
         r = (
           await db.query(
             "SELECT * FROM password_credentials WHERE player_id=$1",
@@ -367,7 +372,7 @@ export class Accounts {
           )
         ).rows[0];
       if (
-        p.status !== "REGISTERED" ||
+        !["REGISTERED", "DELETION_PENDING"].includes(p.status) ||
         !r ||
         !timingSafeEqual(r.digest, candidate.digest)
       )
@@ -401,11 +406,12 @@ export class Accounts {
   async googleChallenge(auth: Session, purpose: GooglePurpose) {
     return transaction(this.pool, async (db) => {
       const now = await serverTime(db, this.clock),
-        p = await this.player(db, auth.playerId);
+        p = await this.player(db, auth.playerId, purpose === "REAUTH");
       await this.live(db, auth, now, purpose === "LINK");
       if (
-        (purpose === "LINK" || purpose === "REAUTH") &&
-        p.status !== "REGISTERED"
+        (purpose === "LINK" && p.status !== "REGISTERED") ||
+        (purpose === "REAUTH" &&
+          !["REGISTERED", "DELETION_PENDING"].includes(p.status))
       )
         throw new Fault(403, "GOOGLE_ACCOUNT_REQUIRED");
       if (purpose === "MERGE" && p.status === "REGISTERED")
@@ -460,7 +466,7 @@ export class Accounts {
         ],
       );
       const now = await serverTime(db, this.clock),
-        source = await this.player(db, auth.playerId);
+        source = await this.player(db, auth.playerId, purpose === "REAUTH");
       await this.live(db, auth, now, purpose === "LINK");
       await consumeGoogleChallenge(
         db,
@@ -471,7 +477,10 @@ export class Accounts {
       );
       const owner = await identity();
       if (purpose === "REAUTH") {
-        if (source.status !== "REGISTERED" || owner !== source.id)
+        if (
+          !["REGISTERED", "DELETION_PENDING"].includes(source.status) ||
+          owner !== source.id
+        )
           throw new Fault(401, "GOOGLE_CREDENTIAL_INVALID", true);
         await db.query("UPDATE sessions SET authenticated_at=$2 WHERE id=$1", [
           auth.sessionId,
@@ -493,7 +502,9 @@ export class Accounts {
         throw new Fault(409, "GOOGLE_SWITCH_REQUIRES_SIGN_OUT", true);
 
       const target =
-        owner && owner !== source.id ? await this.player(db, owner) : source;
+        owner && owner !== source.id
+          ? await this.player(db, owner, true)
+          : source;
       if (
         target.id !== source.id &&
         (
@@ -572,16 +583,16 @@ export class Accounts {
   async forgot(emailValue: string) {
     const email = normalizedEmail(emailValue);
     return transaction(this.pool, async (db) => {
-      const now = await serverTime(db, this.clock),
-        a = (
-          await db.query(
-            "SELECT player_id FROM email_accounts WHERE email=$1",
-            [email],
-          )
-        ).rows[0];
-      if (!a) return;
-      const p = await this.player(db, a.player_id);
-      if (p.status !== "REGISTERED") return;
+      const now = await serverTime(db, this.clock);
+      // Resolve the address and lock the same eligible player to keep recovery
+      // responses uniform if maintenance finalizes deletion concurrently.
+      const p = (
+        await db.query<{ id: string; locale: Session["locale"] }>(
+          "SELECT p.id,p.locale FROM players p JOIN email_accounts a ON a.player_id=p.id WHERE a.email=$1 AND p.status IN ('REGISTERED','DELETION_PENDING') FOR UPDATE OF p",
+          [email],
+        )
+      ).rows[0];
+      if (!p) return;
       if (await this.cooldown(db, email, now)) {
         await this.send(db, p, email, "RESET", null, now);
         await this.audit(db, p.id, "RESET_REQUESTED", now);
@@ -600,14 +611,19 @@ export class Accounts {
     if (!hint) throw new Fault(422, "AUTH_TOKEN_INVALID");
     return transaction(this.pool, async (db) => {
       const now = await serverTime(db, this.clock),
-        p = await this.player(db, hint.player_id),
+        p = await this.player(db, hint.player_id, true),
         t = (
           await db.query(
             "SELECT * FROM account_tokens WHERE digest=$1 AND purpose='RESET' FOR UPDATE",
             [digest(token)],
           )
         ).rows[0];
-      if (p.status !== "REGISTERED" || !t || t.used_at || t.expires_at <= now)
+      if (
+        !["REGISTERED", "DELETION_PENDING"].includes(p.status) ||
+        !t ||
+        t.used_at ||
+        t.expires_at <= now
+      )
         throw new Fault(422, "AUTH_TOKEN_INVALID");
       await db.query(
         "UPDATE password_credentials SET algorithm=$2,salt=$3,digest=$4,changed_at=$5 WHERE player_id=$1",
@@ -635,7 +651,7 @@ export class Accounts {
       throw new Fault(401, "INVALID_CREDENTIALS");
     return transaction(this.pool, async (db) => {
       const now = await serverTime(db, this.clock);
-      await this.player(db, auth.playerId);
+      await this.player(db, auth.playerId, true);
       await this.live(db, auth, now);
       const latest = (
         await db.query(
@@ -655,7 +671,7 @@ export class Accounts {
   async list(auth: Session) {
     return transaction(this.pool, async (db) => {
       const now = await serverTime(db, this.clock);
-      await this.player(db, auth.playerId);
+      await this.player(db, auth.playerId, true);
       await this.live(db, auth, now, true);
       const rows = (
         await db.query(
@@ -677,7 +693,7 @@ export class Accounts {
   async revoke(auth: Session, id: string) {
     return transaction(this.pool, async (db) => {
       const now = await serverTime(db, this.clock);
-      await this.player(db, auth.playerId);
+      await this.player(db, auth.playerId, true);
       await this.live(db, auth, now, true);
       if (
         !(
@@ -694,7 +710,7 @@ export class Accounts {
   async logout(auth: Session) {
     return transaction(this.pool, async (db) => {
       const now = await serverTime(db, this.clock);
-      await this.player(db, auth.playerId);
+      await this.player(db, auth.playerId, true);
       await this.live(db, auth, now);
       await db.query("UPDATE sessions SET revoked_at=$2 WHERE id=$1", [
         auth.sessionId,

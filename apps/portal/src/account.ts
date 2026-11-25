@@ -19,6 +19,7 @@ export async function initializeAccount(
     };
   let profile: components["schemas"]["PlayerSummary"] | undefined,
     profileInForm: typeof profile,
+    privacy: components["schemas"]["PrivacyStatus"] | undefined,
     list: components["schemas"]["AccountSessions"] | undefined,
     googleClientId: string | null = null,
     googleRequest: { playerId: string } | undefined,
@@ -94,12 +95,54 @@ export async function initializeAccount(
     get("account-merge-expiry").textContent =
       t.mergeExpiry + " " + expiry.format(new Date(mergePreview.expires_at));
   }
+  function renderPrivacy(t: ReturnType<typeof copy>, registered: boolean) {
+    const moderation = privacy?.nickname_moderation;
+    const deletion = privacy?.deletion;
+    const pending = profile?.account_status === "DELETION_PENDING";
+    const date = new Intl.DateTimeFormat(context.locale(), {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+    get("account-privacy-panel").hidden =
+      !profile || (!registered && !moderation);
+    get("account-account-privacy").hidden = !registered;
+    get("account-nickname-moderation").hidden = !moderation;
+    get("account-nickname-appeal").hidden =
+      moderation?.state !== "HIDDEN" || pending;
+    get("account-nickname-notice").textContent = moderation
+      ? [
+          moderation.state === "APPEALED"
+            ? t.moderationPending
+            : moderation.state === "RESTORED"
+              ? t.moderationRestored
+              : moderation.state === "UPHELD"
+                ? t.moderationUpheld
+                : t.moderationHidden,
+          t[`moderation${moderation.reason}`],
+          date.format(new Date(moderation.hidden_at)),
+        ].join(" ")
+      : "";
+    get("account-delete-details").hidden = pending;
+    get("account-deletion-status").hidden = !pending;
+    get("account-deletion-status").textContent =
+      pending && deletion
+        ? t.privacyDeletionScheduled +
+          " " +
+          date.format(new Date(deletion.finalize_at))
+        : t.privacyPending;
+    get("account-delete-cancel").hidden = !pending;
+    get<HTMLButtonElement>("account-delete-submit").disabled =
+      busy || pending || !get<HTMLInputElement>("account-delete-agree").checked;
+  }
+
   function render() {
     const t = copy();
     for (const e of root.querySelectorAll<HTMLElement>("[data-account-copy]"))
       e.textContent = t[e.dataset["accountCopy"] as AccountTextKey];
     get<HTMLAnchorElement>("account-back").href = runnerPath(context.locale());
-    const registered = profile?.account_status === "REGISTERED";
+    const deletionPending = profile?.account_status === "DELETION_PENDING";
+    const registered =
+      profile?.account_status === "REGISTERED" || deletionPending;
     const googleOnly = profile?.account_type === "GOOGLE";
     const linkedGoogle = googleOnly || profile?.account_type === "MULTI";
     get("account-google-panel").hidden =
@@ -108,13 +151,16 @@ export async function initializeAccount(
       profile.account_status === "EMAIL_PENDING";
     get("account-google-status").hidden = !linkedGoogle;
     get("account-google-signin").hidden = registered;
-    get("account-google-link").hidden = !registered || linkedGoogle;
+    get("account-google-link").hidden =
+      deletionPending || !registered || linkedGoogle;
     get("account-google-reauth").hidden =
       !linkedGoogle || !reauth || !googleClientId;
-    get("account-google-unlink").hidden = profile?.account_type !== "MULTI";
+    get("account-google-unlink").hidden =
+      deletionPending || profile?.account_type !== "MULTI";
     get("account-google-unlink-hint").hidden =
-      profile?.account_type !== "MULTI";
-    get("account-guest").hidden = registered && !googleOnly;
+      deletionPending || profile?.account_type !== "MULTI";
+    get("account-guest").hidden =
+      deletionPending || (registered && !googleOnly);
     get("account-email-login-panel").hidden = registered;
     get("account-register-title").textContent = googleOnly
       ? t.addEmail
@@ -133,7 +179,7 @@ export async function initializeAccount(
     get("account-name").textContent =
       profile?.nickname ?? (registered ? t.profileTitle : t.guest);
     get("account-email").textContent = profile?.email ?? "";
-    get("account-profile-panel").hidden = !profile;
+    get("account-profile-panel").hidden = !profile || deletionPending;
     const registerNickname = get<HTMLInputElement>("register-nickname");
     registerNickname.readOnly = !!profile?.nickname;
     registerNickname.required = !googleOnly;
@@ -145,7 +191,11 @@ export async function initializeAccount(
       registerNickname.value = profile?.nickname ?? "";
       profileInForm = profile;
     }
-    const available = profile?.nickname_change_available_at;
+    const moderationState = privacy?.nickname_moderation?.state;
+    const available =
+      moderationState && moderationState !== "RESTORED"
+        ? null
+        : profile?.nickname_change_available_at;
     get("account-nickname-hint").textContent =
       available && new Date(available).getTime() > Date.now()
         ? t.nicknameAvailable +
@@ -155,13 +205,15 @@ export async function initializeAccount(
             timeStyle: "short",
           }).format(new Date(available))
         : t.nicknameHint;
-    get("account-state").textContent = emailPending
-      ? t.pending
-      : registered
-        ? googleOnly
-          ? t.googleLinked
-          : t.registered
-        : t.guest;
+    get("account-state").textContent = deletionPending
+      ? t.privacyPending
+      : emailPending
+        ? t.pending
+        : registered
+          ? googleOnly
+            ? t.googleLinked
+            : t.registered
+          : t.guest;
     get("verify-panel").hidden = intent.kind !== "verify";
     get("reset-panel").hidden = intent.kind !== "reset";
     get("account-reauth-form").hidden = !reauth || googleOnly;
@@ -183,6 +235,7 @@ export async function initializeAccount(
     >(".account-page button,.account-page input"))
       input.disabled = busy;
     renderMerge(t, registered);
+    renderPrivacy(t, registered);
     get<HTMLButtonElement>("account-merge-confirm").disabled =
       busy ||
       !mergePreview ||
@@ -222,8 +275,13 @@ export async function initializeAccount(
     profile = await api.guest(context.locale());
     googleClientId =
       (await api.googleConfig().catch(() => null))?.client_id ?? null;
+    privacy = await api.privacyStatus().catch(() => undefined);
     bootstrapError = false;
-    if (profile.account_status === "REGISTERED") await loadSessions();
+    if (
+      profile.account_status === "REGISTERED" ||
+      profile.account_status === "DELETION_PENDING"
+    )
+      await loadSessions();
     else list = undefined;
   }
   async function run(work: () => Promise<void>) {
@@ -248,6 +306,7 @@ export async function initializeAccount(
       if (["SESSION_REQUIRED", "SESSION_CHANGED"].includes(error.code)) {
         profile = undefined;
         list = undefined;
+        privacy = undefined;
         clearMerge();
         bootstrapError = true;
       }
@@ -317,7 +376,10 @@ export async function initializeAccount(
                   return;
                 }
                 const signedIn = await api.googleAuth(purpose, token);
-                if (signedIn) profile = signedIn;
+                if (signedIn) {
+                  profile = signedIn;
+                  privacy = await api.privacyStatus();
+                }
                 await loadSessions();
                 message =
                   purpose === "LINK"
@@ -377,8 +439,61 @@ export async function initializeAccount(
       return;
     profile = await api.mergeConfirm(mergePreview.merge_nonce);
     clearMerge();
+    privacy = await api.privacyStatus();
     await loadSessions();
     message = "mergeDone";
+  });
+  get("account-export").addEventListener("click", () => {
+    void run(async () => {
+      const { next_cursor, ...first } = await api.exportData();
+      const runs = first.runs;
+      let cursor = next_cursor;
+      while (cursor) {
+        const page = await api.exportData(cursor);
+        if (
+          page.profile.player_id !== first.profile.player_id ||
+          page.exported_at !== first.exported_at ||
+          (page.next_cursor && page.next_cursor.after_id <= cursor.after_id)
+        )
+          throw new ClientError("INVALID_SERVER_RESPONSE");
+        runs.push(...page.runs);
+        cursor = page.next_cursor;
+      }
+      const url = URL.createObjectURL(
+        new Blob([JSON.stringify(first, null, 2) + "\n"], {
+          type: "application/json",
+        }),
+      );
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "ronin-id-data.json";
+      link.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      message = "privacyExportReady";
+    });
+  });
+  get("account-delete-agree").addEventListener("change", render);
+  form("account-delete-form", async () => {
+    if (!get<HTMLInputElement>("account-delete-agree").checked) return;
+    privacy = await api.requestDeletion();
+    profile = await api.profile();
+    get<HTMLInputElement>("account-delete-agree").checked = false;
+    get<HTMLDetailsElement>("account-delete-details").open = false;
+    await loadSessions();
+    message = "privacyRequested";
+  });
+  get("account-delete-cancel").addEventListener("click", () => {
+    void run(async () => {
+      privacy = await api.cancelDeletion();
+      profile = await api.profile();
+      message = "privacyCancelled";
+    });
+  });
+  get("account-nickname-appeal").addEventListener("click", () => {
+    void run(async () => {
+      privacy = await api.appealNickname();
+      message = "moderationReviewSent";
+    });
   });
   form("account-profile-form", async (data) => {
     if (!profile) return;
@@ -408,6 +523,7 @@ export async function initializeAccount(
       String(data.get("email")),
       String(data.get("password")),
     );
+    privacy = await api.privacyStatus();
     await loadSessions();
   });
   form("account-forgot-form", async (data) => {

@@ -1,11 +1,12 @@
 import {
   createCipheriv,
+  createHash,
   createDecipheriv,
   randomBytes,
   randomUUID,
 } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
-import { transaction, serverTime } from "./runtime.ts";
+import { Fault, transaction, serverTime } from "./runtime.ts";
 import type { Clock } from "./runtime.ts";
 export interface AuthMail {
   to: string;
@@ -26,6 +27,7 @@ export async function enqueueAuthMail(
   key: Buffer,
   mail: AuthMail,
   now: Date,
+  playerId?: string,
 ) {
   checkMailKey(key);
   const id = randomUUID(),
@@ -37,10 +39,82 @@ export async function enqueueAuthMail(
     cipher.final(),
   ]);
   await db.query(
-    "INSERT INTO auth_mail_outbox(id,ciphertext,nonce,tag,created_at,available_at) VALUES($1,$2,$3,$4,$5,$5)",
-    [id, ciphertext, nonce, cipher.getAuthTag(), now],
+    "INSERT INTO auth_mail_outbox(id,ciphertext,nonce,tag,created_at,available_at,player_id) VALUES($1,$2,$3,$4,$5,$5,$6)",
+    [id, ciphertext, nonce, cipher.getAuthTag(), now, playerId ?? null],
   );
 }
+type SealedAuthMail = {
+  id: string;
+  nonce: Buffer;
+  tag: Buffer;
+  ciphertext: Buffer;
+};
+
+function unsealAuthMail(key: Buffer, row: SealedAuthMail) {
+  const decipher = createDecipheriv("aes-256-gcm", key, row.nonce);
+  decipher.setAAD(Buffer.from("ronin-auth-mail-v1:" + row.id));
+  decipher.setAuthTag(row.tag);
+  return JSON.parse(
+    Buffer.concat([decipher.update(row.ciphertext), decipher.final()]).toString(
+      "utf8",
+    ),
+  ) as AuthMail;
+}
+
+/** Legacy mail has a token in its authenticated ciphertext, linked to account_tokens. */
+export async function purgeAuthMail(
+  db: PoolClient,
+  key: Buffer,
+  players: string[],
+  now: Date,
+) {
+  checkMailKey(key);
+  const digests = new Set(
+    (
+      await db.query<{ hex: string }>(
+        "SELECT encode(digest,'hex') AS hex FROM account_tokens WHERE player_id=ANY($1::uuid[])",
+        [players],
+      )
+    ).rows.map((row) => row.hex),
+  );
+  const legacy = digests.size
+    ? (
+        await db.query<SealedAuthMail>(
+          "SELECT id,nonce,tag,ciphertext FROM auth_mail_outbox WHERE player_id IS NULL",
+        )
+      ).rows
+        .filter((row) => {
+          const mail = unsealAuthMail(key, row);
+          const token = new URLSearchParams(
+            new URL(mail.link).hash.slice(1),
+          ).get(mail.purpose === "VERIFY" ? "verify" : "reset");
+          return (
+            !!token &&
+            digests.has(createHash("sha256").update(token).digest("hex"))
+          );
+        })
+        .map((row) => row.id)
+    : [];
+  const locked = await db.query<{
+    id: string;
+    state: string;
+    lease_until: Date | null;
+  }>(
+    "SELECT id,state,lease_until FROM auth_mail_outbox WHERE player_id=ANY($1::uuid[]) OR id=ANY($2::uuid[]) ORDER BY id FOR UPDATE",
+    [players, legacy],
+  );
+  if (
+    locked.rows.some(
+      (row) =>
+        row.state === "SENDING" && row.lease_until && row.lease_until > now,
+    )
+  )
+    throw new Fault(409, "PRIVACY_MAIL_IN_PROGRESS");
+  await db.query("DELETE FROM auth_mail_outbox WHERE id=ANY($1::uuid[])", [
+    locked.rows.map((row) => row.id),
+  ]);
+}
+
 /** Durable claim/fence and idempotent transport. Never logs recipient, token or decrypted payload. */
 export async function deliverAuthMail(
   pool: Pool,
@@ -68,15 +142,7 @@ export async function deliverAuthMail(
   });
   if (!claim) return "IDLE" as const;
   try {
-    const decipher = createDecipheriv("aes-256-gcm", key, claim.nonce);
-    decipher.setAAD(Buffer.from("ronin-auth-mail-v1:" + claim.id));
-    decipher.setAuthTag(claim.tag);
-    const mail = JSON.parse(
-      Buffer.concat([
-        decipher.update(claim.ciphertext),
-        decipher.final(),
-      ]).toString("utf8"),
-    ) as AuthMail;
+    const mail = unsealAuthMail(key, claim);
     await transport.send(claim.id, mail);
     return await transaction(pool, async (db) => {
       const now = await serverTime(db, clock);

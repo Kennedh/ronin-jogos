@@ -10,7 +10,7 @@ export const definitions = {
     properties: {
       account_status: {
         type: "string",
-        enum: ["GUEST", "EMAIL_PENDING", "REGISTERED"],
+        enum: ["GUEST", "EMAIL_PENDING", "REGISTERED", "DELETION_PENDING"],
       },
       email: {
         type: ["string", "null"],
@@ -46,6 +46,328 @@ export const definitions = {
         items: {
           type: "string",
         },
+      },
+    },
+  },
+  DeletionConsent: {
+    type: "object",
+    additionalProperties: false,
+    required: ["confirmed"],
+    properties: {
+      confirmed: {
+        type: "boolean",
+        const: true,
+      },
+    },
+  },
+  PrivacyStatus: {
+    type: "object",
+    additionalProperties: false,
+    required: ["deletion", "nickname_moderation"],
+    properties: {
+      deletion: {
+        type: ["object", "null"],
+        additionalProperties: false,
+        required: ["state", "requested_at", "finalize_at", "resolved_at"],
+        properties: {
+          state: {
+            type: "string",
+            enum: ["PENDING", "CANCELLED", "COMPLETED"],
+          },
+          requested_at: {
+            type: "string",
+            format: "date-time",
+          },
+          finalize_at: {
+            type: "string",
+            format: "date-time",
+          },
+          resolved_at: {
+            type: ["string", "null"],
+            format: "date-time",
+          },
+        },
+      },
+      nickname_moderation: {
+        type: ["object", "null"],
+        additionalProperties: false,
+        required: [
+          "state",
+          "reason",
+          "hidden_at",
+          "appealed_at",
+          "resolved_at",
+        ],
+        properties: {
+          state: {
+            type: "string",
+            enum: ["HIDDEN", "APPEALED", "RESTORED", "UPHELD"],
+          },
+          reason: {
+            type: "string",
+            enum: ["IMPERSONATION", "OFFENSIVE", "PERSONAL_DATA", "OTHER"],
+          },
+          hidden_at: {
+            type: "string",
+            format: "date-time",
+          },
+          appealed_at: {
+            type: ["string", "null"],
+            format: "date-time",
+          },
+          resolved_at: {
+            type: ["string", "null"],
+            format: "date-time",
+          },
+        },
+      },
+    },
+  },
+  PrivacyExportCursor: {
+    type: "object",
+    additionalProperties: false,
+    required: ["after_id", "started_through"],
+    properties: {
+      after_id: {
+        type: "string",
+        format: "uuid",
+      },
+      started_through: {
+        type: "string",
+        format: "date-time",
+      },
+    },
+  },
+  PrivacyExportRequest: {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      cursor: {
+        $ref: "#/$defs/PrivacyExportCursor",
+      },
+    },
+  },
+  PrivacyExportPage: {
+    type: "object",
+    additionalProperties: false,
+    required: [
+      "version",
+      "exported_at",
+      "profile",
+      "progress",
+      "sessions",
+      "runs",
+      "privacy",
+      "next_cursor",
+    ],
+    properties: {
+      version: {
+        type: "integer",
+        const: 1,
+      },
+      exported_at: {
+        type: "string",
+        format: "date-time",
+      },
+      profile: {
+        type: "object",
+        additionalProperties: false,
+        required: [
+          "player_id",
+          "nickname",
+          "locale",
+          "public_profile",
+          "status",
+          "created_at",
+          "email",
+          "email_verified_at",
+          "pending_email",
+          "google_linked_at",
+        ],
+        properties: {
+          player_id: {
+            type: "string",
+            format: "uuid",
+          },
+          nickname: {
+            type: ["string", "null"],
+          },
+          locale: {
+            type: "string",
+            enum: ["pt-BR", "en"],
+          },
+          public_profile: {
+            type: "boolean",
+          },
+          status: {
+            type: "string",
+            enum: ["REGISTERED", "DELETION_PENDING"],
+          },
+          created_at: {
+            type: "string",
+            format: "date-time",
+          },
+          email: {
+            type: ["string", "null"],
+          },
+          email_verified_at: {
+            type: ["string", "null"],
+            format: "date-time",
+          },
+          pending_email: {
+            type: ["string", "null"],
+          },
+          google_linked_at: {
+            type: ["string", "null"],
+            format: "date-time",
+          },
+        },
+      },
+      progress: {
+        type: "object",
+        additionalProperties: false,
+        required: ["regions", "seals", "rewards"],
+        properties: {
+          regions: {
+            type: "array",
+            items: {
+              type: "string",
+            },
+          },
+          seals: {
+            type: "array",
+            items: {
+              type: "object",
+              additionalProperties: false,
+              required: ["boss_id", "earned_at", "run_id"],
+              properties: {
+                boss_id: {
+                  type: "string",
+                },
+                earned_at: {
+                  type: "string",
+                  format: "date-time",
+                },
+                run_id: {
+                  type: "string",
+                  format: "uuid",
+                },
+              },
+            },
+          },
+          rewards: {
+            type: "array",
+            items: {
+              type: "object",
+              additionalProperties: false,
+              required: ["reward_id", "earned_at", "run_id"],
+              properties: {
+                reward_id: {
+                  type: "string",
+                },
+                earned_at: {
+                  type: "string",
+                  format: "date-time",
+                },
+                run_id: {
+                  type: "string",
+                  format: "uuid",
+                },
+              },
+            },
+          },
+        },
+      },
+      sessions: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: ["created_at", "last_seen_at", "expires_at"],
+          properties: {
+            created_at: {
+              type: "string",
+              format: "date-time",
+            },
+            last_seen_at: {
+              type: "string",
+              format: "date-time",
+            },
+            expires_at: {
+              type: "string",
+              format: "date-time",
+            },
+          },
+        },
+      },
+      runs: {
+        type: "array",
+        maxItems: 200,
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: [
+            "run_id",
+            "mode",
+            "starting_region",
+            "started_at",
+            "status",
+            "end_reason",
+            "score",
+            "real_distance_units",
+            "ranked",
+            "verified_at",
+          ],
+          properties: {
+            run_id: {
+              type: "string",
+              format: "uuid",
+            },
+            mode: {
+              type: "string",
+              enum: ["FULL", "REGIONAL"],
+            },
+            starting_region: {
+              type: "string",
+            },
+            started_at: {
+              type: "string",
+              format: "date-time",
+            },
+            status: {
+              type: "string",
+            },
+            end_reason: {
+              type: ["string", "null"],
+            },
+            score: {
+              type: ["string", "null"],
+            },
+            real_distance_units: {
+              type: ["string", "null"],
+            },
+            ranked: {
+              type: ["boolean", "null"],
+            },
+            verified_at: {
+              type: ["string", "null"],
+              format: "date-time",
+            },
+          },
+        },
+      },
+      privacy: {
+        $ref: "#/$defs/PrivacyStatus",
+      },
+      next_cursor: {
+        oneOf: [
+          {
+            $ref: "#/$defs/PrivacyExportCursor",
+          },
+          {
+            type: "null",
+          },
+        ],
       },
     },
   },

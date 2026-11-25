@@ -1,12 +1,22 @@
 # Ronin Runner — continuidade
 
-## Estado atual — parte 5B, fusão explícita de perfis
+## Estado atual — parte 5B, privacidade e moderação
+
+O painel de privacidade do Ronin ID em PT-BR/EN oferece exportação dos dados de conta, sessões e progresso em JSON. O servidor valida autenticação recente e limita cada página a 200 partidas. O navegador monta o download. O pacote usa metadados e resultados próprios e deixa os segredos e dados técnicos antifraude no servidor.
+
+A migração 009 adiciona exclusão reversível e revisão de apelido. O pedido oculta o perfil público, revoga sessões anteriores e suspende novas partidas. A sessão restrita permite exportar, reautenticar com o método cadastrado ou cancelar em até sete dias. Depois do prazo, a manutenção remove os dados de acesso, apelido, sessões, tokens e e-mails da fila. Os resultados e as evidências competitivas ficam com identidade pública oculta. O estado interno ANONYMIZED mantém IDs opacos para integridade, sem representar uma decisão jurídica sobre anonimização.
+
+A moderação registra motivo e data. O jogador vê o estado e pode pedir revisão. A visão de identidade pública esconde apelidos moderados e perfis privados ou em exclusão. A fila e a resolução são operadas localmente com os comandos documentados no README.
+
+A execução automática em produção, a política final de retenção de replays, logs, backups e a homologação de Google e SMTP pertencem à preparação operacional. A próxima parte funcional é 6A, Criador de Ronin. A revisão de pontuações públicas e as projeções de ranking pertencem à parte de carreira e ranking.
+
+## Parte 5B — fusão explícita de perfis
 
 O Ronin ID permite transferir o progresso do visitante para uma conta existente após prova por senha ou Google. A prévia mostra apelidos, partidas, recorde elegível, regiões, selos e recompensas, com confirmação válida por cinco minutos. Partidas do visitante em andamento ou em verificação precisam terminar antes da fusão.
 
 A migração 008 registra a operação e a origem das partidas. O banco move a propriedade de partidas encerradas e suas evidências sem reconstruir replays, mantém o mesmo ID e preserva a preferência e o apelido da conta de destino. Regiões, selos e recompensas são unidos sem duplicação. Quatro selos distribuídos entre os perfis liberam o Traço da Aurora. A fusão emite um único evento de outbox, encerra o visitante e revoga suas sessões dentro da transação. Uma repetição autenticada no destino reaproveita o resultado. Após perder a resposta da confirmação, o jogador pode recuperar o progresso por login na conta de destino.
 
-Tabela de ranking, semanários, criador e inventário ainda pertencem às suas respectivas fases. Suas projeções devem usar as partidas verificadas da conta canônica e o evento de fusão. Exportação, exclusão e moderação seguem pendentes da 5B.
+Tabela de ranking, semanários, criador e inventário ainda pertencem às suas respectivas fases. Suas projeções devem usar as partidas verificadas da conta canônica e o evento de fusão. Exportação, exclusão e moderação foram implementadas na fatia subsequente, descrita acima.
 
 ## Parte 5B — Google e métodos vinculados
 

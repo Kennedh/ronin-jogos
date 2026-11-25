@@ -18,6 +18,7 @@ import {
   rateLimit,
   Accounts,
   Merges,
+  Privacy,
 } from "@ronin/data";
 import type { Session, Clock, ResourcePolicy } from "@ronin/data";
 import { CURRENT_MANIFEST } from "@ronin/content/runner-manifest";
@@ -116,6 +117,20 @@ export function createApi(options?: ApiOptions) {
     return accounts;
   };
   const merges = new Merges(options.pool, options.clock);
+  const privacy = new Privacy(options.pool, options.clock);
+  const pendingEndpoints = new Set([
+    "GET /api/v1/me",
+    "GET /api/v1/me/privacy",
+    "POST /api/v1/me/export",
+    "POST /api/v1/me/delete-request",
+    "DELETE /api/v1/me/delete-request",
+    "POST /api/v1/auth/reauth",
+    "GET /api/v1/auth/google/config",
+    "POST /api/v1/auth/google/challenge",
+    "POST /api/v1/auth/google/reauth",
+    "GET /api/v1/me/sessions",
+    "DELETE /api/v1/me/sessions/:session_id",
+  ]);
   const publicAuth = new Set([
     "/api/v1/auth/logout",
     "/api/v1/auth/login",
@@ -236,6 +251,11 @@ export function createApi(options?: ApiOptions) {
     if (!token) throw new Fault(401, "SESSION_REQUIRED");
     const auth = await sessions.read(token);
     auths.set(request, auth);
+    if (
+      auth.deletionPending &&
+      !pendingEndpoints.has(request.method + " " + route)
+    )
+      throw new Fault(409, "ACCOUNT_DELETION_PENDING");
     if (request.method !== "GET")
       sessions.checkCsrf(
         auth,
@@ -392,6 +412,50 @@ export function createApi(options?: ApiOptions) {
     );
   });
 
+  api.get("/api/v1/me/privacy", async (request) =>
+    checked("PrivacyStatus", await privacy.status(session(request))),
+  );
+  api.post("/api/v1/me/export", { bodyLimit: 8192 }, async (request) => {
+    if (!validate("PrivacyExportRequest", request.body))
+      throw new Fault(422, "INVALID_REQUEST");
+    const body = request.body as components["schemas"]["PrivacyExportRequest"];
+    return checked(
+      "PrivacyExportPage",
+      await privacy.exportPage(session(request), body.cursor),
+    );
+  });
+  api.post(
+    "/api/v1/me/delete-request",
+    { bodyLimit: 8192 },
+    async (request, reply) => {
+      checkedBody("DeletionConsent", request);
+      const auth = session(request),
+        result = await privacy.requestDeletion(auth);
+      if (result) {
+        setCookie(reply, result.token, result.session);
+        reply.header("X-CSRF-Token", result.session.csrfToken);
+      }
+      return reply
+        .status(202)
+        .send(
+          checked(
+            "PrivacyStatus",
+            await privacy.status(result?.session ?? auth),
+          ),
+        );
+    },
+  );
+  api.delete("/api/v1/me/delete-request", async (request) =>
+    checked("PrivacyStatus", await privacy.cancelDeletion(session(request))),
+  );
+  api.post(
+    "/api/v1/me/nickname-appeal",
+    { bodyLimit: 8192 },
+    async (request) => {
+      checkedBody("EmptyRequest", request);
+      return checked("PrivacyStatus", await privacy.appeal(session(request)));
+    },
+  );
   api.get("/api/v1/auth/google/config", async () =>
     checked("GoogleConfig", { client_id: options.google?.clientId ?? null }),
   );

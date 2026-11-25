@@ -40,4 +40,25 @@ export const accountMarkup = `<section class="account-page"><div class="account-
     </form>
   </div>
   <button disabled type="button" id="account-merge-cancel" data-account-copy="mergeCancel"></button>
+</section><section id="account-privacy-panel" class="account-card" hidden>
+  <h2 data-account-copy="privacyTitle"></h2>
+  <div id="account-nickname-moderation" hidden>
+    <h3 data-account-copy="moderationTitle"></h3>
+    <p id="account-nickname-notice"></p>
+    <button disabled type="button" id="account-nickname-appeal" hidden data-account-copy="moderationAppeal"></button>
+  </div>
+  <div id="account-account-privacy" hidden>
+    <button disabled id="account-export" type="button" data-account-copy="privacyExport"></button>
+    <p class="small" data-account-copy="privacyExportHint"></p>
+    <details id="account-delete-details">
+      <summary data-account-copy="privacyDeletion"></summary>
+      <p data-account-copy="privacyDeletionHint"></p>
+      <form method="post" id="account-delete-form">
+        <label class="profile-visibility"><input disabled id="account-delete-agree" type="checkbox" required><span data-account-copy="privacyDeletionAgree"></span></label>
+        <button disabled id="account-delete-submit" type="submit" data-account-copy="privacyDeletionSubmit"></button>
+      </form>
+    </details>
+    <p id="account-deletion-status" role="status" hidden></p>
+    <button disabled id="account-delete-cancel" type="button" hidden data-account-copy="privacyDeletionCancel"></button>
+  </div>
 </section><section id="account-session-panel" class="account-card" hidden><h2 data-account-copy="sessions"></h2><button disabled id="account-sessions-refresh" type="button" data-account-copy="refresh"></button><div id="account-sessions"></div><form method="post" id="account-reauth-form" hidden><p data-account-copy="reauthHint"></p><label for="reauth-password" data-account-copy="password"></label><input disabled id="reauth-password" type="password" autocomplete="current-password" maxlength="256" required><button disabled type="submit" data-account-copy="reauth"></button></form></section></section>`;

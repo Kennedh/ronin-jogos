@@ -21,7 +21,7 @@ type Player = {
 type Merge = {
   id: string;
   source_player_id: string;
-  source_session_id: string;
+  source_session_id: string | null;
   target_player_id: string;
   proof_method: Proof["method"];
   proof_digest: Buffer | null;
