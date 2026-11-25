@@ -49,7 +49,7 @@ export class Sessions {
           locale: Session["locale"];
           status: string;
         }>(
-          "SELECT s.*,p.locale,p.status FROM sessions s JOIN players p ON p.id=s.player_id WHERE s.id=$1 AND s.revoked_at IS NULL AND s.expires_at>$2 AND p.status NOT IN ('DELETION_PENDING','ANONYMIZED') FOR UPDATE OF s",
+          "SELECT s.*,p.locale,p.status FROM sessions s JOIN players p ON p.id=s.player_id WHERE s.id=$1 AND s.revoked_at IS NULL AND s.expires_at>$2 AND p.status IN ('GUEST','EMAIL_PENDING','REGISTERED') FOR UPDATE OF s",
           [match[1], now],
         )
       ).rows[0];

@@ -395,76 +395,50 @@ paths:
   /auth/merge/preview:
     post:
       operationId: post_auth_merge_preview
-      tags:
-        - Auth
-      summary: Consultar potencial mesclagem com prova de ambas identidades
+      tags: [Auth]
+      summary: Comparar visitante e conta após autenticar a conta de destino
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - target_session_proof
-              properties:
-                target_session_proof:
-                  type: string
-              additionalProperties: false
+              $ref: "#/components/schemas/MergePreviewRequest"
       responses:
         "200":
-          description: Comparativo sem modificar dados
+          description: Comparativo e confirmação válida por cinco minutos
           content:
             application/json:
               schema:
-                type: object
-                required:
-                  - merge_nonce
-                  - source_player_id
-                  - target_player_id
-                properties:
-                  merge_nonce:
-                    type: string
-                  source_player_id:
-                    type: string
-                    format: uuid
-                  target_player_id:
-                    type: string
-                    format: uuid
-                  summary:
-                    type: object
-        "403":
-          $ref: "#/components/responses/Forbidden"
+                $ref: "#/components/schemas/MergePreview"
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "409": {$ref: "#/components/responses/Conflict"}
+        "429": {$ref: "#/components/responses/RateLimited"}
   /auth/merge/confirm:
     post:
       operationId: post_auth_merge_confirm
-      tags:
-        - Auth
-      summary: Mesclar duas identidades autenticadas com idempotencia
+      tags: [Auth]
+      summary: Transferir progresso ao destino após confirmação explícita
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - merge_nonce
-                - confirmed
-              properties:
-                merge_nonce:
-                  type: string
-                confirmed:
-                  type: boolean
-                  const: true
-              additionalProperties: false
+              $ref: "#/components/schemas/MergeConfirmRequest"
       responses:
         "200":
-          description: Perfil canonico, sem duplicar eventos
+          description: Perfil de destino, com sessão rotacionada na primeira confirmação
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/PlayerSummary"
-        "409":
-          $ref: "#/components/responses/Conflict"
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "409": {$ref: "#/components/responses/Conflict"}
   /auth/link:
     post:
       operationId: post_auth_link
@@ -1526,6 +1500,64 @@ components:
           type: array
           items:
             type: string
+    MergePreviewRequest:
+      oneOf:
+        - type: object
+          additionalProperties: false
+          required: [method, email, password]
+          properties:
+            method: {type: string, const: EMAIL}
+            email: {type: string, format: email, maxLength: 254}
+            password: {type: string, minLength: 1, maxLength: 256}
+        - type: object
+          additionalProperties: false
+          required: [method, id_token]
+          properties:
+            method: {type: string, const: GOOGLE}
+            id_token: {type: string, minLength: 1, maxLength: 5500}
+    MergeConfirmRequest:
+      type: object
+      additionalProperties: false
+      required: [merge_nonce, confirmed]
+      properties:
+        merge_nonce: {type: string, pattern: '^[A-Za-z0-9_-]{43}$'}
+        confirmed: {type: boolean, const: true}
+    MergeProgress:
+      type: object
+      additionalProperties: false
+      required: [nickname, runs, verified, best_ranked_score, regions, seals, rewards]
+      properties:
+        nickname: {type: [string, "null"]}
+        runs: {type: integer, minimum: 0}
+        verified: {type: integer, minimum: 0}
+        best_ranked_score:
+          type: [string, "null"]
+          pattern: '^(0|[1-9][0-9]*)$'
+        regions:
+          type: array
+          items: {type: string}
+        seals:
+          type: array
+          items: {type: string}
+        rewards:
+          type: array
+          items: {type: string}
+    MergePreview:
+      type: object
+      additionalProperties: false
+      required: [merge_nonce, source_player_id, target_player_id, expires_at, summary]
+      properties:
+        merge_nonce: {type: string, pattern: '^[A-Za-z0-9_-]{43}$'}
+        source_player_id: {type: string, format: uuid}
+        target_player_id: {type: string, format: uuid}
+        expires_at: {type: string, format: date-time}
+        summary:
+          type: object
+          additionalProperties: false
+          required: [source, target]
+          properties:
+            source: {$ref: "#/components/schemas/MergeProgress"}
+            target: {$ref: "#/components/schemas/MergeProgress"}
     GoogleConfig:
       type: object
       additionalProperties: false
@@ -1540,7 +1572,7 @@ components:
       properties:
         purpose:
           type: string
-          enum: [SIGN_IN, LINK, REAUTH]
+          enum: [SIGN_IN, LINK, REAUTH, MERGE]
     GoogleChallenge:
       type: object
       additionalProperties: false

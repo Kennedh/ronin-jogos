@@ -69,9 +69,25 @@ export const API_ERRORS = {
     "Use um apelido de 3 a 20 caracteres com letras, números, espaços, hífen ou sublinhado.",
     "Use a nickname of 3 to 20 characters with letters, numbers, spaces, hyphens or underscores.",
   ],
+  MERGE_NOT_AVAILABLE: [
+    "A transferência exige um visitante e uma conta de destino ativa.",
+    "A transfer requires a guest and an active destination account.",
+  ],
+  MERGE_PROOF_INVALID: [
+    "A confirmação expirou ou perdeu a validade. Compare os perfis novamente.",
+    "This confirmation expired or is no longer valid. Compare the profiles again.",
+  ],
+  MERGE_PREVIEW_CHANGED: [
+    "O progresso mudou desde a comparação. Confira os dois perfis novamente.",
+    "Progress has changed since the preview. Compare both profiles again.",
+  ],
+  MERGE_RUNS_IN_PROGRESS: [
+    "Encerre a partida do visitante e aguarde a verificação antes de transferir.",
+    "End the guest run and wait for verification before transferring.",
+  ],
   GUEST_PROGRESS_REQUIRES_LINK: [
-    "Este visitante tem progresso. Ele foi preservado; continue nele para manter seu acesso.",
-    "This guest has progress. It was preserved; keep using it to retain access.",
+    "Este visitante tem progresso. Para levá-lo à sua conta, compare os perfis na transferência abaixo.",
+    "This guest has progress. To take it to your account, compare the profiles in the transfer form below.",
   ],
   ACCOUNT_UNAVAILABLE: [
     "O serviço de contas está indisponível. Tente novamente mais tarde.",

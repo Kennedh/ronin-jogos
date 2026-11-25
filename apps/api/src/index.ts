@@ -11,7 +11,14 @@ import {
   TransportError,
 } from "@ronin/contracts/node-transport";
 import { preferredLocale } from "@ronin/content";
-import { Runs, Sessions, Fault, rateLimit, Accounts } from "@ronin/data";
+import {
+  Runs,
+  Sessions,
+  Fault,
+  rateLimit,
+  Accounts,
+  Merges,
+} from "@ronin/data";
 import type { Session, Clock, ResourcePolicy } from "@ronin/data";
 import { CURRENT_MANIFEST } from "@ronin/content/runner-manifest";
 import type { RunnerManifest } from "@ronin/content/runner-manifest";
@@ -108,6 +115,7 @@ export function createApi(options?: ApiOptions) {
     if (!accounts) throw new Fault(503, "ACCOUNT_UNAVAILABLE");
     return accounts;
   };
+  const merges = new Merges(options.pool, options.clock);
   const publicAuth = new Set([
     "/api/v1/auth/logout",
     "/api/v1/auth/login",
@@ -427,6 +435,65 @@ export function createApi(options?: ApiOptions) {
         : reply.status(204).send();
     });
   }
+  api.post(
+    "/api/v1/auth/merge/preview",
+    { bodyLimit: 8192 },
+    async (request) => {
+      if (!validate("MergePreviewRequest", request.body))
+        throw new Fault(422, "INVALID_REQUEST");
+      const body = request.body as components["schemas"]["MergePreviewRequest"];
+      const auth = session(request);
+      await rateLimit(
+        options.pool,
+        "merge-proof-ip",
+        createHmac("sha256", rateSecret).update(request.ip).digest(),
+        30,
+        options.clock,
+      );
+      if (body.method === "EMAIL") {
+        await rateLimit(
+          options.pool,
+          "password-login",
+          createHmac("sha256", rateSecret)
+            .update(body.email.trim().toLowerCase())
+            .digest(),
+          10,
+          options.clock,
+        );
+        const candidate = await uniform(() =>
+          account().provePassword(body.email, body.password),
+        );
+        return checked(
+          "MergePreview",
+          await merges.preview(auth, {
+            method: "EMAIL",
+            playerId: candidate.player_id,
+            passwordDigest: candidate.digest,
+          }),
+        );
+      }
+      if (!verifyGoogle) throw new Fault(503, "GOOGLE_UNAVAILABLE");
+      return checked(
+        "MergePreview",
+        await merges.preview(auth, {
+          method: "GOOGLE",
+          credential: await verifyGoogle(body.id_token),
+        }),
+      );
+    },
+  );
+  api.post(
+    "/api/v1/auth/merge/confirm",
+    { bodyLimit: 8192 },
+    async (request, reply) => {
+      const body = checkedBody("MergeConfirmRequest", request);
+      const auth = session(request);
+      const result = await merges.confirm(auth, body["merge_nonce"]!);
+      return result
+        ? useRotatedSession(reply, result)
+        : checked("PlayerSummary", await sessions.summary(auth));
+    },
+  );
   api.delete("/api/v1/auth/google/link", async (request, reply) =>
     useRotatedSession(reply, await account().unlinkGoogle(session(request))),
   );

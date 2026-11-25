@@ -35,7 +35,7 @@
 
 - Cookie de sessão opaco, `HttpOnly; Secure; SameSite=Lax`, **host-only** no domínio do portal, com rotação ao login/vínculo e proteção CSRF/origin nas mutações. Para autenticação que exija cross-site form ou popup, adaptar SameSite e fluxo de CSRF explicitamente, não remover proteção.
 - Conta registrada: baseline **30 dias de sessão lembrada** por dispositivo, renovação por atividade em limites; ações críticas pedem autenticação recente em até **10 minutos** e podem revogar outras sessões. Servidor mostra lista de sessões recentes e botão encerrar.
-- `POST /auth/merge/preview`: exige prova de acesso ao visitante atual E à conta destino; exibe resumo de progresso e ação que ocorrerá, sem alterar banco.
+- `POST /auth/merge/preview`: exige prova de acesso ao visitante atual E à conta destino; exibe resumo e cria uma confirmação temporária vinculada à sessão, sem modificar o progresso.
 - `POST /auth/merge/confirm`: operação com `merge_id` idempotente e transação que migra **runs distintas por ID**, união de conquistas, progresso semanal por evento, selos e trajes, recorde como máximo válido; não somar contadores agregados duas vezes. Exibir conflito de aparência e preservar visual da conta de destino até escolha explícita.
 - Após sucesso, revogar sessões de origem visitante migrado e emitir sessão nova no perfil destino; guardar auditoria sem senhas ou tokens. Em falha, perfis continuam recuperáveis e não apagar guest antes do commit.
 - Se e-mail já pertence a outra conta e usuário não prova posse, **NÃO MESCLAR**; oferecer troca de método, login existente ou suporte sem exposição da existência da conta.
@@ -95,8 +95,8 @@
 | Esqueci | POST /api/v1/auth/password/forgot | email | accepted genérico | público com limite |
 | Reset | POST /api/v1/auth/password/reset | token,new_password | success | token válido |
 | Link | POST /api/v1/auth/link | provider, proof | linked | sessão+reauth |
-| Merge preview | POST /api/v1/auth/merge/preview | session proof | preview+merge_nonce | ambos perfis autenticados |
-| Merge confirm | POST /api/v1/auth/merge/confirm | merge_nonce,confirm | canonical_player | prova dupla |
+| Merge preview | POST /api/v1/auth/merge/preview | credencial de destino por senha ou Google | resumo, validade e merge_nonce | sessão visitante, CSRF e prova do destino |
+| Merge confirm | POST /api/v1/auth/merge/confirm | merge_nonce, confirmed=true | perfil da conta destino | sessão visitante, CSRF e prova dupla vigente |
 | Perfil | GET /api/v1/me | - | profile+progress summary | sessão |
 | Aparência | GET/PATCH /api/v1/me/character | option_ids,appearance_version | canonical_character | sessão e posse |
 | Catálogo | GET /api/v1/character/catalog | locale? | parts+unlock requirements | público |
