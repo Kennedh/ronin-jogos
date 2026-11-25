@@ -1,6 +1,26 @@
 import type { Locale } from "./index.ts";
 /** Same message_key contract in both locales; technical/private diagnostics stay server-side. */
 export const API_ERRORS = {
+  PRIVACY_ACCOUNT_REQUIRED: [
+    "Entre no seu Ronin ID para acessar esta opção.",
+    "Sign in to your Ronin ID to use this option.",
+  ],
+  PRIVACY_RUNS_IN_PROGRESS: [
+    "Encerre a partida e aguarde a verificação antes de pedir a exclusão.",
+    "Finish the run and wait for verification before requesting deletion.",
+  ],
+  ACCOUNT_DELETION_PENDING: [
+    "A conta está com exclusão pendente. Você pode cancelar o pedido no Ronin ID.",
+    "Account deletion is pending. You can cancel the request from Ronin ID.",
+  ],
+  DELETION_CANNOT_CANCEL: [
+    "O prazo para cancelar este pedido terminou.",
+    "The cancellation window for this request has ended.",
+  ],
+  NICKNAME_REVIEW_UNAVAILABLE: [
+    "A revisão deste apelido está indisponível.",
+    "Review is unavailable for this nickname.",
+  ],
   GOOGLE_UNAVAILABLE: [
     "O login com Google está indisponível.",
     "Google sign-in is unavailable.",

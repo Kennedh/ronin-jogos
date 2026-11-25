@@ -136,6 +136,47 @@ export class RunnerApi {
     if (profile) this.playerId = profile.player_id;
     return profile;
   }
+  async privacyStatus() {
+    return (await this.request(
+      "/me/privacy",
+      "GET",
+      "PrivacyStatus",
+    )) as components["schemas"]["PrivacyStatus"];
+  }
+  async exportData(cursor?: components["schemas"]["PrivacyExportCursor"]) {
+    return (await this.request(
+      "/me/export",
+      "POST",
+      "PrivacyExportPage",
+      JSON.stringify(cursor ? { cursor } : {}),
+      { "content-type": "application/json" },
+    )) as components["schemas"]["PrivacyExportPage"];
+  }
+  async requestDeletion() {
+    return (await this.request(
+      "/me/delete-request",
+      "POST",
+      "PrivacyStatus",
+      JSON.stringify({ confirmed: true }),
+      { "content-type": "application/json" },
+    )) as components["schemas"]["PrivacyStatus"];
+  }
+  async cancelDeletion() {
+    return (await this.request(
+      "/me/delete-request",
+      "DELETE",
+      "PrivacyStatus",
+    )) as components["schemas"]["PrivacyStatus"];
+  }
+  async appealNickname() {
+    return (await this.request(
+      "/me/nickname-appeal",
+      "POST",
+      "PrivacyStatus",
+      "{}",
+      { "content-type": "application/json" },
+    )) as components["schemas"]["PrivacyStatus"];
+  }
   async mergePreview(input: components["schemas"]["MergePreviewRequest"]) {
     return (await this.request(
       "/auth/merge/preview",

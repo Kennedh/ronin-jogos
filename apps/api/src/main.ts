@@ -17,7 +17,7 @@ api.addHook("onClose", async () => {
   await pool.end();
 });
 try {
-  await pool.query("SELECT provider FROM auth_identities LIMIT 0");
+  await pool.query("SELECT state FROM deletion_requests LIMIT 0");
   await api.listen({ host: "127.0.0.1", port });
   console.log(
     `Ronin dev API: http://127.0.0.1:${port}; inicie db:dev e dev:verifier separadamente.`,

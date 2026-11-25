@@ -453,6 +453,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/me/privacy": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Estado privado de exclusão e revisão de apelido */
+    get: operations["getPrivacyStatus"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/me/export": {
     parameters: {
       query?: never;
@@ -462,7 +479,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Solicitar exportacao de dados protegida */
+    /** Exportar dados próprios com autenticação recente */
     post: operations["post_me_export"];
     delete?: never;
     options?: never;
@@ -479,8 +496,26 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Solicitar exclusao de conta apos reautenticacao */
+    /** Solicitar exclusão de conta após consentimento explícito */
     post: operations["post_me_delete_request"];
+    /** Cancelar pedido antes do prazo */
+    delete: operations["cancelDeletion"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/me/nickname-appeal": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Solicitar revisão da ocultação do próprio apelido */
+    post: operations["appealNickname"];
     delete?: never;
     options?: never;
     head?: never;
@@ -775,7 +810,8 @@ export interface components {
     RunMode: "FULL" | "REGIONAL";
     PlayerSummary: {
       /** @enum {string} */
-      account_status?: "GUEST" | "EMAIL_PENDING" | "REGISTERED";
+      account_status?:
+        "GUEST" | "EMAIL_PENDING" | "REGISTERED" | "DELETION_PENDING";
       /** Format: email */
       email?: string | null;
       /** Format: uuid */
@@ -790,6 +826,110 @@ export interface components {
       nickname_change_available_at?: string | null;
       email_verified?: boolean;
       region_unlocks?: string[];
+    };
+    DeletionConsent: {
+      /** @constant */
+      confirmed: true;
+    };
+    PrivacyStatus: {
+      deletion: {
+        /** @enum {string} */
+        state: "PENDING" | "CANCELLED" | "COMPLETED";
+        /** Format: date-time */
+        requested_at: string;
+        /** Format: date-time */
+        finalize_at: string;
+        /** Format: date-time */
+        resolved_at: string | null;
+      } | null;
+      nickname_moderation: {
+        /** @enum {string} */
+        state: "HIDDEN" | "APPEALED" | "RESTORED" | "UPHELD";
+        /** @enum {string} */
+        reason: "IMPERSONATION" | "OFFENSIVE" | "PERSONAL_DATA" | "OTHER";
+        /** Format: date-time */
+        hidden_at: string;
+        /** Format: date-time */
+        appealed_at: string | null;
+        /** Format: date-time */
+        resolved_at: string | null;
+      } | null;
+    };
+    PrivacyExportCursor: {
+      /** Format: uuid */
+      after_id: string;
+      /** Format: date-time */
+      started_through: string;
+    };
+    PrivacyExportRequest: {
+      cursor?: components["schemas"]["PrivacyExportCursor"];
+    };
+    PrivacyExportPage: {
+      /** @constant */
+      version: 1;
+      /** Format: date-time */
+      exported_at: string;
+      profile: {
+        /** Format: uuid */
+        player_id: string;
+        nickname: string | null;
+        /** @enum {string} */
+        locale: "pt-BR" | "en";
+        public_profile: boolean;
+        /** @enum {string} */
+        status: "REGISTERED" | "DELETION_PENDING";
+        /** Format: date-time */
+        created_at: string;
+        email: string | null;
+        /** Format: date-time */
+        email_verified_at: string | null;
+        pending_email: string | null;
+        /** Format: date-time */
+        google_linked_at: string | null;
+      };
+      progress: {
+        regions: string[];
+        seals: {
+          boss_id: string;
+          /** Format: date-time */
+          earned_at: string;
+          /** Format: uuid */
+          run_id: string;
+        }[];
+        rewards: {
+          reward_id: string;
+          /** Format: date-time */
+          earned_at: string;
+          /** Format: uuid */
+          run_id: string;
+        }[];
+      };
+      sessions: {
+        /** Format: date-time */
+        created_at: string;
+        /** Format: date-time */
+        last_seen_at: string;
+        /** Format: date-time */
+        expires_at: string;
+      }[];
+      runs: {
+        /** Format: uuid */
+        run_id: string;
+        /** @enum {string} */
+        mode: "FULL" | "REGIONAL";
+        starting_region: string;
+        /** Format: date-time */
+        started_at: string;
+        status: string;
+        end_reason: string | null;
+        score: string | null;
+        real_distance_units: string | null;
+        ranked: boolean | null;
+        /** Format: date-time */
+        verified_at: string | null;
+      }[];
+      privacy: components["schemas"]["PrivacyStatus"];
+      next_cursor: components["schemas"]["PrivacyExportCursor"] | null;
     };
     MergePreviewRequest:
       | {
@@ -2046,7 +2186,7 @@ export interface operations {
       };
     };
   };
-  post_me_export: {
+  getPrivacyStatus: {
     parameters: {
       query?: never;
       header?: never;
@@ -2055,12 +2195,41 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description Pedido aceito apos autenticacao recente quando necessario */
-      202: {
+      /** @description Estado do próprio jogador */
+      200: {
         headers: {
           [name: string]: unknown;
         };
-        content?: never;
+        content: {
+          "application/json": components["schemas"]["PrivacyStatus"];
+        };
+      };
+      401: components["responses"]["Unauthorized"];
+    };
+  };
+  post_me_export: {
+    parameters: {
+      query?: never;
+      header: {
+        "X-CSRF-Token": components["parameters"]["CsrfToken"];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PrivacyExportRequest"];
+      };
+    };
+    responses: {
+      /** @description Parte de uma exportação privada */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PrivacyExportPage"];
+        };
       };
       403: components["responses"]["Forbidden"];
     };
@@ -2068,20 +2237,80 @@ export interface operations {
   post_me_delete_request: {
     parameters: {
       query?: never;
-      header?: never;
+      header: {
+        "X-CSRF-Token": components["parameters"]["CsrfToken"];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["DeletionConsent"];
+      };
+    };
+    responses: {
+      /** @description Pedido agendado e prazo de cancelamento */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PrivacyStatus"];
+        };
+      };
+      403: components["responses"]["Forbidden"];
+      409: components["responses"]["Conflict"];
+    };
+  };
+  cancelDeletion: {
+    parameters: {
+      query?: never;
+      header: {
+        "X-CSRF-Token": components["parameters"]["CsrfToken"];
+      };
       path?: never;
       cookie?: never;
     };
     requestBody?: never;
     responses: {
-      /** @description Pedido aceito com instrucoes e periodo de confirmacao */
-      202: {
+      /** @description Pedido cancelado */
+      200: {
         headers: {
           [name: string]: unknown;
         };
-        content?: never;
+        content: {
+          "application/json": components["schemas"]["PrivacyStatus"];
+        };
       };
       403: components["responses"]["Forbidden"];
+      409: components["responses"]["Conflict"];
+    };
+  };
+  appealNickname: {
+    parameters: {
+      query?: never;
+      header: {
+        "X-CSRF-Token": components["parameters"]["CsrfToken"];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["EmptyRequest"];
+      };
+    };
+    responses: {
+      /** @description Estado privado da revisão */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PrivacyStatus"];
+        };
+      };
+      401: components["responses"]["Unauthorized"];
     };
   };
   get_me: {

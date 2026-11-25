@@ -136,3 +136,16 @@ Para habilitar no ambiente escolhido, crie um cliente OAuth do tipo **Aplicativo
 No ambiente local, mantenha a origem da API e a URL do navegador iguais ao endereço autorizado no cliente Web. Em staging, confira CSP e, se o popup legado exigir, `Cross-Origin-Opener-Policy: same-origin-allow-popups`. Com o ID ausente, o portal mantém os fluxos de visitante e e-mail. A suíte usa chaves locais e pode ser executada sem cliente Google.
 
 Antes de usar a integração com contas reais, valide o popup, a política de divulgação de dados e as origens do cliente Web no ambiente autorizado. O cronograma de fusão de perfis, exclusão e exportação está no [PROGRESS.md](PROGRESS.md).
+
+### Privacidade e revisão de apelidos em desenvolvimento
+
+No Ronin ID, use **Baixar meus dados** para exportar perfil, métodos, sessões, partidas e progresso. **Excluir minha conta** exige confirmação explícita. A conta pode cancelar o pedido durante sete dias após reautenticar com senha ou Google.
+
+A migração 009 habilita estes comandos no banco sintético local.
+
+- `npm run dev:privacy -- finalize` processa até 100 pedidos vencidos. A entrada é revalidada dentro da transação.
+- `npm run dev:privacy -- hide <id-do-jogador> <motivo>` oculta o apelido. Os motivos válidos são `IMPERSONATION`, `OFFENSIVE`, `PERSONAL_DATA` e `OTHER`.
+- `npm run dev:privacy -- queue` lista revisões pendentes. Use `inspect <id-do-jogador>` no mesmo comando para examinar apenas a conta selecionada em um terminal autorizado.
+- `npm run dev:privacy -- resolve <id-do-jogador> <decisão>` encerra a revisão com `RESTORED` ou `UPHELD`.
+
+A manutenção remove os dados de acesso e as mensagens associadas no banco da aplicação. A pasta de entrega de teste, backups e qualquer transporte externo têm retenção própria. A futura implantação precisa agendar a manutenção e fechar a retenção de evidências competitivas e registros.

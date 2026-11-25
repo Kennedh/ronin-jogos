@@ -23,6 +23,7 @@ export interface Session {
   csrfToken: string;
   expiresAt: Date;
   locale: "pt-BR" | "en";
+  deletionPending?: true;
 }
 export class Sessions {
   readonly pool: Pool;
@@ -49,7 +50,7 @@ export class Sessions {
           locale: Session["locale"];
           status: string;
         }>(
-          "SELECT s.*,p.locale,p.status FROM sessions s JOIN players p ON p.id=s.player_id WHERE s.id=$1 AND s.revoked_at IS NULL AND s.expires_at>$2 AND p.status IN ('GUEST','EMAIL_PENDING','REGISTERED') FOR UPDATE OF s",
+          "SELECT s.*,p.locale,p.status FROM sessions s JOIN players p ON p.id=s.player_id WHERE s.id=$1 AND s.revoked_at IS NULL AND s.expires_at>$2 AND p.status IN ('GUEST','EMAIL_PENDING','REGISTERED','DELETION_PENDING') FOR UPDATE OF s",
           [match[1], now],
         )
       ).rows[0];
@@ -61,7 +62,9 @@ export class Sessions {
         !timingSafeEqual(row.csrf_digest, digest(csrfToken))
       )
         throw new Fault(401, "SESSION_REQUIRED");
-      const days = row.status === "REGISTERED" ? 30 : 90;
+      const days = ["REGISTERED", "DELETION_PENDING"].includes(row.status)
+        ? 30
+        : 90;
       const expiresAt = new Date(now.getTime() + days * 86400000);
       if (row.expires_at.getTime() - now.getTime() < (days - 1) * 86400000) {
         await db.query("UPDATE sessions SET expires_at=$2 WHERE id=$1", [
@@ -80,6 +83,9 @@ export class Sessions {
         csrfToken,
         expiresAt: row.expires_at,
         locale: row.locale,
+        ...(row.status === "DELETION_PENDING"
+          ? { deletionPending: true as const }
+          : {}),
       };
     });
   }
@@ -127,8 +133,9 @@ export class Sessions {
           nickname: string | null;
           nickname_changed_at: Date | null;
           public_profile: boolean;
+          nickname_hidden: boolean;
         }>(
-          "SELECT nickname,nickname_changed_at,public_profile FROM players WHERE id=$1 AND status IN ('GUEST','EMAIL_PENDING','REGISTERED') FOR UPDATE",
+          "SELECT nickname,nickname_changed_at,public_profile,EXISTS (SELECT 1 FROM nickname_moderation WHERE player_id=$1 AND state IN ('HIDDEN','APPEALED','UPHELD')) AS nickname_hidden FROM players WHERE id=$1 AND status IN ('GUEST','EMAIL_PENDING','REGISTERED') FOR UPDATE",
           [auth.playerId],
         )
       ).rows[0];
@@ -146,6 +153,7 @@ export class Sessions {
       const isPublic = input.public_profile ?? player.public_profile;
       if (changedName && name !== null) {
         if (
+          !player.nickname_hidden &&
           player.nickname_changed_at &&
           now.getTime() <
             player.nickname_changed_at.getTime() + NICKNAME_CHANGE_INTERVAL
@@ -186,7 +194,8 @@ export class Sessions {
         : p.status === "GUEST"
           ? "GUEST"
           : "EMAIL",
-      account_status: p.status as "GUEST" | "EMAIL_PENDING" | "REGISTERED",
+      account_status: p.status as
+        "GUEST" | "EMAIL_PENDING" | "REGISTERED" | "DELETION_PENDING",
       nickname: p.nickname,
       public_profile: p.public_profile,
       nickname_change_available_at: p.nickname_changed_at
