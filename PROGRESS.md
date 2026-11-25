@@ -1,12 +1,20 @@
 # Ronin Runner — continuidade
 
-## Estado atual — parte 5B, Google e métodos vinculados
+## Estado atual — parte 5B, fusão explícita de perfis
+
+O Ronin ID permite transferir o progresso do visitante para uma conta existente após prova por senha ou Google. A prévia mostra apelidos, partidas, recorde elegível, regiões, selos e recompensas, com confirmação válida por cinco minutos. Partidas do visitante em andamento ou em verificação precisam terminar antes da fusão.
+
+A migração 008 registra a operação e a origem das partidas. O banco move a propriedade de partidas encerradas e suas evidências sem reconstruir replays, mantém o mesmo ID e preserva a preferência e o apelido da conta de destino. Regiões, selos e recompensas são unidos sem duplicação. Quatro selos distribuídos entre os perfis liberam o Traço da Aurora. A fusão emite um único evento de outbox, encerra o visitante e revoga suas sessões dentro da transação. Uma repetição autenticada no destino reaproveita o resultado. Após perder a resposta da confirmação, o jogador pode recuperar o progresso por login na conta de destino.
+
+Tabela de ranking, semanários, criador e inventário ainda pertencem às suas respectivas fases. Suas projeções devem usar as partidas verificadas da conta canônica e o evento de fusão. Exportação, exclusão e moderação seguem pendentes da 5B.
+
+## Parte 5B — Google e métodos vinculados
 
 Implementação em `feat/runner-google-5b` sobre `fcbc214`/PR #10. O Ronin ID aceita login com Google, converte um visitante no mesmo jogador e associa Google a uma conta por e-mail autenticada. Uma conta criada pelo Google também pode adicionar e-mail e senha após reautenticação e confirmação do endereço. É possível desvincular o Google quando existe senha. A operação revoga sessões e entrega uma sessão nova.
 
 A migração 007 adiciona identidades por `(provider, subject)` e uma prova de cinco minutos vinculada à sessão e à finalidade. O callback do Google Identity Services passa pelo POST de mesma origem com CSRF. O servidor verifica RS256, emissor, destinatário, validade, idade e nonce. Consome o nonce na transação de login, vínculo ou reautenticação. O e-mail e o nome recebidos do Google ficam fora do perfil. Progresso de visitante que entra em outro perfil precisa do fluxo explícito de fusão.
 
-Consulte o README para a configuração do cliente Web. A QA usa chaves locais e JWTs assinados, com a interface exercitada em Chromium. A homologação com conta e cliente Google reais depende das origens autorizadas. A próxima fatia da 5B cobre fusão explícita de perfis com prova dupla. Exportação, exclusão e moderação seguem pendentes.
+Consulte o README para a configuração do cliente Web. A QA usa chaves locais e JWTs assinados, com a interface exercitada em Chromium. A homologação com conta e cliente Google reais depende das origens autorizadas. A fusão explícita de perfis foi implementada na fatia subsequente, descrita acima.
 
 ## Parte 5B — perfil do jogador
 

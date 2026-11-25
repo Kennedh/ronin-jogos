@@ -1250,6 +1250,28 @@ footer a {
   flex-direction: column;
   gap: 0.7rem;
 }
+#account-merge-comparison section {
+  border: 1px solid currentColor;
+  padding: 1rem;
+  min-width: 0;
+}
+#account-merge-comparison dl {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.25rem 1rem;
+  margin-bottom: 0;
+}
+#account-merge-comparison dd {
+  margin: 0;
+  text-align: right;
+  overflow-wrap: anywhere;
+  max-width: 16ch;
+}
+#account-merge-cancel,
+#account-merge-open,
+#account-merge-google {
+  margin-top: 0.75rem;
+}
 .account-page .profile-visibility {
   display: flex;
   align-items: center;

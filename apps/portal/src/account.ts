@@ -22,6 +22,8 @@ export async function initializeAccount(
     list: components["schemas"]["AccountSessions"] | undefined,
     googleClientId: string | null = null,
     googleRequest: { playerId: string } | undefined,
+    mergeOpen = false,
+    mergePreview: components["schemas"]["MergePreview"] | undefined,
     busy = true,
     reauth = false,
     message: AccountTextKey | "" = "",
@@ -31,6 +33,66 @@ export async function initializeAccount(
   function clearGoogleButton() {
     googleRequest = undefined;
     get("account-google-button").replaceChildren();
+    get("account-merge-google-button").replaceChildren();
+  }
+  function clearMerge() {
+    mergeOpen = false;
+    mergePreview = undefined;
+    get<HTMLInputElement>("account-merge-agree").checked = false;
+  }
+  function showMerge(preview: components["schemas"]["MergePreview"]) {
+    mergeOpen = true;
+    mergePreview = preview;
+    get<HTMLInputElement>("account-merge-agree").checked = false;
+    message = "mergeReviewReady";
+  }
+  function renderMerge(t: ReturnType<typeof copy>, registered: boolean) {
+    const guest = !!profile && !registered;
+    get("account-merge-panel").hidden = !guest || !mergeOpen;
+    get("account-merge-open").hidden = !guest || mergeOpen;
+    get("account-merge-google").hidden = !googleClientId;
+    get("account-merge-proof").hidden = !!mergePreview;
+    get("account-merge-preview").hidden = !mergePreview;
+    const comparison = get("account-merge-comparison");
+    comparison.replaceChildren();
+    if (!mergePreview) return;
+    const number = new Intl.NumberFormat(context.locale());
+    for (const [key, data] of [
+      ["mergeSource", mergePreview.summary.source],
+      ["mergeTarget", mergePreview.summary.target],
+    ] as const) {
+      const section = document.createElement("section");
+      const heading = document.createElement("h3");
+      const list = document.createElement("dl");
+      heading.textContent = t[key];
+      for (const [label, value] of [
+        [t.nickname, data.nickname ?? t.mergeNoNickname],
+        [t.mergeRuns, number.format(data.runs)],
+        [t.mergeVerified, number.format(data.verified)],
+        [
+          t.mergeBest,
+          data.best_ranked_score === null
+            ? "—"
+            : number.format(BigInt(data.best_ranked_score)),
+        ],
+        [t.mergeRegions, number.format(data.regions.length)],
+        [t.mergeSeals, number.format(data.seals.length)],
+        [t.mergeRewards, number.format(data.rewards.length)],
+      ]) {
+        const term = document.createElement("dt");
+        const description = document.createElement("dd");
+        term.textContent = label ?? "";
+        description.textContent = value ?? "";
+        list.append(term, description);
+      }
+      section.append(heading, list);
+      comparison.append(section);
+    }
+    const expiry = new Intl.DateTimeFormat(context.locale(), {
+      timeStyle: "short",
+    });
+    get("account-merge-expiry").textContent =
+      t.mergeExpiry + " " + expiry.format(new Date(mergePreview.expires_at));
   }
   function render() {
     const t = copy();
@@ -120,6 +182,11 @@ export async function initializeAccount(
       HTMLButtonElement | HTMLInputElement
     >(".account-page button,.account-page input"))
       input.disabled = busy;
+    renderMerge(t, registered);
+    get<HTMLButtonElement>("account-merge-confirm").disabled =
+      busy ||
+      !mergePreview ||
+      !get<HTMLInputElement>("account-merge-agree").checked;
     get("account-sessions").replaceChildren();
     for (const row of list?.sessions ?? []) {
       const article = document.createElement("article"),
@@ -171,9 +238,17 @@ export async function initializeAccount(
       error =
         e instanceof ClientError ? e : new ClientError("SERVICE_UNAVAILABLE");
       if (error.code === "REAUTH_REQUIRED") reauth = true;
+      if (error.code === "GUEST_PROGRESS_REQUIRES_LINK") mergeOpen = true;
+      if (
+        ["MERGE_PREVIEW_CHANGED", "MERGE_PROOF_INVALID"].includes(error.code)
+      ) {
+        mergePreview = undefined;
+        get<HTMLInputElement>("account-merge-agree").checked = false;
+      }
       if (["SESSION_REQUIRED", "SESSION_CHANGED"].includes(error.code)) {
         profile = undefined;
         list = undefined;
+        clearMerge();
         bootstrapError = true;
       }
     } finally {
@@ -203,6 +278,7 @@ export async function initializeAccount(
     ["account-google-signin", "SIGN_IN"],
     ["account-google-link", "LINK"],
     ["account-google-reauth", "REAUTH"],
+    ["account-merge-google", "MERGE"],
   ] as const) {
     get(id).addEventListener("click", () => {
       void run(async () => {
@@ -211,7 +287,11 @@ export async function initializeAccount(
         const request = { playerId: profile.player_id };
         const { nonce } = await api.googleChallenge(purpose);
         googleRequest = request;
-        const slot = get("account-google-button");
+        const slot = get(
+          purpose === "MERGE"
+            ? "account-merge-google-button"
+            : "account-google-button",
+        );
         try {
           await renderGoogleButton(
             slot,
@@ -227,6 +307,15 @@ export async function initializeAccount(
                 return;
               clearGoogleButton();
               void run(async () => {
+                if (purpose === "MERGE") {
+                  showMerge(
+                    await api.mergePreview({
+                      method: "GOOGLE",
+                      id_token: token,
+                    }),
+                  );
+                  return;
+                }
                 const signedIn = await api.googleAuth(purpose, token);
                 if (signedIn) profile = signedIn;
                 await loadSessions();
@@ -254,6 +343,42 @@ export async function initializeAccount(
       await loadSessions();
       message = "googleUnlinkDone";
     });
+  });
+  get("account-merge-open").addEventListener("click", () => {
+    clearGoogleButton();
+    mergeOpen = true;
+    message = "";
+    render();
+    get<HTMLInputElement>("merge-email").focus();
+  });
+  get("account-merge-cancel").addEventListener("click", () => {
+    clearGoogleButton();
+    clearMerge();
+    message = "";
+    error = undefined;
+    const input = get<HTMLInputElement>("merge-password");
+    input.value = "";
+    render();
+    get("account-merge-open").focus();
+  });
+  get("account-merge-agree").addEventListener("change", render);
+  form("account-merge-proof-form", async (data) => {
+    clearGoogleButton();
+    showMerge(
+      await api.mergePreview({
+        method: "EMAIL",
+        email: String(data.get("email")),
+        password: String(data.get("password")),
+      }),
+    );
+  });
+  form("account-merge-confirm-form", async () => {
+    if (!mergePreview || !get<HTMLInputElement>("account-merge-agree").checked)
+      return;
+    profile = await api.mergeConfirm(mergePreview.merge_nonce);
+    clearMerge();
+    await loadSessions();
+    message = "mergeDone";
   });
   form("account-profile-form", async (data) => {
     if (!profile) return;

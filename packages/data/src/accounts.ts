@@ -24,7 +24,8 @@ export function normalizedEmail(value: string) {
 }
 import { nickname, reserveNickname } from "./nicknames.ts";
 
-type GooglePurpose = "SIGN_IN" | "LINK" | "REAUTH";
+import { consumeGoogleChallenge } from "./google-challenges.ts";
+import type { GoogleCredential, GooglePurpose } from "./google-challenges.ts";
 
 export class Accounts {
   readonly pool: Pool;
@@ -44,7 +45,7 @@ export class Accounts {
   private async player(db: PoolClient, id: string) {
     const p = (
       await db.query(
-        "SELECT * FROM players WHERE id=$1 AND status NOT IN ('DELETION_PENDING','ANONYMIZED') FOR UPDATE",
+        "SELECT * FROM players WHERE id=$1 AND status IN ('GUEST','EMAIL_PENDING','REGISTERED') FOR UPDATE",
         [id],
       )
     ).rows[0];
@@ -324,7 +325,7 @@ export class Accounts {
       return this.sessions.issue(db, p.id, p.locale, now);
     });
   }
-  async login(emailValue: string, password: string, current?: Session) {
+  async provePassword(emailValue: string, password: string) {
     const email = normalizedEmail(emailValue),
       candidate = (
         await this.pool.query(
@@ -341,6 +342,10 @@ export class Accounts {
     const valid = await this.hasher.verify(password, candidate);
     if (!valid || candidate?.status !== "REGISTERED")
       throw new Fault(401, "INVALID_CREDENTIALS");
+    return candidate;
+  }
+  async login(emailValue: string, password: string, current?: Session) {
+    const candidate = await this.provePassword(emailValue, password);
     return transaction(this.pool, async (db) => {
       const now = await serverTime(db, this.clock);
       await db.query(
@@ -398,8 +403,13 @@ export class Accounts {
       const now = await serverTime(db, this.clock),
         p = await this.player(db, auth.playerId);
       await this.live(db, auth, now, purpose === "LINK");
-      if (purpose !== "SIGN_IN" && p.status !== "REGISTERED")
+      if (
+        (purpose === "LINK" || purpose === "REAUTH") &&
+        p.status !== "REGISTERED"
+      )
         throw new Fault(403, "GOOGLE_ACCOUNT_REQUIRED");
+      if (purpose === "MERGE" && p.status === "REGISTERED")
+        throw new Fault(409, "MERGE_NOT_AVAILABLE");
       const nonce = randomBytes(32).toString("base64url");
       await db.query(
         "DELETE FROM google_challenges WHERE session_id IN (SELECT session_id FROM google_challenges WHERE expires_at<=$1 LIMIT 100 FOR UPDATE SKIP LOCKED)",
@@ -420,11 +430,11 @@ export class Accounts {
 
   async google(
     auth: Session,
-    purpose: GooglePurpose,
-    credential: { subject: string; nonce: string; expiresAt: Date },
+    purpose: Exclude<GooglePurpose, "MERGE">,
+    credential: GoogleCredential,
   ) {
     return transaction(this.pool, async (db) => {
-      const { subject, nonce, expiresAt } = credential;
+      const { subject } = credential;
       // Serialize first-time claims for one subject, then lock player rows in UUID order.
       await db.query(
         "SELECT pg_advisory_xact_lock(hashtextextended('google:' || $1, 0))",
@@ -452,16 +462,13 @@ export class Accounts {
       const now = await serverTime(db, this.clock),
         source = await this.player(db, auth.playerId);
       await this.live(db, auth, now, purpose === "LINK");
-      if (
-        expiresAt <= now ||
-        !(
-          await db.query(
-            "DELETE FROM google_challenges WHERE session_id=$1 AND purpose=$2 AND nonce_digest=$3 AND expires_at>$4",
-            [auth.sessionId, purpose, digest(nonce), now],
-          )
-        ).rowCount
-      )
-        throw new Fault(401, "GOOGLE_CREDENTIAL_INVALID");
+      await consumeGoogleChallenge(
+        db,
+        auth.sessionId,
+        purpose,
+        credential,
+        now,
+      );
       const owner = await identity();
       if (purpose === "REAUTH") {
         if (source.status !== "REGISTERED" || owner !== source.id)

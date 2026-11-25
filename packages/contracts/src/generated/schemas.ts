@@ -49,6 +49,152 @@ export const definitions = {
       },
     },
   },
+  MergePreviewRequest: {
+    oneOf: [
+      {
+        type: "object",
+        additionalProperties: false,
+        required: ["method", "email", "password"],
+        properties: {
+          method: {
+            type: "string",
+            const: "EMAIL",
+          },
+          email: {
+            type: "string",
+            format: "email",
+            maxLength: 254,
+          },
+          password: {
+            type: "string",
+            minLength: 1,
+            maxLength: 256,
+          },
+        },
+      },
+      {
+        type: "object",
+        additionalProperties: false,
+        required: ["method", "id_token"],
+        properties: {
+          method: {
+            type: "string",
+            const: "GOOGLE",
+          },
+          id_token: {
+            type: "string",
+            minLength: 1,
+            maxLength: 5500,
+          },
+        },
+      },
+    ],
+  },
+  MergeConfirmRequest: {
+    type: "object",
+    additionalProperties: false,
+    required: ["merge_nonce", "confirmed"],
+    properties: {
+      merge_nonce: {
+        type: "string",
+        pattern: "^[A-Za-z0-9_-]{43}$",
+      },
+      confirmed: {
+        type: "boolean",
+        const: true,
+      },
+    },
+  },
+  MergeProgress: {
+    type: "object",
+    additionalProperties: false,
+    required: [
+      "nickname",
+      "runs",
+      "verified",
+      "best_ranked_score",
+      "regions",
+      "seals",
+      "rewards",
+    ],
+    properties: {
+      nickname: {
+        type: ["string", "null"],
+      },
+      runs: {
+        type: "integer",
+        minimum: 0,
+      },
+      verified: {
+        type: "integer",
+        minimum: 0,
+      },
+      best_ranked_score: {
+        type: ["string", "null"],
+        pattern: "^(0|[1-9][0-9]*)$",
+      },
+      regions: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+      },
+      seals: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+      },
+      rewards: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+      },
+    },
+  },
+  MergePreview: {
+    type: "object",
+    additionalProperties: false,
+    required: [
+      "merge_nonce",
+      "source_player_id",
+      "target_player_id",
+      "expires_at",
+      "summary",
+    ],
+    properties: {
+      merge_nonce: {
+        type: "string",
+        pattern: "^[A-Za-z0-9_-]{43}$",
+      },
+      source_player_id: {
+        type: "string",
+        format: "uuid",
+      },
+      target_player_id: {
+        type: "string",
+        format: "uuid",
+      },
+      expires_at: {
+        type: "string",
+        format: "date-time",
+      },
+      summary: {
+        type: "object",
+        additionalProperties: false,
+        required: ["source", "target"],
+        properties: {
+          source: {
+            $ref: "#/$defs/MergeProgress",
+          },
+          target: {
+            $ref: "#/$defs/MergeProgress",
+          },
+        },
+      },
+    },
+  },
   GoogleConfig: {
     type: "object",
     additionalProperties: false,
@@ -66,7 +212,7 @@ export const definitions = {
     properties: {
       purpose: {
         type: "string",
-        enum: ["SIGN_IN", "LINK", "REAUTH"],
+        enum: ["SIGN_IN", "LINK", "REAUTH", "MERGE"],
       },
     },
   },

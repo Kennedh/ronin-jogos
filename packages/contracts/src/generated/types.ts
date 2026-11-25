@@ -241,7 +241,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Consultar potencial mesclagem com prova de ambas identidades */
+    /** Comparar visitante e conta após autenticar a conta de destino */
     post: operations["post_auth_merge_preview"];
     delete?: never;
     options?: never;
@@ -258,7 +258,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Mesclar duas identidades autenticadas com idempotencia */
+    /** Transferir progresso ao destino após confirmação explícita */
     post: operations["post_auth_merge_confirm"];
     delete?: never;
     options?: never;
@@ -791,12 +791,52 @@ export interface components {
       email_verified?: boolean;
       region_unlocks?: string[];
     };
+    MergePreviewRequest:
+      | {
+          /** @constant */
+          method: "EMAIL";
+          /** Format: email */
+          email: string;
+          password: string;
+        }
+      | {
+          /** @constant */
+          method: "GOOGLE";
+          id_token: string;
+        };
+    MergeConfirmRequest: {
+      merge_nonce: string;
+      /** @constant */
+      confirmed: true;
+    };
+    MergeProgress: {
+      nickname: string | null;
+      runs: number;
+      verified: number;
+      best_ranked_score: string | null;
+      regions: string[];
+      seals: string[];
+      rewards: string[];
+    };
+    MergePreview: {
+      merge_nonce: string;
+      /** Format: uuid */
+      source_player_id: string;
+      /** Format: uuid */
+      target_player_id: string;
+      /** Format: date-time */
+      expires_at: string;
+      summary: {
+        source: components["schemas"]["MergeProgress"];
+        target: components["schemas"]["MergeProgress"];
+      };
+    };
     GoogleConfig: {
       client_id: string | null;
     };
     GoogleChallengeRequest: {
       /** @enum {string} */
-      purpose: "SIGN_IN" | "LINK" | "REAUTH";
+      purpose: "SIGN_IN" | "LINK" | "REAUTH" | "MERGE";
     };
     GoogleChallenge: {
       nonce: string;
@@ -1672,55 +1712,49 @@ export interface operations {
   post_auth_merge_preview: {
     parameters: {
       query?: never;
-      header?: never;
+      header: {
+        "X-CSRF-Token": components["parameters"]["CsrfToken"];
+      };
       path?: never;
       cookie?: never;
     };
     requestBody: {
       content: {
-        "application/json": {
-          target_session_proof: string;
-        };
+        "application/json": components["schemas"]["MergePreviewRequest"];
       };
     };
     responses: {
-      /** @description Comparativo sem modificar dados */
+      /** @description Comparativo e confirmação válida por cinco minutos */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": {
-            merge_nonce: string;
-            /** Format: uuid */
-            source_player_id: string;
-            /** Format: uuid */
-            target_player_id: string;
-            summary?: Record<string, never>;
-          };
+          "application/json": components["schemas"]["MergePreview"];
         };
       };
+      401: components["responses"]["Unauthorized"];
       403: components["responses"]["Forbidden"];
+      409: components["responses"]["Conflict"];
+      429: components["responses"]["RateLimited"];
     };
   };
   post_auth_merge_confirm: {
     parameters: {
       query?: never;
-      header?: never;
+      header: {
+        "X-CSRF-Token": components["parameters"]["CsrfToken"];
+      };
       path?: never;
       cookie?: never;
     };
     requestBody: {
       content: {
-        "application/json": {
-          merge_nonce: string;
-          /** @constant */
-          confirmed: true;
-        };
+        "application/json": components["schemas"]["MergeConfirmRequest"];
       };
     };
     responses: {
-      /** @description Perfil canonico, sem duplicar eventos */
+      /** @description Perfil de destino, com sessão rotacionada na primeira confirmação */
       200: {
         headers: {
           [name: string]: unknown;
@@ -1729,6 +1763,8 @@ export interface operations {
           "application/json": components["schemas"]["PlayerSummary"];
         };
       };
+      401: components["responses"]["Unauthorized"];
+      403: components["responses"]["Forbidden"];
       409: components["responses"]["Conflict"];
     };
   };

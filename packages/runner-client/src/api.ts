@@ -115,7 +115,10 @@ export class RunnerApi {
     )) as components["schemas"]["GoogleChallenge"];
   }
   async googleAuth(
-    purpose: components["schemas"]["GoogleChallengeRequest"]["purpose"],
+    purpose: Exclude<
+      components["schemas"]["GoogleChallengeRequest"]["purpose"],
+      "MERGE"
+    >,
     token: string,
   ) {
     const path = {
@@ -131,6 +134,26 @@ export class RunnerApi {
       { "content-type": "application/json" },
     )) as components["schemas"]["PlayerSummary"] | undefined;
     if (profile) this.playerId = profile.player_id;
+    return profile;
+  }
+  async mergePreview(input: components["schemas"]["MergePreviewRequest"]) {
+    return (await this.request(
+      "/auth/merge/preview",
+      "POST",
+      "MergePreview",
+      JSON.stringify(input),
+      { "content-type": "application/json" },
+    )) as components["schemas"]["MergePreview"];
+  }
+  async mergeConfirm(nonce: string) {
+    const profile = (await this.request(
+      "/auth/merge/confirm",
+      "POST",
+      "PlayerSummary",
+      JSON.stringify({ merge_nonce: nonce, confirmed: true }),
+      { "content-type": "application/json" },
+    )) as components["schemas"]["PlayerSummary"];
+    this.playerId = profile.player_id;
     return profile;
   }
   async unlinkGoogle() {
