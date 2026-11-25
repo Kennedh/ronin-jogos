@@ -1,6 +1,14 @@
 import type { Locale } from "./index.ts";
 /** Same message_key contract in both locales; technical/private diagnostics stay server-side. */
 export const API_ERRORS = {
+  COSMETIC_LOCKED: [
+    "Conquiste este item para equipá-lo.",
+    "Earn this item before equipping it.",
+  ],
+  APPEARANCE_CONFLICT: [
+    "O visual mudou em outra sessão. Recarregue o visual salvo.",
+    "Your look changed in another session. Reload the saved look.",
+  ],
   PRIVACY_ACCOUNT_REQUIRED: [
     "Entre no seu Ronin ID para acessar esta opção.",
     "Sign in to your Ronin ID to use this option.",

@@ -867,6 +867,7 @@ export interface components {
     PrivacyExportPage: {
       /** @constant */
       version: 1;
+      character: components["schemas"]["Character"];
       /** Format: date-time */
       exported_at: string;
       profile: {
@@ -945,12 +946,15 @@ export interface components {
           id_token: string;
         };
     MergeConfirmRequest: {
+      /** @enum {string} */
+      appearance_from?: "GUEST" | "TARGET";
       merge_nonce: string;
       /** @constant */
       confirmed: true;
     };
     MergeProgress: {
       nickname: string | null;
+      character: components["schemas"]["Character"];
       runs: number;
       verified: number;
       best_ranked_score: string | null;
@@ -1001,13 +1005,40 @@ export interface components {
       email: string;
       password: string;
     };
+    CharacterCatalog: {
+      catalog_version: string;
+      parts: components["schemas"]["CharacterPart"][];
+    };
+    CosmeticInventory: {
+      unlocked_part_ids: string[];
+      equipped: components["schemas"]["Character"];
+    };
+    EmblemUpdate: {
+      emblem_instance_id: string | null;
+      expected_appearance_version?: number;
+    };
     CharacterPart: {
       part_id: string;
-      slot: string;
-      is_basic_free: boolean;
-      unlock_requirement_id?: string | null;
+      /** @enum {string} */
+      slot:
+        | "body_palette"
+        | "hair_style"
+        | "hair_color"
+        | "eye_style"
+        | "face_detail"
+        | "outfit_id"
+        | "head_accessory_id"
+        | "katana_visual_id"
+        | "slash_effect_id"
+        | "profile_emblem_id";
+      asset_id: string;
       rig_version: string;
-      locale_key?: string;
+      is_basic_free: boolean;
+      unlock_requirement_id: string | null;
+      labels: {
+        "pt-BR": string;
+        en: string;
+      };
     };
     Character: {
       /** Format: uuid */
@@ -2380,12 +2411,10 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": {
-            catalog_version: string;
-            parts: components["schemas"]["CharacterPart"][];
-          };
+          "application/json": components["schemas"]["CharacterCatalog"];
         };
       };
+      403: components["responses"]["Forbidden"];
     };
   };
   get_me_character: {
@@ -2406,6 +2435,7 @@ export interface operations {
           "application/json": components["schemas"]["Character"];
         };
       };
+      401: components["responses"]["Unauthorized"];
     };
   };
   patch_me_character: {
@@ -3000,12 +3030,10 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": {
-            unlocked_part_ids?: string[];
-            equipped?: components["schemas"]["Character"];
-          };
+          "application/json": components["schemas"]["CosmeticInventory"];
         };
       };
+      401: components["responses"]["Unauthorized"];
     };
   };
   patch_me_emblems_equip: {
@@ -3017,9 +3045,7 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": {
-          emblem_instance_id: string | null;
-        };
+        "application/json": components["schemas"]["EmblemUpdate"];
       };
     };
     responses: {

@@ -139,6 +139,20 @@ test(
       assert.deepEqual(earned.seals, ["B01", "B02", "B03", "B04"]);
       assert.ok(earned.rewards.includes("AURORA_TRAIL"));
       assert.ok(earned.rewards.includes("PATH_LEGEND"));
+      const equip = await h.api.inject({
+        method: "PATCH",
+        url: "/api/v1/me/character",
+        headers: h.headers(owner),
+        payload: {
+          expected_appearance_version: 1,
+          slots: {
+            slash_effect_id: "trail_aurora",
+            profile_emblem_id: "seal_castle",
+          },
+        },
+      });
+      assert.equal(equip.statusCode, 200, equip.body);
+      assert.equal(equip.json().slots.slash_effect_id, "trail_aurora");
       assert.deepEqual(await progress(outsider), { seals: [], rewards: [] });
       await queue.complete(lease, {
         score: first.state.score,

@@ -1,5 +1,5 @@
 export const accountMarkup = `<section class="account-page"><div class="account-heading"><p class="eyebrow">Ronin Play</p><h1>Ronin ID</h1><p data-account-copy="intro"></p><a id="account-back" class="quiet" data-account-copy="back"></a></div><p id="account-message" role="status" aria-live="polite"></p><p id="account-error" role="alert" hidden></p><section class="account-summary"><h2 data-account-copy="ready"></h2><strong id="account-name"></strong><p id="account-email"></p><p id="account-state"></p><button disabled id="account-reload" type="button" data-account-copy="retry"></button><button disabled id="account-new-guest" type="button" data-account-copy="newGuest" hidden></button><button disabled id="account-logout" type="button" data-account-copy="logout" hidden></button></section><section id="account-profile-panel" class="account-card" hidden>
-  <h2 data-account-copy="profileTitle"></h2>
+  <h2 data-account-copy="profileTitle"></h2><figure id="account-avatar" hidden><canvas width="180" height="142" aria-hidden="true"></canvas><figcaption></figcaption></figure><a id="account-creator" class="quiet" data-account-copy="creator"></a>
   <form method="post" id="account-profile-form">
     <label for="account-profile-nickname" data-account-copy="nickname"></label>
     <input disabled id="account-profile-nickname" name="nickname" autocomplete="nickname" minlength="3" maxlength="20" aria-describedby="account-nickname-hint">
@@ -35,6 +35,7 @@ export const accountMarkup = `<section class="account-page"><div class="account-
     <div class="account-grid" id="account-merge-comparison"></div>
     <p class="small" id="account-merge-expiry"></p>
     <form method="post" id="account-merge-confirm-form">
+      <label class="profile-visibility"><input id="account-merge-look" type="checkbox"><span data-account-copy="mergeLook"></span></label>
       <label class="profile-visibility"><input disabled id="account-merge-agree" type="checkbox" required><span data-account-copy="mergeAgree"></span></label>
       <button disabled id="account-merge-confirm" type="submit" data-account-copy="mergeConfirm"></button>
     </form>

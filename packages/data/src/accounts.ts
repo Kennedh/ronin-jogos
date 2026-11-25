@@ -386,9 +386,10 @@ export class Accounts {
         if (
           source?.status !== "REGISTERED" &&
           (
-            await db.query("SELECT 1 FROM runs WHERE player_id=$1 LIMIT 1", [
-              current.playerId,
-            ])
+            await db.query(
+              "SELECT 1 FROM runs WHERE player_id=$1 UNION ALL SELECT 1 FROM player_character_profiles WHERE player_id=$1 LIMIT 1",
+              [current.playerId],
+            )
           ).rowCount
         )
           throw new Fault(409, "GUEST_PROGRESS_REQUIRES_LINK");
@@ -508,9 +509,10 @@ export class Accounts {
       if (
         target.id !== source.id &&
         (
-          await db.query("SELECT 1 FROM runs WHERE player_id=$1 LIMIT 1", [
-            source.id,
-          ])
+          await db.query(
+            "SELECT 1 FROM runs WHERE player_id=$1 UNION ALL SELECT 1 FROM player_character_profiles WHERE player_id=$1 LIMIT 1",
+            [source.id],
+          )
         ).rowCount
       )
         throw new Fault(409, "GUEST_PROGRESS_REQUIRES_LINK", true);

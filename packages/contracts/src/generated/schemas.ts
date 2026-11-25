@@ -159,11 +159,15 @@ export const definitions = {
       "runs",
       "privacy",
       "next_cursor",
+      "character",
     ],
     properties: {
       version: {
         type: "integer",
         const: 1,
+      },
+      character: {
+        $ref: "#/$defs/Character",
       },
       exported_at: {
         type: "string",
@@ -417,6 +421,10 @@ export const definitions = {
     additionalProperties: false,
     required: ["merge_nonce", "confirmed"],
     properties: {
+      appearance_from: {
+        type: "string",
+        enum: ["GUEST", "TARGET"],
+      },
       merge_nonce: {
         type: "string",
         pattern: "^[A-Za-z0-9_-]{43}$",
@@ -438,10 +446,14 @@ export const definitions = {
       "regions",
       "seals",
       "rewards",
+      "character",
     ],
     properties: {
       nickname: {
         type: ["string", "null"],
+      },
+      character: {
+        $ref: "#/$defs/Character",
       },
       runs: {
         type: "integer",
@@ -619,14 +631,88 @@ export const definitions = {
     },
     additionalProperties: false,
   },
+  CharacterCatalog: {
+    type: "object",
+    additionalProperties: false,
+    required: ["catalog_version", "parts"],
+    properties: {
+      catalog_version: {
+        type: "string",
+      },
+      parts: {
+        type: "array",
+        items: {
+          $ref: "#/$defs/CharacterPart",
+        },
+      },
+    },
+  },
+  CosmeticInventory: {
+    type: "object",
+    additionalProperties: false,
+    required: ["unlocked_part_ids", "equipped"],
+    properties: {
+      unlocked_part_ids: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+      },
+      equipped: {
+        $ref: "#/$defs/Character",
+      },
+    },
+  },
+  EmblemUpdate: {
+    type: "object",
+    additionalProperties: false,
+    required: ["emblem_instance_id"],
+    properties: {
+      emblem_instance_id: {
+        type: ["string", "null"],
+        maxLength: 64,
+      },
+      expected_appearance_version: {
+        type: "integer",
+        minimum: 1,
+      },
+    },
+  },
   CharacterPart: {
     type: "object",
-    required: ["part_id", "slot", "is_basic_free", "rig_version"],
+    required: [
+      "part_id",
+      "slot",
+      "asset_id",
+      "rig_version",
+      "is_basic_free",
+      "unlock_requirement_id",
+      "labels",
+    ],
+    additionalProperties: false,
     properties: {
       part_id: {
         type: "string",
       },
       slot: {
+        type: "string",
+        enum: [
+          "body_palette",
+          "hair_style",
+          "hair_color",
+          "eye_style",
+          "face_detail",
+          "outfit_id",
+          "head_accessory_id",
+          "katana_visual_id",
+          "slash_effect_id",
+          "profile_emblem_id",
+        ],
+      },
+      asset_id: {
+        type: "string",
+      },
+      rig_version: {
         type: "string",
       },
       is_basic_free: {
@@ -635,16 +721,24 @@ export const definitions = {
       unlock_requirement_id: {
         type: ["string", "null"],
       },
-      rig_version: {
-        type: "string",
-      },
-      locale_key: {
-        type: "string",
+      labels: {
+        type: "object",
+        additionalProperties: false,
+        required: ["pt-BR", "en"],
+        properties: {
+          "pt-BR": {
+            type: "string",
+          },
+          en: {
+            type: "string",
+          },
+        },
       },
     },
   },
   Character: {
     type: "object",
+    additionalProperties: false,
     required: ["player_id", "appearance_version", "slots"],
     properties: {
       player_id: {
@@ -657,6 +751,21 @@ export const definitions = {
       },
       slots: {
         type: "object",
+        minProperties: 10,
+        propertyNames: {
+          enum: [
+            "body_palette",
+            "hair_style",
+            "hair_color",
+            "eye_style",
+            "face_detail",
+            "outfit_id",
+            "head_accessory_id",
+            "katana_visual_id",
+            "slash_effect_id",
+            "profile_emblem_id",
+          ],
+        },
         additionalProperties: {
           type: "string",
         },
@@ -665,20 +774,38 @@ export const definitions = {
   },
   CharacterUpdate: {
     type: "object",
+    additionalProperties: false,
     required: ["expected_appearance_version", "slots"],
     properties: {
       expected_appearance_version: {
         type: "integer",
         minimum: 1,
+        maximum: 2147483647,
       },
       slots: {
         type: "object",
+        minProperties: 1,
+        propertyNames: {
+          enum: [
+            "body_palette",
+            "hair_style",
+            "hair_color",
+            "eye_style",
+            "face_detail",
+            "outfit_id",
+            "head_accessory_id",
+            "katana_visual_id",
+            "slash_effect_id",
+            "profile_emblem_id",
+          ],
+        },
         additionalProperties: {
           type: "string",
+          minLength: 1,
+          maxLength: 64,
         },
       },
     },
-    additionalProperties: false,
   },
   RunTicket: {
     type: "object",

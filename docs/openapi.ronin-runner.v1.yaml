@@ -1,9 +1,9 @@
 openapi: 3.1.0
 info:
   title: Ronin Runner API - contrato preliminar de design
-  version: 0.25.0-foundation-draft
+  version: 0.26.0-creator-draft
   description: |-
-    API de fundação em desenvolvimento. Guest e runs implementados na1C; conta/Google/ranking/weekly permanecem contratos futuros. Prefixo /api/v1. Score somente após replay verificado; implantação não autorizada.
+    API de desenvolvimento do Ronin Runner. Partidas verificadas, Ronin ID e criador modular implementados. Ranking e desafios semanais incluem contratos de fases posteriores. Prefixo /api/v1.
 servers:
   - url: https://play.ronin.dev.br/api/v1
     description: Origem confirmada; implantação ainda não autorizada
@@ -833,17 +833,8 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                required:
-                  - catalog_version
-                  - parts
-                properties:
-                  catalog_version:
-                    type: string
-                  parts:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/CharacterPart"
+                $ref: "#/components/schemas/CharacterCatalog"
+        "403": {$ref: "#/components/responses/Forbidden"}
   /me/character:
     get:
       operationId: get_me_character
@@ -857,6 +848,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Character"
+        "401": {$ref: "#/components/responses/Unauthorized"}
     patch:
       operationId: patch_me_character
       tags:
@@ -1397,14 +1389,8 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  unlocked_part_ids:
-                    type: array
-                    items:
-                      type: string
-                  equipped:
-                    $ref: "#/components/schemas/Character"
+                $ref: "#/components/schemas/CosmeticInventory"
+        "401": {$ref: "#/components/responses/Unauthorized"}
   /me/emblems/equip:
     patch:
       operationId: patch_me_emblems_equip
@@ -1416,15 +1402,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - emblem_instance_id
-              properties:
-                emblem_instance_id:
-                  type:
-                    - string
-                    - "null"
-              additionalProperties: false
+              $ref: "#/components/schemas/EmblemUpdate"
       responses:
         "204":
           description: Emblema atualizado apos verificacao de posse
@@ -1607,9 +1585,10 @@ components:
     PrivacyExportPage:
       type: object
       additionalProperties: false
-      required: [version, exported_at, profile, progress, sessions, runs, privacy, next_cursor]
+      required: [version, exported_at, profile, progress, sessions, runs, privacy, next_cursor, character]
       properties:
         version: {type: integer, const: 1}
+        character: {$ref: "#/components/schemas/Character"}
         exported_at: {type: string, format: date-time}
         profile:
           type: object
@@ -1707,14 +1686,16 @@ components:
       additionalProperties: false
       required: [merge_nonce, confirmed]
       properties:
+        appearance_from: {type: string, enum: [GUEST, TARGET]}
         merge_nonce: {type: string, pattern: '^[A-Za-z0-9_-]{43}$'}
         confirmed: {type: boolean, const: true}
     MergeProgress:
       type: object
       additionalProperties: false
-      required: [nickname, runs, verified, best_ranked_score, regions, seals, rewards]
+      required: [nickname, runs, verified, best_ranked_score, regions, seals, rewards, character]
       properties:
         nickname: {type: [string, "null"]}
+        character: {$ref: "#/components/schemas/Character"}
         runs: {type: integer, minimum: 0}
         verified: {type: integer, minimum: 0}
         best_ranked_score:
@@ -1825,59 +1806,72 @@ components:
           minLength: 1
           maxLength: 256
       additionalProperties: false
+    CharacterCatalog:
+      type: object
+      additionalProperties: false
+      required: [catalog_version, parts]
+      properties:
+        catalog_version: {type: string}
+        parts:
+          type: array
+          items: {$ref: "#/components/schemas/CharacterPart"}
+    CosmeticInventory:
+      type: object
+      additionalProperties: false
+      required: [unlocked_part_ids, equipped]
+      properties:
+        unlocked_part_ids:
+          type: array
+          items: {type: string}
+        equipped: {$ref: "#/components/schemas/Character"}
+    EmblemUpdate:
+      type: object
+      additionalProperties: false
+      required: [emblem_instance_id]
+      properties:
+        emblem_instance_id: {type: [string, "null"], maxLength: 64}
+        expected_appearance_version: {type: integer, minimum: 1}
     CharacterPart:
       type: object
-      required:
-        - part_id
-        - slot
-        - is_basic_free
-        - rig_version
+      required: [part_id, slot, asset_id, rig_version, is_basic_free, unlock_requirement_id, labels]
+      additionalProperties: false
       properties:
-        part_id:
-          type: string
-        slot:
-          type: string
-        is_basic_free:
-          type: boolean
-        unlock_requirement_id:
-          type:
-            - string
-            - "null"
-        rig_version:
-          type: string
-        locale_key:
-          type: string
+        part_id: {type: string}
+        slot: {type: string, enum: [body_palette, hair_style, hair_color, eye_style, face_detail, outfit_id, head_accessory_id, katana_visual_id, slash_effect_id, profile_emblem_id]}
+        asset_id: {type: string}
+        rig_version: {type: string}
+        is_basic_free: {type: boolean}
+        unlock_requirement_id: {type: [string, "null"]}
+        labels:
+          type: object
+          additionalProperties: false
+          required: [pt-BR, en]
+          properties:
+            pt-BR: {type: string}
+            en: {type: string}
     Character:
       type: object
-      required:
-        - player_id
-        - appearance_version
-        - slots
+      additionalProperties: false
+      required: [player_id, appearance_version, slots]
       properties:
-        player_id:
-          type: string
-          format: uuid
-        appearance_version:
-          type: integer
-          minimum: 1
+        player_id: {type: string, format: uuid}
+        appearance_version: {type: integer, minimum: 1}
         slots:
           type: object
-          additionalProperties:
-            type: string
+          minProperties: 10
+          propertyNames: {enum: [body_palette, hair_style, hair_color, eye_style, face_detail, outfit_id, head_accessory_id, katana_visual_id, slash_effect_id, profile_emblem_id]}
+          additionalProperties: {type: string}
     CharacterUpdate:
       type: object
-      required:
-        - expected_appearance_version
-        - slots
+      additionalProperties: false
+      required: [expected_appearance_version, slots]
       properties:
-        expected_appearance_version:
-          type: integer
-          minimum: 1
+        expected_appearance_version: {type: integer, minimum: 1, maximum: 2147483647}
         slots:
           type: object
-          additionalProperties:
-            type: string
-      additionalProperties: false
+          minProperties: 1
+          propertyNames: {enum: [body_palette, hair_style, hair_color, eye_style, face_detail, outfit_id, head_accessory_id, katana_visual_id, slash_effect_id, profile_emblem_id]}
+          additionalProperties: {type: string, minLength: 1, maxLength: 64}
     RunTicket:
       type: object
       properties:

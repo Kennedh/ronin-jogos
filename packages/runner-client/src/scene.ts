@@ -1,3 +1,4 @@
+import type { Appearance } from "@ronin/content/character";
 import Phaser from "phaser";
 import { paintBoss } from "./boss-render.ts";
 import { biomeTheme, paintBackdrop, paintProps, paintEnemy } from "./biomes.ts";
@@ -9,6 +10,7 @@ export interface SceneOptions {
   session: () => RunSession | undefined;
   frame: (time: number) => void;
   reducedMotion: () => boolean;
+  appearance?: () => Appearance;
 }
 /** Original vector rig; geometry and score remain exclusively in the shared core. */
 export function mountRunner(parent: HTMLElement, options: SceneOptions) {
@@ -270,6 +272,8 @@ export function mountRunner(parent: HTMLElement, options: SceneOptions) {
         pose,
         rules,
         options.reducedMotion(),
+        false,
+        options.appearance?.(),
       );
       g.restore();
       // Foreground brush accents are cosmetic and never enter the world RNG.

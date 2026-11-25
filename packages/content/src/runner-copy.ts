@@ -37,7 +37,7 @@ const en = {
   directorHelp:
     "Full Journey crosses all four regions. Expeditions start in a region unlocked by a verified run; only distance actually travelled counts.",
   directorScope:
-    "Four regions, guardian encounters and endless cycles are available in this development build. Final art, customization, accounts and public leaderboards are still in development.",
+    "Create your Ronin and run through four regions with guardian encounters and endless cycles.",
 
   concentration: "Concentration",
   combo: "Perfect streak",
@@ -54,9 +54,16 @@ const en = {
   rebindError:
     "Choose a letter, number, arrow or Space that is not assigned to another action.",
   resetKeys: "Reset shortcuts",
-  rigTitle: "Character animation study",
-  rigHint:
-    "Original shared rig. This is an art study for review; character customization comes later.",
+  creatorSave: "Save look",
+  creatorReset: "Preview default",
+  creatorReload: "Reload saved look",
+  creatorWorking: "Loading…",
+  creatorSaved: "Look saved.",
+  creatorUnsaved: "Unsaved preview.",
+  creatorDefeat: "Defeat",
+  creatorFourSeals: "Earn all four guardian seals.",
+  rigTitle: "Ronin Creator",
+  rigHint: "Try a look and a movement. Save to wear it on your next run.",
   rigPlay: "Animate preview",
   rigDebug: "Show pivots and collision box",
   rigPose: "Animation",
@@ -243,7 +250,7 @@ const pt: Record<keyof typeof en, string> = {
   directorHelp:
     "A Jornada Completa atravessa as quatro regiões. Expedições começam em regiões alcançadas em uma corrida verificada; só conta a distância realmente percorrida.",
   directorScope:
-    "Quatro regiões, encontros de guardiões e ciclos infinitos estão disponíveis nesta versão de desenvolvimento. Arte final, personalização, contas e rankings públicos seguem em desenvolvimento.",
+    "Crie seu Ronin e percorra quatro regiões com encontros de guardiões e ciclos infinitos.",
 
   concentration: "Concentração",
   combo: "Sequência perfeita",
@@ -261,9 +268,17 @@ const pt: Record<keyof typeof en, string> = {
   rebindError:
     "Escolha uma letra, número, seta ou Espaço que não esteja em outra ação.",
   resetKeys: "Restaurar atalhos",
-  rigTitle: "Estudo de animação do personagem",
+  creatorSave: "Salvar visual",
+  creatorReset: "Prévia do padrão",
+  creatorReload: "Recarregar visual salvo",
+  creatorWorking: "Aguarde…",
+  creatorSaved: "Visual salvo.",
+  creatorUnsaved: "Prévia com alterações por salvar.",
+  creatorDefeat: "Derrote",
+  creatorFourSeals: "Conquiste os quatro selos de guardião.",
+  rigTitle: "Criador de Ronin",
   rigHint:
-    "Rig original compartilhado. Esta é uma amostra artística para revisão; a personalização virá depois.",
+    "Experimente um visual e um movimento. Salve para usá-lo na próxima corrida.",
   rigPlay: "Animar prévia",
   rigDebug: "Mostrar pivôs e caixa de colisão",
   rigPose: "Animação",

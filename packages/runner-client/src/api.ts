@@ -186,12 +186,16 @@ export class RunnerApi {
       { "content-type": "application/json" },
     )) as components["schemas"]["MergePreview"];
   }
-  async mergeConfirm(nonce: string) {
+  async mergeConfirm(nonce: string, guestAppearance = false) {
     const profile = (await this.request(
       "/auth/merge/confirm",
       "POST",
       "PlayerSummary",
-      JSON.stringify({ merge_nonce: nonce, confirmed: true }),
+      JSON.stringify({
+        merge_nonce: nonce,
+        confirmed: true,
+        appearance_from: guestAppearance ? "GUEST" : "TARGET",
+      }),
       { "content-type": "application/json" },
     )) as components["schemas"]["PlayerSummary"];
     this.playerId = profile.player_id;
@@ -306,6 +310,36 @@ export class RunnerApi {
       throw new ClientError("SESSION_CHANGED", 401);
     this.playerId = value.player_id;
     return value;
+  }
+  async character() {
+    return (await this.request(
+      "/me/character",
+      "GET",
+      "Character",
+    )) as components["schemas"]["Character"];
+  }
+  async catalog() {
+    return (await this.request(
+      "/character/catalog",
+      "GET",
+      "CharacterCatalog",
+    )) as components["schemas"]["CharacterCatalog"];
+  }
+  async cosmetics() {
+    return (await this.request(
+      "/me/cosmetics",
+      "GET",
+      "CosmeticInventory",
+    )) as components["schemas"]["CosmeticInventory"];
+  }
+  async saveCharacter(input: components["schemas"]["CharacterUpdate"]) {
+    return (await this.request(
+      "/me/character",
+      "PATCH",
+      "Character",
+      JSON.stringify(input),
+      { "content-type": "application/json" },
+    )) as components["schemas"]["Character"];
   }
   async bosses() {
     return (await this.request(
