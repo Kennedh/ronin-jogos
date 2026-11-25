@@ -1,5 +1,29 @@
 import type { SimState, SimEvent, Rules } from "@ronin/runner-core";
-export const RIG_VERSION = "rr-rig-2";
+import { CHARACTER_RIG, defaultAppearance } from "@ronin/content/character";
+import type { Appearance } from "@ronin/content/character";
+export const RIG_VERSION = CHARACTER_RIG;
+const pigments: Readonly<Record<string, number>> = {
+  skin_ochre: 0xb99763,
+  skin_porcelain: 0xf2d3bd,
+  skin_sand: 0xe3bb97,
+  skin_honey: 0xd2a575,
+  skin_amber: 0xb77b4e,
+  skin_copper: 0x975f42,
+  skin_umber: 0x784936,
+  skin_ebony: 0x563629,
+  dye_ink: 0x2a2528,
+  dye_chestnut: 0x674439,
+  dye_rust: 0x904c39,
+  dye_ash: 0x77736c,
+  dye_indigo: 0x484b63,
+  dye_silver: 0xcac0ac,
+  robe_moss: 0x3a4035,
+  robe_blue: 0x395466,
+  robe_clay: 0x965c4a,
+  sword_iron: 0x514948,
+  sword_jade: 0x447966,
+  sword_brass: 0xb38948,
+};
 export const ANIMATIONS = [
   "IDLE",
   "RUN",
@@ -126,12 +150,15 @@ export function drawRig(
   r: Rules,
   reduced = false,
   debug = false,
+  look: Readonly<Appearance> = defaultAppearance,
 ) {
   const ink = 0x2a2528,
-    cloth = 0x3a4035,
+    cloth = pigments[look.outfit_id] ?? 0x3a4035,
     red = 0xa64340,
     paper = 0xf2e7ce,
-    skin = 0xb99763;
+    skin = pigments[look.body_palette] ?? 0xb99763,
+    hair = pigments[look.hair_color] ?? ink,
+    fittings = pigments[look.katana_visual_id] ?? ink;
   const swing =
     reduced || p.locomotion === "IDLE" ? 0 : Math.sin(p.tick * 0.33);
   const air = ["JUMP_START", "JUMP_APEX", "DOUBLE_JUMP", "FALL"].includes(
@@ -199,13 +226,27 @@ export function drawRig(
           : [19, -29]
       : [12 + swing * 9, -19];
   line([hip, kneeBack, p.slide ? [-33, -2] : [-16 + swing * 13, -1]], ink, 7);
+  // Hair behind the shoulders; every layer follows the same head pivot in all poses.
+  const atHead = (x: number, y: number): Point => [head[0] + x, head[1] + y];
+  if (look.hair_style === "hair_tied" || look.hair_style === "hair_ponytail") {
+    const long = look.hair_style === "hair_ponytail";
+    poly(
+      [
+        atHead(-5, -7),
+        atHead(-12, -5),
+        atHead(long ? -24 : -13, long ? 18 : 10),
+        atHead(-8, 5),
+      ],
+      hair,
+    );
+  }
   // Sheath and rear sleeve precede torso, avoiding a blade through the face.
   line(
     [
       [hip[0] - 5, hip[1] - 4],
       [hip[0] - 38, hip[1] + 18],
     ],
-    ink,
+    fittings,
     5,
   );
   line(
@@ -251,39 +292,58 @@ export function drawRig(
     red,
   );
   circle(head[0], head[1], 9, skin);
-  poly(
-    [
-      [head[0] - 10, head[1] - 8],
-      [head[0] + 5, head[1] - 10],
-      [head[0] + 10, head[1] - 1],
-      [head[0] - 10, head[1] - 1],
-    ],
-    ink,
-  );
+  if (look.hair_style === "hair_shaved") {
+    line([atHead(-8, -4), atHead(-3, -8), atHead(5, -7)], hair, 2);
+  } else {
+    poly(
+      [
+        atHead(-10, -8),
+        atHead(3, -10),
+        atHead(10, -2),
+        atHead(look.hair_style === "hair_short" ? 3 : -2, 0),
+        atHead(-10, -1),
+      ],
+      hair,
+    );
+    if (
+      look.hair_style === "hair_bun" &&
+      look.head_accessory_id !== "hat_straw"
+    )
+      circle(head[0] - 6, head[1] - 11, 4, hair);
+  }
+  const brow =
+    look.eye_style === "eyes_focused"
+      ? -2
+      : look.eye_style === "eyes_arched"
+        ? -3
+        : 0;
   line(
     [
-      [head[0] + 3, head[1] + 1],
-      [head[0] + 7, head[1] + 1],
+      atHead(2, brow),
+      atHead(5, look.eye_style === "eyes_level" ? 0 : 1),
+      atHead(8, 0),
     ],
     ink,
-    1.5,
+    1.3,
   );
-  poly(
-    [
-      [head[0] - 25, head[1] - 7],
-      [head[0], head[1] - 22],
-      [head[0] + 27, head[1] - 6],
-    ],
-    ink,
-  );
-  line(
-    [
-      [head[0] - 25, head[1] - 5],
-      [head[0] + 27, head[1] - 4],
-    ],
-    skin,
-    1.5,
-  );
+  if (look.eye_style === "eyes_arched")
+    line([atHead(2, -2), atHead(5, -4), atHead(8, -3)], ink, 1);
+  if (look.face_detail === "face_scar")
+    line([atHead(6, 2), atHead(3, 6)], red, 1.2);
+  if (look.face_detail === "face_paint")
+    line([atHead(1, 3), atHead(7, 4)], red, 2.2);
+  if (look.face_detail === "face_freckles") {
+    circle(head[0] + 1, head[1] + 3, 0.9, ink);
+    circle(head[0] + 4, head[1] + 5, 0.9, ink);
+  }
+  if (look.face_detail === "face_beard")
+    poly([atHead(-4, 5), atHead(3, 7), atHead(8, 4), atHead(2, 10)], hair);
+  if (look.head_accessory_id === "hat_straw") {
+    poly([atHead(-25, -7), atHead(0, -22), atHead(27, -6)], ink);
+    line([atHead(-25, -5), atHead(27, -4)], 0xb99763, 1.5);
+  } else if (look.head_accessory_id === "head_band") {
+    line([atHead(-9, -3), atHead(8, -4)], red, 3);
+  }
   const wrist: Point =
     p.action === "ATTACK_WINDUP"
       ? [shoulder[0] + 8, shoulder[1] - 4]
@@ -294,6 +354,14 @@ export function drawRig(
           : [shoulder[0] + 19, shoulder[1] + 24];
   line([shoulder, [shoulder[0] + 15, shoulder[1] + 12], wrist], ink, 7);
   circle(wrist[0], wrist[1], 3, skin);
+  line(
+    [
+      [wrist[0] - 2, wrist[1] + 2],
+      [wrist[0] + 4, wrist[1] - 4],
+    ],
+    fittings,
+    3,
+  );
   if (p.action === "ATTACK_ACTIVE" || p.special || p.perfect) {
     const reach =
       (p.special ? (r.specialReach ?? r.swordReach) : r.swordReach) /
@@ -314,7 +382,11 @@ export function drawRig(
         [22 + reach, -51],
         [28 + reach * 0.7, -33],
       ],
-      p.perfect ? 0x6b8768 : red,
+      look.slash_effect_id === "trail_aurora"
+        ? 0x408e8d
+        : p.perfect
+          ? 0x6b8768
+          : red,
       reduced ? 2 : 4,
       0.8,
     );

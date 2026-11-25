@@ -10,6 +10,11 @@ import {
   decodeTransport,
   TransportError,
 } from "@ronin/contracts/node-transport";
+import {
+  characterParts,
+  CATALOG_VERSION,
+  defaultAppearance,
+} from "@ronin/content/character";
 import { preferredLocale } from "@ronin/content";
 import {
   Runs,
@@ -18,6 +23,7 @@ import {
   rateLimit,
   Accounts,
   Merges,
+  Characters,
   Privacy,
 } from "@ronin/data";
 import type { Session, Clock, ResourcePolicy } from "@ronin/data";
@@ -99,6 +105,7 @@ export function createApi(options?: ApiOptions) {
       options.policy,
       options.manifest ?? CURRENT_MANIFEST,
     );
+  const characters = new Characters(options.pool, options.clock);
   const accounts = options.authMailKey
     ? new Accounts(
         options.pool,
@@ -207,6 +214,8 @@ export function createApi(options?: ApiOptions) {
       request.headers["content-encoding"] !== "identity"
     )
       throw new Fault(415, "UNSUPPORTED_ENCODING");
+    if (route === "/api/v1/character/catalog" && request.method === "GET")
+      return;
     if (route === "/api/v1/auth/guest") {
       await rateLimit(
         options.pool,
@@ -412,6 +421,52 @@ export function createApi(options?: ApiOptions) {
     );
   });
 
+  api.get("/api/v1/character/catalog", async () =>
+    checked("CharacterCatalog", {
+      catalog_version: CATALOG_VERSION,
+      parts: characterParts,
+    }),
+  );
+  api.get("/api/v1/me/character", async (request) =>
+    checked("Character", await characters.get(session(request).playerId)),
+  );
+  api.get("/api/v1/me/cosmetics", async (request) =>
+    checked(
+      "CosmeticInventory",
+      await characters.inventory(session(request).playerId),
+    ),
+  );
+  api.patch("/api/v1/me/character", { bodyLimit: 4096 }, async (request) => {
+    if (!validate("CharacterUpdate", request.body))
+      throw new Fault(422, "INVALID_REQUEST");
+    const body = request.body as components["schemas"]["CharacterUpdate"];
+    return checked(
+      "Character",
+      await characters.update(
+        session(request),
+        body.expected_appearance_version,
+        body.slots,
+      ),
+    );
+  });
+  api.patch(
+    "/api/v1/me/emblems/equip",
+    { bodyLimit: 1024 },
+    async (request, reply) => {
+      if (!validate("EmblemUpdate", request.body))
+        throw new Fault(422, "INVALID_REQUEST");
+      const body = request.body as components["schemas"]["EmblemUpdate"];
+      await characters.update(
+        session(request),
+        body.expected_appearance_version,
+        {
+          profile_emblem_id:
+            body.emblem_instance_id ?? defaultAppearance.profile_emblem_id,
+        },
+      );
+      return reply.status(204).send();
+    },
+  );
   api.get("/api/v1/me/privacy", async (request) =>
     checked("PrivacyStatus", await privacy.status(session(request))),
   );
@@ -552,7 +607,11 @@ export function createApi(options?: ApiOptions) {
     async (request, reply) => {
       const body = checkedBody("MergeConfirmRequest", request);
       const auth = session(request);
-      const result = await merges.confirm(auth, body["merge_nonce"]!);
+      const result = await merges.confirm(
+        auth,
+        body["merge_nonce"]!,
+        body["appearance_from"] === "GUEST",
+      );
       return result
         ? useRotatedSession(reply, result)
         : checked("PlayerSummary", await sessions.summary(auth));

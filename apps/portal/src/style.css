@@ -1316,3 +1316,66 @@ footer a {
     flex-wrap: wrap;
   }
 }
+
+.creator-link {
+  display: inline-block;
+  margin: 0.65rem 0.45rem 0;
+  color: var(--ink);
+}
+.rig-lab {
+  grid-column: 1/-1;
+  min-width: 0;
+}
+.rig-lab summary {
+  cursor: pointer;
+}
+.creator-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(1rem, 3vw, 3rem);
+}
+#creator-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+  gap: 0.65rem;
+}
+#creator-fields label {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+  align-content: start;
+}
+#creator-fields select {
+  width: 100%;
+  max-width: 100%;
+}
+.creator-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+}
+#creator-requirement {
+  font-weight: 600;
+}
+#creator-emblem:not(:empty) {
+  display: block;
+  margin: 0.5rem 0;
+  font-weight: bold;
+}
+@media (max-width: 720px) {
+  .creator-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+#account-avatar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin: 0.75rem 0;
+}
+#account-avatar canvas {
+  background: var(--paper);
+  border: 1px solid var(--line);
+}

@@ -1,6 +1,12 @@
 # Ronin Runner — continuidade
 
-## Estado atual — parte 5B, privacidade e moderação
+## Estado atual — parte 6A, Criador de Ronin
+
+No menu de Ronin Runner, abra **Criador de Ronin**. Há um segundo acesso no perfil Ronin ID. O visitante pode editar cabelo, rosto, pele, roupa, acessórios e katana, experimentar a Aurora e os emblemas de chefes e salvar o visual para a próxima corrida. O servidor reconhece apenas itens livres ou conquistas verificadas.
+
+A branch `feat/runner-creator-6a` parte do PR #13. A migração 010 mantém os jogadores existentes com o visual padrão até a primeira edição. O [ADR 012](docs/adr/ADR-012-CRIADOR-DE-RONIN.md) descreve persistência, controle de concorrência, renderização compartilhada e testes. O próximo marco é a parte 6B, com arte, áudio e telas finais.
+
+## Parte 5B — privacidade e moderação
 
 O painel de privacidade do Ronin ID em PT-BR/EN oferece exportação dos dados de conta, sessões e progresso em JSON. O servidor valida autenticação recente e limita cada página a 200 partidas. O navegador monta o download. O pacote usa metadados e resultados próprios e deixa os segredos e dados técnicos antifraude no servidor.
 
@@ -8,7 +14,7 @@ A migração 009 adiciona exclusão reversível e revisão de apelido. O pedido 
 
 A moderação registra motivo e data. O jogador vê o estado e pode pedir revisão. A visão de identidade pública esconde apelidos moderados e perfis privados ou em exclusão. A fila e a resolução são operadas localmente com os comandos documentados no README.
 
-A execução automática em produção, a política final de retenção de replays, logs, backups e a homologação de Google e SMTP pertencem à preparação operacional. A próxima parte funcional é 6A, Criador de Ronin. A revisão de pontuações públicas e as projeções de ranking pertencem à parte de carreira e ranking.
+A execução automática em produção, a política final de retenção de replays, logs, backups e a homologação de Google e SMTP pertencem à preparação operacional. A revisão de pontuações públicas e as projeções de ranking pertencem à parte de carreira e ranking.
 
 ## Parte 5B — fusão explícita de perfis
 

@@ -7,6 +7,8 @@ import type { Session } from "./sessions.ts";
 import { consumeGoogleChallenge } from "./google-challenges.ts";
 import type { GoogleCredential } from "./google-challenges.ts";
 
+import { readCharacter } from "./characters.ts";
+
 type Proof =
   | { method: "EMAIL"; playerId: string; passwordDigest: Buffer }
   | { method: "GOOGLE"; credential: GoogleCredential };
@@ -93,7 +95,11 @@ async function summarize(db: PoolClient, player: Player) {
        ARRAY(SELECT reward_id FROM player_rewards WHERE player_id=$1 ORDER BY reward_id) AS rewards`,
     [player.id],
   );
-  return { nickname: player.nickname, ...rows[0]! };
+  return {
+    nickname: player.nickname,
+    ...rows[0]!,
+    character: await readCharacter(db, player.id),
+  };
 }
 
 async function methodFingerprint(
@@ -260,7 +266,7 @@ export class Merges {
     });
   }
 
-  async confirm(auth: Session, nonce: string) {
+  async confirm(auth: Session, nonce: string, guestAppearance = false) {
     const key = digest(nonce);
     return transaction(this.pool, async (db) => {
       const hint = (
@@ -328,6 +334,21 @@ export class Merges {
         merge.source_player_id,
         merge.target_player_id,
         now,
+      );
+      if (guestAppearance) {
+        await db.query(
+          `INSERT INTO player_character_profiles(player_id,appearance_version,slots) VALUES($1,$2,$3)
+          ON CONFLICT(player_id) DO UPDATE SET appearance_version=EXCLUDED.appearance_version,slots=EXCLUDED.slots`,
+          [
+            target!.id,
+            summary.target.character.appearance_version + 1,
+            summary.source.character.slots,
+          ],
+        );
+      }
+      await db.query(
+        "DELETE FROM player_character_profiles WHERE player_id=$1",
+        [source!.id],
       );
       await db.query("DELETE FROM nickname_reservations WHERE player_id=$1", [
         merge.source_player_id,

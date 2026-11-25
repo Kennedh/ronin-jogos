@@ -56,6 +56,15 @@ test(
       await migrate(db.pool);
       const visitor = await h.guest(),
         other = await h.guest();
+      assert.equal(
+        (
+          await request("PATCH", "/me/character", visitor, {
+            expected_appearance_version: 1,
+            slots: { hair_style: "hair_bun" },
+          })
+        ).statusCode,
+        200,
+      );
       const forbidden = await request("POST", "/me/export", other, {});
       assert.equal(forbidden.statusCode, 403);
       assert.equal(
@@ -151,6 +160,7 @@ test(
       const page = first.json();
       assert.equal(validate("PrivacyExportPage", page), true);
       assert.equal(page.profile.email, email);
+      assert.equal(page.character.slots.hair_style, "hair_bun");
       assert.equal(page.runs.length, 200);
       const second = await request("POST", "/me/export", owner, {
         cursor: page.next_cursor,
@@ -251,6 +261,15 @@ test(
       );
       assert.equal((await request("GET", "/me", owner)).statusCode, 401);
       assert.equal(await publicName(owner.playerId), null);
+      assert.equal(
+        (
+          await db.pool.query(
+            "SELECT 1 FROM player_character_profiles WHERE player_id=$1",
+            [owner.playerId],
+          )
+        ).rowCount,
+        0,
+      );
       const evidence = (
         await db.pool.query(
           "SELECT p.status,p.nickname,e.email,d.state AS deletion,(SELECT count(*) FROM run_outcomes WHERE player_id=p.id) AS results,(SELECT count(*) FROM auth_mail_outbox) AS queued FROM players p LEFT JOIN email_accounts e ON e.player_id=p.id JOIN deletion_requests d ON d.player_id=p.id WHERE p.id=$1",

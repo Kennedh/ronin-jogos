@@ -66,6 +66,20 @@ test(
       await migrate(db.pool);
       const guest = await h.guest(),
         other = await h.guest();
+      assert.equal(
+        (
+          await h.api.inject({
+            method: "PATCH",
+            url: "/api/v1/me/character",
+            headers: h.headers(guest),
+            payload: {
+              expected_appearance_version: 1,
+              slots: { eye_style: "eyes_arched" },
+            },
+          })
+        ).statusCode,
+        200,
+      );
       const run = await h.start(guest);
       assert.equal(
         (await get("/auth/google/config", guest)).json().client_id,
@@ -143,6 +157,10 @@ test(
       )!;
       const signed = rotated(signedResponse);
       assert.equal(signed.playerId, guest.playerId);
+      assert.equal(
+        (await get("/me/character", signed)).json().slots.eye_style,
+        "eyes_arched",
+      );
       assert.equal(signedResponse.json().account_type, "GOOGLE");
       assert.equal(signedResponse.json().email, null);
       assert.equal(signedResponse.json().email_verified, false);

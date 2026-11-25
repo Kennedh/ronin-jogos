@@ -1,3 +1,5 @@
+import { attachCreator } from "./creator.ts";
+import { defaultAppearance, resolveAppearance } from "@ronin/content/character";
 import { apiErrorMessage } from "@ronin/content";
 import type { Locale } from "@ronin/content";
 import type { runnerCopy } from "@ronin/content/runner-copy";
@@ -56,13 +58,19 @@ export async function initializeGame(
   const alternate = get<HTMLInputElement>("alternate"),
     reduced = get<HTMLInputElement>("reduced"),
     fullscreen = get<HTMLInputElement>("fullscreen");
+  let guestRequest: ReturnType<RunnerApi["guest"]> | undefined;
+  const ensureSession = () =>
+    (guestRequest ??= api.guest(context.locale()).finally(() => {
+      guestRequest = undefined;
+    }));
+  let runAppearance = { ...defaultAppearance };
   const sound = new BossSound();
   const soundSetting = get<HTMLInputElement>("boss-sound");
   let bossProgress: Awaited<ReturnType<RunnerApi["bosses"]>> | undefined,
     bossProgressError = false;
   const refreshBosses = async () => {
     try {
-      await api.guest();
+      await ensureSession();
       bossProgress = await api.bosses();
       bossProgressError = false;
     } catch {
@@ -144,7 +152,7 @@ export async function initializeGame(
     saveSettings();
   });
   const loadRegions = () => {
-    regionsPromise = api.guest();
+    regionsPromise = ensureSession();
     void regionsPromise
       .then((player) => {
         unlocked = player.region_unlocks ?? ["BAMBOO"];
@@ -455,7 +463,10 @@ export async function initializeGame(
       newRun.disabled = !submission?.safeToLeave;
     }
   }
-  context.setRedraw(render);
+  context.setRedraw(() => {
+    render();
+    creator.render();
+  });
   const focusPanel = (id: string) =>
     requestAnimationFrame(() => get(id).focus());
   function pauseRun(reason: PauseReason) {
@@ -499,10 +510,17 @@ export async function initializeGame(
     const immersion = immersive();
     render();
     try {
-      const player = await (regionsPromise ?? api.guest());
+      const player = await (regionsPromise ?? ensureSession());
       unlocked = player.region_unlocks ?? ["BAMBOO"];
       candidate ??= await api.start(startKey, latchedMode, latchedRegion);
-      const manifest = await api.manifest(candidate);
+      await creator.finishSave();
+      const [manifest, look] = await Promise.all([
+        api.manifest(candidate),
+        api.character().catch(() => undefined),
+      ]);
+      runAppearance = look
+        ? resolveAppearance(look.slots)
+        : { ...defaultAppearance };
       await immersion;
       lab.open = false;
       stopLab();
@@ -739,6 +757,12 @@ export async function initializeGame(
     poseSelect = get<HTMLSelectElement>("rig-animation"),
     animate = get<HTMLInputElement>("rig-play"),
     debug = get<HTMLInputElement>("rig-debug");
+  const creator = attachCreator(lab, api, ensureSession, context.locale);
+  get("open-creator").addEventListener("click", () => {
+    lab.open = true;
+    lab.querySelector("summary")?.focus();
+  });
+  if (location.hash === "#rig-lab") lab.open = true;
   for (const value of ANIMATIONS) poseSelect.add(new Option(value, value));
   poseSelect.value = "RUN";
   animate.checked = !reduced.checked;
@@ -776,7 +800,7 @@ export async function initializeGame(
       )
         ? -Math.abs(Math.sin((labTick / 72) * Math.PI)) * 65
         : 0;
-      ctx.translate(160, 250 + lift);
+      ctx.translate(272, 250 + lift);
       ctx.scale(1.75, 1.75);
       drawRig(
         canvasBrush(ctx),
@@ -784,6 +808,7 @@ export async function initializeGame(
         RULES_V2,
         reduced.checked,
         debug.checked,
+        creator.preview(),
       );
       ctx.restore();
       canvas.dataset["frame"] = String(Math.floor(labTick));
@@ -792,7 +817,10 @@ export async function initializeGame(
     };
     labFrame = requestAnimationFrame(paint);
   };
-  lab.addEventListener("toggle", startLab);
+  lab.addEventListener("toggle", () => {
+    startLab();
+    if (lab.open) void creator.load();
+  });
   window.addEventListener("pageshow", (event) => {
     if (event.persisted && lab.open) startLab();
   });
@@ -802,6 +830,7 @@ export async function initializeGame(
     const { mountRunner } = await import("@ronin/runner-client/scene");
     const mounted = mountRunner(surface, {
       session: () => session,
+      appearance: () => runAppearance,
       frame: (time) => session?.frame(time),
       reducedMotion: () => reduced.checked,
     });

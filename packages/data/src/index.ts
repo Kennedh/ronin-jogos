@@ -31,3 +31,4 @@ export { NICKNAME_REASONS, Privacy } from "./privacy.ts";
 export { PasswordHasher, passwordPolicy } from "./passwords.ts";
 export { deliverAuthMail } from "./auth-mail.ts";
 export type { AuthMail, MailTransport } from "./auth-mail.ts";
+export { Characters } from "./characters.ts";

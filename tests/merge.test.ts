@@ -48,7 +48,11 @@ test(
     const preview = (c: Client) =>
       post("/auth/merge/preview", c, { method: "EMAIL", email, password });
     const confirm = (c: Client, nonce: string) =>
-      post("/auth/merge/confirm", c, { merge_nonce: nonce, confirmed: true });
+      post("/auth/merge/confirm", c, {
+        merge_nonce: nonce,
+        confirmed: true,
+        appearance_from: "GUEST",
+      });
     const nonceFrom = async (c: Client) => {
       const result = await preview(c);
       assert.equal(result.statusCode, 200, result.body);
@@ -207,6 +211,25 @@ test(
         "MERGE_PROOF_INVALID",
       );
 
+      const beforeLook = await nonceFrom(visitor);
+      assert.equal(
+        (
+          await h.api.inject({
+            method: "PATCH",
+            url: "/api/v1/me/character",
+            headers: h.headers(visitor),
+            payload: {
+              expected_appearance_version: 1,
+              slots: { outfit_id: "robe_blue" },
+            },
+          })
+        ).statusCode,
+        200,
+      );
+      assert.equal(
+        (await confirm(visitor, beforeLook)).json().error.code,
+        "MERGE_PREVIEW_CHANGED",
+      );
       const outdated = await nonceFrom(visitor);
       await h.api.inject({
         method: "PATCH",
@@ -319,6 +342,10 @@ test(
           )
         ).rows[0].source_run,
         targetRun,
+      );
+      assert.equal(
+        (await get("/me/character", merged)).json().slots.outfit_id,
+        "robe_blue",
       );
       assert.deepEqual(await replayEvidence(), beforeEvidence);
       assert.equal((await h.status(merged, replay.run_id)).status, "VERIFIED");

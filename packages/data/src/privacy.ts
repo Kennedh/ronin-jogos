@@ -6,6 +6,8 @@ import { Sessions } from "./sessions.ts";
 import type { Session } from "./sessions.ts";
 import { purgeAuthMail } from "./auth-mail.ts";
 
+import { readCharacter } from "./characters.ts";
+
 const DAYS_TO_CANCEL = 7;
 type Deletion = {
   requested_at: Date;
@@ -199,6 +201,7 @@ export class Privacy {
       return {
         version: 1,
         exported_at: through,
+        character: await readCharacter(db, player.id),
         profile: serializeDates(profile),
         progress,
         sessions: sessions.map(serializeDates),
@@ -366,6 +369,10 @@ export class Privacy {
         )
       ).rows.map((p) => p.id);
       const involved = [next.id, ...merged];
+      await db.query(
+        "DELETE FROM player_character_profiles WHERE player_id=ANY($1::uuid[])",
+        [involved],
+      );
       await purgeAuthMail(db, mailKey, involved, now);
       const emails = (
         await db.query<{ email: string }>(

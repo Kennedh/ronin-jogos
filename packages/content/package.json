@@ -7,6 +7,7 @@
     ".": "./src/index.ts",
     "./runner-manifest": "./src/runner-manifest.ts",
     "./account-copy": "./src/account-copy.ts",
+    "./character": "./src/character.ts",
     "./runner-copy": "./src/runner-copy.ts",
     "./director": "./src/director.ts",
     "./solver": "./src/solver.ts"

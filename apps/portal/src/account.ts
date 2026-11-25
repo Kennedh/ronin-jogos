@@ -1,5 +1,12 @@
 import { RunnerApi, ClientError } from "@ronin/runner-client";
 import type { components } from "@ronin/contracts";
+import { canvasBrush, demoPose, drawRig } from "@ronin/runner-client";
+import { RULES_V2 } from "@ronin/runner-core";
+import {
+  partsById,
+  resolveAppearance,
+  defaultAppearance,
+} from "@ronin/content/character";
 import { accountCopy } from "@ronin/content/account-copy";
 import type { AccountTextKey } from "@ronin/content/account-copy";
 import { apiErrorMessage, runnerPath } from "@ronin/content";
@@ -31,6 +38,41 @@ export async function initializeAccount(
     error: ClientError | undefined,
     bootstrapError = false;
   const copy = () => accountCopy(context.locale());
+  let character: components["schemas"]["Character"] | undefined;
+  async function loadAvatar() {
+    character =
+      profile && profile.account_status !== "DELETION_PENDING"
+        ? await api.character().catch(() => undefined)
+        : undefined;
+  }
+  function renderAvatar() {
+    const figure = get("account-avatar");
+    figure.hidden = !character || character.player_id !== profile?.player_id;
+    if (figure.hidden || !character) return;
+    const slots = resolveAppearance(character.slots),
+      canvas = figure.querySelector("canvas")!,
+      ctx = canvas.getContext("2d");
+    if (ctx) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+      ctx.translate(76, 126);
+      drawRig(
+        canvasBrush(ctx),
+        demoPose("IDLE", 0),
+        RULES_V2,
+        true,
+        false,
+        slots,
+      );
+      ctx.restore();
+    }
+    const ids = [slots.outfit_id];
+    if (slots.profile_emblem_id !== defaultAppearance.profile_emblem_id)
+      ids.push(slots.profile_emblem_id);
+    figure.querySelector("figcaption")!.textContent = ids
+      .map((id) => partsById.get(id)?.labels[context.locale()])
+      .join(" · ");
+  }
   function clearGoogleButton() {
     googleRequest = undefined;
     get("account-google-button").replaceChildren();
@@ -44,6 +86,9 @@ export async function initializeAccount(
   function showMerge(preview: components["schemas"]["MergePreview"]) {
     mergeOpen = true;
     mergePreview = preview;
+    get<HTMLInputElement>("account-merge-look").checked =
+      preview.summary.source.character.appearance_version > 1 &&
+      preview.summary.target.character.appearance_version === 1;
     get<HTMLInputElement>("account-merge-agree").checked = false;
     message = "mergeReviewReady";
   }
@@ -68,6 +113,12 @@ export async function initializeAccount(
       heading.textContent = t[key];
       for (const [label, value] of [
         [t.nickname, data.nickname ?? t.mergeNoNickname],
+        [
+          t.mergeAppearance,
+          partsById.get(data.character.slots["outfit_id"] ?? "")?.labels[
+            context.locale()
+          ] ?? "—",
+        ],
         [t.mergeRuns, number.format(data.runs)],
         [t.mergeVerified, number.format(data.verified)],
         [
@@ -140,6 +191,9 @@ export async function initializeAccount(
     for (const e of root.querySelectorAll<HTMLElement>("[data-account-copy]"))
       e.textContent = t[e.dataset["accountCopy"] as AccountTextKey];
     get<HTMLAnchorElement>("account-back").href = runnerPath(context.locale());
+    get<HTMLAnchorElement>("account-creator").href =
+      runnerPath(context.locale()) + "#rig-lab";
+    renderAvatar();
     const deletionPending = profile?.account_status === "DELETION_PENDING";
     const registered =
       profile?.account_status === "REGISTERED" || deletionPending;
@@ -275,6 +329,7 @@ export async function initializeAccount(
     profile = await api.guest(context.locale());
     googleClientId =
       (await api.googleConfig().catch(() => null))?.client_id ?? null;
+    await loadAvatar();
     privacy = await api.privacyStatus().catch(() => undefined);
     bootstrapError = false;
     if (
@@ -378,6 +433,7 @@ export async function initializeAccount(
                 const signedIn = await api.googleAuth(purpose, token);
                 if (signedIn) {
                   profile = signedIn;
+                  await loadAvatar();
                   privacy = await api.privacyStatus();
                 }
                 await loadSessions();
@@ -437,8 +493,12 @@ export async function initializeAccount(
   form("account-merge-confirm-form", async () => {
     if (!mergePreview || !get<HTMLInputElement>("account-merge-agree").checked)
       return;
-    profile = await api.mergeConfirm(mergePreview.merge_nonce);
+    profile = await api.mergeConfirm(
+      mergePreview.merge_nonce,
+      get<HTMLInputElement>("account-merge-look").checked,
+    );
     clearMerge();
+    await loadAvatar();
     privacy = await api.privacyStatus();
     await loadSessions();
     message = "mergeDone";
@@ -486,6 +546,7 @@ export async function initializeAccount(
     void run(async () => {
       privacy = await api.cancelDeletion();
       profile = await api.profile();
+      await loadAvatar();
       message = "privacyCancelled";
     });
   });
@@ -523,6 +584,7 @@ export async function initializeAccount(
       String(data.get("email")),
       String(data.get("password")),
     );
+    await loadAvatar();
     privacy = await api.privacyStatus();
     await loadSessions();
   });
@@ -545,6 +607,7 @@ export async function initializeAccount(
       intent.kind = "";
       profile = await api.profile();
       await loadSessions();
+      await loadAvatar();
       message = "verified";
     });
   });

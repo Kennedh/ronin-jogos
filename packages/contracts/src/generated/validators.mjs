@@ -56,7 +56,7 @@ var e = Object.create,
         /^(?=.{1,253}\.?$)[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[-0-9a-z]{0,61}[0-9a-z])?)*\.?$/i,
       ipv4: /^(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)$/,
       ipv6: /^((([0-9a-f]{1,4}:){7}([0-9a-f]{1,4}|:))|(([0-9a-f]{1,4}:){6}(:[0-9a-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9a-f]{1,4}:){5}(((:[0-9a-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9a-f]{1,4}:){4}(((:[0-9a-f]{1,4}){1,3})|((:[0-9a-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9a-f]{1,4}:){3}(((:[0-9a-f]{1,4}){1,4})|((:[0-9a-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9a-f]{1,4}:){2}(((:[0-9a-f]{1,4}){1,5})|((:[0-9a-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9a-f]{1,4}:){1}(((:[0-9a-f]{1,4}){1,6})|((:[0-9a-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9a-f]{1,4}){1,7})|((:[0-9a-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))$/i,
-      regex: ee,
+      regex: E,
       uuid: /^(?:urn:uuid:)?[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i,
       "json-pointer": /^(?:\/(?:[^~/]|~0|~1)*)*$/,
       "json-pointer-uri-fragment":
@@ -193,7 +193,7 @@ var e = Object.create,
       return !0;
     }
     let T = /[^\\]\\Z/;
-    function ee(e) {
+    function E(e) {
       if (T.test(e)) return !1;
       try {
         return (new RegExp(e), !0);
@@ -1429,7 +1429,7 @@ var e = Object.create,
         return ((m.errors = c), l === 0);
       }
       ((m.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
-        (e.PrivacyExportPage = _));
+        (e.PrivacyExportPage = v));
       let h = {
           type: `object`,
           additionalProperties: !1,
@@ -1442,9 +1442,11 @@ var e = Object.create,
             `runs`,
             `privacy`,
             `next_cursor`,
+            `character`,
           ],
           properties: {
             version: { type: `integer`, const: 1 },
+            character: { $ref: `#/$defs/Character` },
             exported_at: { type: `string`, format: `date-time` },
             profile: {
               type: `object`,
@@ -1574,8 +1576,36 @@ var e = Object.create,
             },
           },
         },
-        g = Object.prototype.hasOwnProperty;
-      function _(
+        g = {
+          type: `object`,
+          additionalProperties: !1,
+          required: [`player_id`, `appearance_version`, `slots`],
+          properties: {
+            player_id: { type: `string`, format: `uuid` },
+            appearance_version: { type: `integer`, minimum: 1 },
+            slots: {
+              type: `object`,
+              minProperties: 10,
+              propertyNames: {
+                enum: [
+                  `body_palette`,
+                  `hair_style`,
+                  `hair_color`,
+                  `eye_style`,
+                  `face_detail`,
+                  `outfit_id`,
+                  `head_accessory_id`,
+                  `katana_visual_id`,
+                  `slash_effect_id`,
+                  `profile_emblem_id`,
+                ],
+              },
+              additionalProperties: { type: `string` },
+            },
+          },
+        },
+        _ = Object.prototype.hasOwnProperty;
+      function v(
         e,
         {
           instancePath: t = ``,
@@ -1587,7 +1617,7 @@ var e = Object.create,
       ) {
         let c = null,
           l = 0,
-          u = _.evaluated;
+          u = v.evaluated;
         if (
           (u.dynamicProps && (u.props = void 0),
           u.dynamicItems && (u.items = void 0),
@@ -1673,17 +1703,18 @@ var e = Object.create,
             };
             (c === null ? (c = [e]) : c.push(e), l++);
           }
+          if (e.character === void 0) {
+            let e = {
+              instancePath: t,
+              schemaPath: `#/required`,
+              keyword: `required`,
+              params: { missingProperty: `character` },
+              message: `must have required property 'character'`,
+            };
+            (c === null ? (c = [e]) : c.push(e), l++);
+          }
           for (let n in e)
-            if (
-              n !== `version` &&
-              n !== `exported_at` &&
-              n !== `profile` &&
-              n !== `progress` &&
-              n !== `sessions` &&
-              n !== `runs` &&
-              n !== `privacy` &&
-              n !== `next_cursor`
-            ) {
+            if (!_.call(h.properties, n)) {
               let e = {
                 instancePath: t,
                 schemaPath: `#/additionalProperties`,
@@ -1712,6 +1743,191 @@ var e = Object.create,
                 keyword: `const`,
                 params: { allowedValue: 1 },
                 message: `must be equal to constant`,
+              };
+              (c === null ? (c = [e]) : c.push(e), l++);
+            }
+          }
+          if (e.character !== void 0) {
+            let n = e.character;
+            if (n && typeof n == `object` && !Array.isArray(n)) {
+              if (n.player_id === void 0) {
+                let e = {
+                  instancePath: t + `/character`,
+                  schemaPath: `#/$defs/Character/required`,
+                  keyword: `required`,
+                  params: { missingProperty: `player_id` },
+                  message: `must have required property 'player_id'`,
+                };
+                (c === null ? (c = [e]) : c.push(e), l++);
+              }
+              if (n.appearance_version === void 0) {
+                let e = {
+                  instancePath: t + `/character`,
+                  schemaPath: `#/$defs/Character/required`,
+                  keyword: `required`,
+                  params: { missingProperty: `appearance_version` },
+                  message: `must have required property 'appearance_version'`,
+                };
+                (c === null ? (c = [e]) : c.push(e), l++);
+              }
+              if (n.slots === void 0) {
+                let e = {
+                  instancePath: t + `/character`,
+                  schemaPath: `#/$defs/Character/required`,
+                  keyword: `required`,
+                  params: { missingProperty: `slots` },
+                  message: `must have required property 'slots'`,
+                };
+                (c === null ? (c = [e]) : c.push(e), l++);
+              }
+              for (let e in n)
+                if (
+                  e !== `player_id` &&
+                  e !== `appearance_version` &&
+                  e !== `slots`
+                ) {
+                  let n = {
+                    instancePath: t + `/character`,
+                    schemaPath: `#/$defs/Character/additionalProperties`,
+                    keyword: `additionalProperties`,
+                    params: { additionalProperty: e },
+                    message: `must NOT have additional properties`,
+                  };
+                  (c === null ? (c = [n]) : c.push(n), l++);
+                }
+              if (n.player_id !== void 0) {
+                let e = n.player_id;
+                if (typeof e == `string`) {
+                  if (!a.test(e)) {
+                    let e = {
+                      instancePath: t + `/character/player_id`,
+                      schemaPath: `#/$defs/Character/properties/player_id/format`,
+                      keyword: `format`,
+                      params: { format: `uuid` },
+                      message: `must match format "uuid"`,
+                    };
+                    (c === null ? (c = [e]) : c.push(e), l++);
+                  }
+                } else {
+                  let e = {
+                    instancePath: t + `/character/player_id`,
+                    schemaPath: `#/$defs/Character/properties/player_id/type`,
+                    keyword: `type`,
+                    params: { type: `string` },
+                    message: `must be string`,
+                  };
+                  (c === null ? (c = [e]) : c.push(e), l++);
+                }
+              }
+              if (n.appearance_version !== void 0) {
+                let e = n.appearance_version;
+                if (typeof e != `number` || e % 1 || isNaN(e) || !isFinite(e)) {
+                  let e = {
+                    instancePath: t + `/character/appearance_version`,
+                    schemaPath: `#/$defs/Character/properties/appearance_version/type`,
+                    keyword: `type`,
+                    params: { type: `integer` },
+                    message: `must be integer`,
+                  };
+                  (c === null ? (c = [e]) : c.push(e), l++);
+                }
+                if (
+                  typeof e == `number` &&
+                  isFinite(e) &&
+                  (e < 1 || isNaN(e))
+                ) {
+                  let e = {
+                    instancePath: t + `/character/appearance_version`,
+                    schemaPath: `#/$defs/Character/properties/appearance_version/minimum`,
+                    keyword: `minimum`,
+                    params: { comparison: `>=`, limit: 1 },
+                    message: `must be >= 1`,
+                  };
+                  (c === null ? (c = [e]) : c.push(e), l++);
+                }
+              }
+              if (n.slots !== void 0) {
+                let e = n.slots;
+                if (e && typeof e == `object` && !Array.isArray(e)) {
+                  if (Object.keys(e).length < 10) {
+                    let e = {
+                      instancePath: t + `/character/slots`,
+                      schemaPath: `#/$defs/Character/properties/slots/minProperties`,
+                      keyword: `minProperties`,
+                      params: { limit: 10 },
+                      message: `must NOT have fewer than 10 properties`,
+                    };
+                    (c === null ? (c = [e]) : c.push(e), l++);
+                  }
+                  for (let n in e) {
+                    let e = l;
+                    if (
+                      n !== `body_palette` &&
+                      n !== `hair_style` &&
+                      n !== `hair_color` &&
+                      n !== `eye_style` &&
+                      n !== `face_detail` &&
+                      n !== `outfit_id` &&
+                      n !== `head_accessory_id` &&
+                      n !== `katana_visual_id` &&
+                      n !== `slash_effect_id` &&
+                      n !== `profile_emblem_id`
+                    ) {
+                      let e = {
+                        instancePath: t + `/character/slots`,
+                        schemaPath: `#/$defs/Character/properties/slots/propertyNames/enum`,
+                        keyword: `enum`,
+                        params: {
+                          allowedValues: g.properties.slots.propertyNames.enum,
+                        },
+                        message: `must be equal to one of the allowed values`,
+                        propertyName: n,
+                      };
+                      (c === null ? (c = [e]) : c.push(e), l++);
+                    }
+                    if (e !== l) {
+                      let e = {
+                        instancePath: t + `/character/slots`,
+                        schemaPath: `#/$defs/Character/properties/slots/propertyNames`,
+                        keyword: `propertyNames`,
+                        params: { propertyName: n },
+                        message: `property name must be valid`,
+                      };
+                      (c === null ? (c = [e]) : c.push(e), l++);
+                    }
+                  }
+                  for (let n in e)
+                    if (typeof e[n] != `string`) {
+                      let e = {
+                        instancePath:
+                          t +
+                          `/character/slots/` +
+                          n.replace(/~/g, `~0`).replace(/\//g, `~1`),
+                        schemaPath: `#/$defs/Character/properties/slots/additionalProperties/type`,
+                        keyword: `type`,
+                        params: { type: `string` },
+                        message: `must be string`,
+                      };
+                      (c === null ? (c = [e]) : c.push(e), l++);
+                    }
+                } else {
+                  let e = {
+                    instancePath: t + `/character/slots`,
+                    schemaPath: `#/$defs/Character/properties/slots/type`,
+                    keyword: `type`,
+                    params: { type: `object` },
+                    message: `must be object`,
+                  };
+                  (c === null ? (c = [e]) : c.push(e), l++);
+                }
+              }
+            } else {
+              let e = {
+                instancePath: t + `/character`,
+                schemaPath: `#/$defs/Character/type`,
+                keyword: `type`,
+                params: { type: `object` },
+                message: `must be object`,
               };
               (c === null ? (c = [e]) : c.push(e), l++);
             }
@@ -1844,7 +2060,7 @@ var e = Object.create,
                 (c === null ? (c = [e]) : c.push(e), l++);
               }
               for (let e in n)
-                if (!g.call(h.properties.profile.properties, e)) {
+                if (!_.call(h.properties.profile.properties, e)) {
                   let n = {
                     instancePath: t + `/profile`,
                     schemaPath: `#/properties/profile/additionalProperties`,
@@ -2699,7 +2915,7 @@ var e = Object.create,
                     (c === null ? (c = [e]) : c.push(e), l++);
                   }
                   for (let n in e)
-                    if (!g.call(h.properties.runs.items.properties, n)) {
+                    if (!_.call(h.properties.runs.items.properties, n)) {
                       let e = {
                         instancePath: t + `/runs/` + r,
                         schemaPath: `#/properties/runs/items/additionalProperties`,
@@ -3505,12 +3721,12 @@ var e = Object.create,
           };
           (c === null ? (c = [e]) : c.push(e), l++);
         }
-        return ((_.errors = c), l === 0);
+        return ((v.errors = c), l === 0);
       }
-      ((_.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
-        (e.MergePreviewRequest = y));
-      let v = u().default;
-      function y(
+      ((v.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.MergePreviewRequest = b));
+      let y = u().default;
+      function b(
         e,
         {
           instancePath: t = ``,
@@ -3522,7 +3738,7 @@ var e = Object.create,
       ) {
         let s = null,
           c = 0,
-          l = y.evaluated;
+          l = b.evaluated;
         (l.dynamicProps && (l.props = void 0),
           l.dynamicItems && (l.items = void 0));
         let u = c,
@@ -3597,7 +3813,7 @@ var e = Object.create,
           if (e.email !== void 0) {
             let n = e.email;
             if (typeof n == `string`) {
-              if (v(n) > 254) {
+              if (y(n) > 254) {
                 let e = {
                   instancePath: t + `/email`,
                   schemaPath: `#/oneOf/0/properties/email/maxLength`,
@@ -3631,7 +3847,7 @@ var e = Object.create,
           if (e.password !== void 0) {
             let n = e.password;
             if (typeof n == `string`) {
-              if (v(n) > 256) {
+              if (y(n) > 256) {
                 let e = {
                   instancePath: t + `/password`,
                   schemaPath: `#/oneOf/0/properties/password/maxLength`,
@@ -3641,7 +3857,7 @@ var e = Object.create,
                 };
                 (s === null ? (s = [e]) : s.push(e), c++);
               }
-              if (v(n) < 1) {
+              if (y(n) < 1) {
                 let e = {
                   instancePath: t + `/password`,
                   schemaPath: `#/oneOf/0/properties/password/minLength`,
@@ -3736,7 +3952,7 @@ var e = Object.create,
           if (e.id_token !== void 0) {
             let n = e.id_token;
             if (typeof n == `string`) {
-              if (v(n) > 5500) {
+              if (y(n) > 5500) {
                 let e = {
                   instancePath: t + `/id_token`,
                   schemaPath: `#/oneOf/1/properties/id_token/maxLength`,
@@ -3746,7 +3962,7 @@ var e = Object.create,
                 };
                 (s === null ? (s = [e]) : s.push(e), c++);
               }
-              if (v(n) < 1) {
+              if (y(n) < 1) {
                 let e = {
                   instancePath: t + `/id_token`,
                   schemaPath: `#/oneOf/1/properties/id_token/minLength`,
@@ -3795,12 +4011,22 @@ var e = Object.create,
           };
           (s === null ? (s = [e]) : s.push(e), c++);
         }
-        return ((y.errors = s), (l.props = h), c === 0);
+        return ((b.errors = s), (l.props = h), c === 0);
       }
-      ((y.evaluated = { dynamicProps: !0, dynamicItems: !1 }),
-        (e.MergeConfirmRequest = x));
-      let b = RegExp(`^[A-Za-z0-9_-]{43}$`, `u`);
-      function x(
+      ((b.evaluated = { dynamicProps: !0, dynamicItems: !1 }),
+        (e.MergeConfirmRequest = C));
+      let x = {
+          type: `object`,
+          additionalProperties: !1,
+          required: [`merge_nonce`, `confirmed`],
+          properties: {
+            appearance_from: { type: `string`, enum: [`GUEST`, `TARGET`] },
+            merge_nonce: { type: `string`, pattern: `^[A-Za-z0-9_-]{43}$` },
+            confirmed: { type: `boolean`, const: !0 },
+          },
+        },
+        S = RegExp(`^[A-Za-z0-9_-]{43}$`, `u`);
+      function C(
         e,
         {
           instancePath: t = ``,
@@ -3812,7 +4038,7 @@ var e = Object.create,
       ) {
         let o = null,
           s = 0,
-          c = x.evaluated;
+          c = C.evaluated;
         if (
           (c.dynamicProps && (c.props = void 0),
           c.dynamicItems && (c.items = void 0),
@@ -3839,7 +4065,11 @@ var e = Object.create,
             (o === null ? (o = [e]) : o.push(e), s++);
           }
           for (let n in e)
-            if (n !== `merge_nonce` && n !== `confirmed`) {
+            if (
+              n !== `appearance_from` &&
+              n !== `merge_nonce` &&
+              n !== `confirmed`
+            ) {
               let e = {
                 instancePath: t,
                 schemaPath: `#/additionalProperties`,
@@ -3849,10 +4079,33 @@ var e = Object.create,
               };
               (o === null ? (o = [e]) : o.push(e), s++);
             }
+          if (e.appearance_from !== void 0) {
+            let n = e.appearance_from;
+            if (typeof n != `string`) {
+              let e = {
+                instancePath: t + `/appearance_from`,
+                schemaPath: `#/properties/appearance_from/type`,
+                keyword: `type`,
+                params: { type: `string` },
+                message: `must be string`,
+              };
+              (o === null ? (o = [e]) : o.push(e), s++);
+            }
+            if (n !== `GUEST` && n !== `TARGET`) {
+              let e = {
+                instancePath: t + `/appearance_from`,
+                schemaPath: `#/properties/appearance_from/enum`,
+                keyword: `enum`,
+                params: { allowedValues: x.properties.appearance_from.enum },
+                message: `must be equal to one of the allowed values`,
+              };
+              (o === null ? (o = [e]) : o.push(e), s++);
+            }
+          }
           if (e.merge_nonce !== void 0) {
             let n = e.merge_nonce;
             if (typeof n == `string`) {
-              if (!b.test(n)) {
+              if (!S.test(n)) {
                 let e = {
                   instancePath: t + `/merge_nonce`,
                   schemaPath: `#/properties/merge_nonce/pattern`,
@@ -3906,11 +4159,11 @@ var e = Object.create,
           };
           (o === null ? (o = [e]) : o.push(e), s++);
         }
-        return ((x.errors = o), s === 0);
+        return ((C.errors = o), s === 0);
       }
-      ((x.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
-        (e.MergeProgress = w));
-      let S = {
+      ((C.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.MergeProgress = E));
+      let w = {
           type: `object`,
           additionalProperties: !1,
           required: [
@@ -3921,9 +4174,11 @@ var e = Object.create,
             `regions`,
             `seals`,
             `rewards`,
+            `character`,
           ],
           properties: {
             nickname: { type: [`string`, `null`] },
+            character: { $ref: `#/$defs/Character` },
             runs: { type: `integer`, minimum: 0 },
             verified: { type: `integer`, minimum: 0 },
             best_ranked_score: {
@@ -3935,23 +4190,23 @@ var e = Object.create,
             rewards: { type: `array`, items: { type: `string` } },
           },
         },
-        C = RegExp(`^(0|[1-9][0-9]*)$`, `u`);
-      function w(
+        T = RegExp(`^(0|[1-9][0-9]*)$`, `u`);
+      function E(
         e,
         {
           instancePath: t = ``,
           parentData: n,
           parentDataProperty: r,
           rootData: i = e,
-          dynamicAnchors: a = {},
+          dynamicAnchors: o = {},
         } = {},
       ) {
-        let o = null,
-          s = 0,
-          c = w.evaluated;
+        let s = null,
+          c = 0,
+          l = E.evaluated;
         if (
-          (c.dynamicProps && (c.props = void 0),
-          c.dynamicItems && (c.items = void 0),
+          (l.dynamicProps && (l.props = void 0),
+          l.dynamicItems && (l.items = void 0),
           e && typeof e == `object` && !Array.isArray(e))
         ) {
           if (e.nickname === void 0) {
@@ -3962,7 +4217,7 @@ var e = Object.create,
               params: { missingProperty: `nickname` },
               message: `must have required property 'nickname'`,
             };
-            (o === null ? (o = [e]) : o.push(e), s++);
+            (s === null ? (s = [e]) : s.push(e), c++);
           }
           if (e.runs === void 0) {
             let e = {
@@ -3972,7 +4227,7 @@ var e = Object.create,
               params: { missingProperty: `runs` },
               message: `must have required property 'runs'`,
             };
-            (o === null ? (o = [e]) : o.push(e), s++);
+            (s === null ? (s = [e]) : s.push(e), c++);
           }
           if (e.verified === void 0) {
             let e = {
@@ -3982,7 +4237,7 @@ var e = Object.create,
               params: { missingProperty: `verified` },
               message: `must have required property 'verified'`,
             };
-            (o === null ? (o = [e]) : o.push(e), s++);
+            (s === null ? (s = [e]) : s.push(e), c++);
           }
           if (e.best_ranked_score === void 0) {
             let e = {
@@ -3992,7 +4247,7 @@ var e = Object.create,
               params: { missingProperty: `best_ranked_score` },
               message: `must have required property 'best_ranked_score'`,
             };
-            (o === null ? (o = [e]) : o.push(e), s++);
+            (s === null ? (s = [e]) : s.push(e), c++);
           }
           if (e.regions === void 0) {
             let e = {
@@ -4002,7 +4257,7 @@ var e = Object.create,
               params: { missingProperty: `regions` },
               message: `must have required property 'regions'`,
             };
-            (o === null ? (o = [e]) : o.push(e), s++);
+            (s === null ? (s = [e]) : s.push(e), c++);
           }
           if (e.seals === void 0) {
             let e = {
@@ -4012,7 +4267,7 @@ var e = Object.create,
               params: { missingProperty: `seals` },
               message: `must have required property 'seals'`,
             };
-            (o === null ? (o = [e]) : o.push(e), s++);
+            (s === null ? (s = [e]) : s.push(e), c++);
           }
           if (e.rewards === void 0) {
             let e = {
@@ -4022,11 +4277,22 @@ var e = Object.create,
               params: { missingProperty: `rewards` },
               message: `must have required property 'rewards'`,
             };
-            (o === null ? (o = [e]) : o.push(e), s++);
+            (s === null ? (s = [e]) : s.push(e), c++);
+          }
+          if (e.character === void 0) {
+            let e = {
+              instancePath: t,
+              schemaPath: `#/required`,
+              keyword: `required`,
+              params: { missingProperty: `character` },
+              message: `must have required property 'character'`,
+            };
+            (s === null ? (s = [e]) : s.push(e), c++);
           }
           for (let n in e)
             if (
               n !== `nickname` &&
+              n !== `character` &&
               n !== `runs` &&
               n !== `verified` &&
               n !== `best_ranked_score` &&
@@ -4041,7 +4307,7 @@ var e = Object.create,
                 params: { additionalProperty: n },
                 message: `must NOT have additional properties`,
               };
-              (o === null ? (o = [e]) : o.push(e), s++);
+              (s === null ? (s = [e]) : s.push(e), c++);
             }
           if (e.nickname !== void 0) {
             let n = e.nickname;
@@ -4050,10 +4316,195 @@ var e = Object.create,
                 instancePath: t + `/nickname`,
                 schemaPath: `#/properties/nickname/type`,
                 keyword: `type`,
-                params: { type: S.properties.nickname.type },
+                params: { type: w.properties.nickname.type },
                 message: `must be string,null`,
               };
-              (o === null ? (o = [e]) : o.push(e), s++);
+              (s === null ? (s = [e]) : s.push(e), c++);
+            }
+          }
+          if (e.character !== void 0) {
+            let n = e.character;
+            if (n && typeof n == `object` && !Array.isArray(n)) {
+              if (n.player_id === void 0) {
+                let e = {
+                  instancePath: t + `/character`,
+                  schemaPath: `#/$defs/Character/required`,
+                  keyword: `required`,
+                  params: { missingProperty: `player_id` },
+                  message: `must have required property 'player_id'`,
+                };
+                (s === null ? (s = [e]) : s.push(e), c++);
+              }
+              if (n.appearance_version === void 0) {
+                let e = {
+                  instancePath: t + `/character`,
+                  schemaPath: `#/$defs/Character/required`,
+                  keyword: `required`,
+                  params: { missingProperty: `appearance_version` },
+                  message: `must have required property 'appearance_version'`,
+                };
+                (s === null ? (s = [e]) : s.push(e), c++);
+              }
+              if (n.slots === void 0) {
+                let e = {
+                  instancePath: t + `/character`,
+                  schemaPath: `#/$defs/Character/required`,
+                  keyword: `required`,
+                  params: { missingProperty: `slots` },
+                  message: `must have required property 'slots'`,
+                };
+                (s === null ? (s = [e]) : s.push(e), c++);
+              }
+              for (let e in n)
+                if (
+                  e !== `player_id` &&
+                  e !== `appearance_version` &&
+                  e !== `slots`
+                ) {
+                  let n = {
+                    instancePath: t + `/character`,
+                    schemaPath: `#/$defs/Character/additionalProperties`,
+                    keyword: `additionalProperties`,
+                    params: { additionalProperty: e },
+                    message: `must NOT have additional properties`,
+                  };
+                  (s === null ? (s = [n]) : s.push(n), c++);
+                }
+              if (n.player_id !== void 0) {
+                let e = n.player_id;
+                if (typeof e == `string`) {
+                  if (!a.test(e)) {
+                    let e = {
+                      instancePath: t + `/character/player_id`,
+                      schemaPath: `#/$defs/Character/properties/player_id/format`,
+                      keyword: `format`,
+                      params: { format: `uuid` },
+                      message: `must match format "uuid"`,
+                    };
+                    (s === null ? (s = [e]) : s.push(e), c++);
+                  }
+                } else {
+                  let e = {
+                    instancePath: t + `/character/player_id`,
+                    schemaPath: `#/$defs/Character/properties/player_id/type`,
+                    keyword: `type`,
+                    params: { type: `string` },
+                    message: `must be string`,
+                  };
+                  (s === null ? (s = [e]) : s.push(e), c++);
+                }
+              }
+              if (n.appearance_version !== void 0) {
+                let e = n.appearance_version;
+                if (typeof e != `number` || e % 1 || isNaN(e) || !isFinite(e)) {
+                  let e = {
+                    instancePath: t + `/character/appearance_version`,
+                    schemaPath: `#/$defs/Character/properties/appearance_version/type`,
+                    keyword: `type`,
+                    params: { type: `integer` },
+                    message: `must be integer`,
+                  };
+                  (s === null ? (s = [e]) : s.push(e), c++);
+                }
+                if (
+                  typeof e == `number` &&
+                  isFinite(e) &&
+                  (e < 1 || isNaN(e))
+                ) {
+                  let e = {
+                    instancePath: t + `/character/appearance_version`,
+                    schemaPath: `#/$defs/Character/properties/appearance_version/minimum`,
+                    keyword: `minimum`,
+                    params: { comparison: `>=`, limit: 1 },
+                    message: `must be >= 1`,
+                  };
+                  (s === null ? (s = [e]) : s.push(e), c++);
+                }
+              }
+              if (n.slots !== void 0) {
+                let e = n.slots;
+                if (e && typeof e == `object` && !Array.isArray(e)) {
+                  if (Object.keys(e).length < 10) {
+                    let e = {
+                      instancePath: t + `/character/slots`,
+                      schemaPath: `#/$defs/Character/properties/slots/minProperties`,
+                      keyword: `minProperties`,
+                      params: { limit: 10 },
+                      message: `must NOT have fewer than 10 properties`,
+                    };
+                    (s === null ? (s = [e]) : s.push(e), c++);
+                  }
+                  for (let n in e) {
+                    let e = c;
+                    if (
+                      n !== `body_palette` &&
+                      n !== `hair_style` &&
+                      n !== `hair_color` &&
+                      n !== `eye_style` &&
+                      n !== `face_detail` &&
+                      n !== `outfit_id` &&
+                      n !== `head_accessory_id` &&
+                      n !== `katana_visual_id` &&
+                      n !== `slash_effect_id` &&
+                      n !== `profile_emblem_id`
+                    ) {
+                      let e = {
+                        instancePath: t + `/character/slots`,
+                        schemaPath: `#/$defs/Character/properties/slots/propertyNames/enum`,
+                        keyword: `enum`,
+                        params: {
+                          allowedValues: g.properties.slots.propertyNames.enum,
+                        },
+                        message: `must be equal to one of the allowed values`,
+                        propertyName: n,
+                      };
+                      (s === null ? (s = [e]) : s.push(e), c++);
+                    }
+                    if (e !== c) {
+                      let e = {
+                        instancePath: t + `/character/slots`,
+                        schemaPath: `#/$defs/Character/properties/slots/propertyNames`,
+                        keyword: `propertyNames`,
+                        params: { propertyName: n },
+                        message: `property name must be valid`,
+                      };
+                      (s === null ? (s = [e]) : s.push(e), c++);
+                    }
+                  }
+                  for (let n in e)
+                    if (typeof e[n] != `string`) {
+                      let e = {
+                        instancePath:
+                          t +
+                          `/character/slots/` +
+                          n.replace(/~/g, `~0`).replace(/\//g, `~1`),
+                        schemaPath: `#/$defs/Character/properties/slots/additionalProperties/type`,
+                        keyword: `type`,
+                        params: { type: `string` },
+                        message: `must be string`,
+                      };
+                      (s === null ? (s = [e]) : s.push(e), c++);
+                    }
+                } else {
+                  let e = {
+                    instancePath: t + `/character/slots`,
+                    schemaPath: `#/$defs/Character/properties/slots/type`,
+                    keyword: `type`,
+                    params: { type: `object` },
+                    message: `must be object`,
+                  };
+                  (s === null ? (s = [e]) : s.push(e), c++);
+                }
+              }
+            } else {
+              let e = {
+                instancePath: t + `/character`,
+                schemaPath: `#/$defs/Character/type`,
+                keyword: `type`,
+                params: { type: `object` },
+                message: `must be object`,
+              };
+              (s === null ? (s = [e]) : s.push(e), c++);
             }
           }
           if (e.runs !== void 0) {
@@ -4066,7 +4517,7 @@ var e = Object.create,
                 params: { type: `integer` },
                 message: `must be integer`,
               };
-              (o === null ? (o = [e]) : o.push(e), s++);
+              (s === null ? (s = [e]) : s.push(e), c++);
             }
             if (typeof n == `number` && isFinite(n) && (n < 0 || isNaN(n))) {
               let e = {
@@ -4076,7 +4527,7 @@ var e = Object.create,
                 params: { comparison: `>=`, limit: 0 },
                 message: `must be >= 0`,
               };
-              (o === null ? (o = [e]) : o.push(e), s++);
+              (s === null ? (s = [e]) : s.push(e), c++);
             }
           }
           if (e.verified !== void 0) {
@@ -4089,7 +4540,7 @@ var e = Object.create,
                 params: { type: `integer` },
                 message: `must be integer`,
               };
-              (o === null ? (o = [e]) : o.push(e), s++);
+              (s === null ? (s = [e]) : s.push(e), c++);
             }
             if (typeof n == `number` && isFinite(n) && (n < 0 || isNaN(n))) {
               let e = {
@@ -4099,7 +4550,7 @@ var e = Object.create,
                 params: { comparison: `>=`, limit: 0 },
                 message: `must be >= 0`,
               };
-              (o === null ? (o = [e]) : o.push(e), s++);
+              (s === null ? (s = [e]) : s.push(e), c++);
             }
           }
           if (e.best_ranked_score !== void 0) {
@@ -4109,12 +4560,12 @@ var e = Object.create,
                 instancePath: t + `/best_ranked_score`,
                 schemaPath: `#/properties/best_ranked_score/type`,
                 keyword: `type`,
-                params: { type: S.properties.best_ranked_score.type },
+                params: { type: w.properties.best_ranked_score.type },
                 message: `must be string,null`,
               };
-              (o === null ? (o = [e]) : o.push(e), s++);
+              (s === null ? (s = [e]) : s.push(e), c++);
             }
-            if (typeof n == `string` && !C.test(n)) {
+            if (typeof n == `string` && !T.test(n)) {
               let e = {
                 instancePath: t + `/best_ranked_score`,
                 schemaPath: `#/properties/best_ranked_score/pattern`,
@@ -4122,7 +4573,7 @@ var e = Object.create,
                 params: { pattern: `^(0|[1-9][0-9]*)$` },
                 message: `must match pattern "^(0|[1-9][0-9]*)$"`,
               };
-              (o === null ? (o = [e]) : o.push(e), s++);
+              (s === null ? (s = [e]) : s.push(e), c++);
             }
           }
           if (e.regions !== void 0) {
@@ -4138,7 +4589,7 @@ var e = Object.create,
                     params: { type: `string` },
                     message: `must be string`,
                   };
-                  (o === null ? (o = [e]) : o.push(e), s++);
+                  (s === null ? (s = [e]) : s.push(e), c++);
                 }
             } else {
               let e = {
@@ -4148,7 +4599,7 @@ var e = Object.create,
                 params: { type: `array` },
                 message: `must be array`,
               };
-              (o === null ? (o = [e]) : o.push(e), s++);
+              (s === null ? (s = [e]) : s.push(e), c++);
             }
           }
           if (e.seals !== void 0) {
@@ -4164,7 +4615,7 @@ var e = Object.create,
                     params: { type: `string` },
                     message: `must be string`,
                   };
-                  (o === null ? (o = [e]) : o.push(e), s++);
+                  (s === null ? (s = [e]) : s.push(e), c++);
                 }
             } else {
               let e = {
@@ -4174,7 +4625,7 @@ var e = Object.create,
                 params: { type: `array` },
                 message: `must be array`,
               };
-              (o === null ? (o = [e]) : o.push(e), s++);
+              (s === null ? (s = [e]) : s.push(e), c++);
             }
           }
           if (e.rewards !== void 0) {
@@ -4190,7 +4641,7 @@ var e = Object.create,
                     params: { type: `string` },
                     message: `must be string`,
                   };
-                  (o === null ? (o = [e]) : o.push(e), s++);
+                  (s === null ? (s = [e]) : s.push(e), c++);
                 }
             } else {
               let e = {
@@ -4200,7 +4651,7 @@ var e = Object.create,
                 params: { type: `array` },
                 message: `must be array`,
               };
-              (o === null ? (o = [e]) : o.push(e), s++);
+              (s === null ? (s = [e]) : s.push(e), c++);
             }
           }
         } else {
@@ -4211,13 +4662,13 @@ var e = Object.create,
             params: { type: `object` },
             message: `must be object`,
           };
-          (o === null ? (o = [e]) : o.push(e), s++);
+          (s === null ? (s = [e]) : s.push(e), c++);
         }
-        return ((w.errors = o), s === 0);
+        return ((E.errors = s), c === 0);
       }
-      ((w.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
-        (e.MergePreview = T));
-      function T(
+      ((E.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.MergePreview = ee));
+      function ee(
         e,
         {
           instancePath: t = ``,
@@ -4229,7 +4680,7 @@ var e = Object.create,
       ) {
         let c = null,
           l = 0,
-          u = T.evaluated;
+          u = ee.evaluated;
         if (
           (u.dynamicProps && (u.props = void 0),
           u.dynamicItems && (u.items = void 0),
@@ -4305,7 +4756,7 @@ var e = Object.create,
           if (e.merge_nonce !== void 0) {
             let n = e.merge_nonce;
             if (typeof n == `string`) {
-              if (!b.test(n)) {
+              if (!S.test(n)) {
                 let e = {
                   instancePath: t + `/merge_nonce`,
                   schemaPath: `#/properties/merge_nonce/pattern`,
@@ -4432,568 +4883,26 @@ var e = Object.create,
                   };
                   (c === null ? (c = [n]) : c.push(n), l++);
                 }
-              if (n.source !== void 0) {
-                let e = n.source;
-                if (e && typeof e == `object` && !Array.isArray(e)) {
-                  if (e.nickname === void 0) {
-                    let e = {
-                      instancePath: t + `/summary/source`,
-                      schemaPath: `#/$defs/MergeProgress/required`,
-                      keyword: `required`,
-                      params: { missingProperty: `nickname` },
-                      message: `must have required property 'nickname'`,
-                    };
-                    (c === null ? (c = [e]) : c.push(e), l++);
-                  }
-                  if (e.runs === void 0) {
-                    let e = {
-                      instancePath: t + `/summary/source`,
-                      schemaPath: `#/$defs/MergeProgress/required`,
-                      keyword: `required`,
-                      params: { missingProperty: `runs` },
-                      message: `must have required property 'runs'`,
-                    };
-                    (c === null ? (c = [e]) : c.push(e), l++);
-                  }
-                  if (e.verified === void 0) {
-                    let e = {
-                      instancePath: t + `/summary/source`,
-                      schemaPath: `#/$defs/MergeProgress/required`,
-                      keyword: `required`,
-                      params: { missingProperty: `verified` },
-                      message: `must have required property 'verified'`,
-                    };
-                    (c === null ? (c = [e]) : c.push(e), l++);
-                  }
-                  if (e.best_ranked_score === void 0) {
-                    let e = {
-                      instancePath: t + `/summary/source`,
-                      schemaPath: `#/$defs/MergeProgress/required`,
-                      keyword: `required`,
-                      params: { missingProperty: `best_ranked_score` },
-                      message: `must have required property 'best_ranked_score'`,
-                    };
-                    (c === null ? (c = [e]) : c.push(e), l++);
-                  }
-                  if (e.regions === void 0) {
-                    let e = {
-                      instancePath: t + `/summary/source`,
-                      schemaPath: `#/$defs/MergeProgress/required`,
-                      keyword: `required`,
-                      params: { missingProperty: `regions` },
-                      message: `must have required property 'regions'`,
-                    };
-                    (c === null ? (c = [e]) : c.push(e), l++);
-                  }
-                  if (e.seals === void 0) {
-                    let e = {
-                      instancePath: t + `/summary/source`,
-                      schemaPath: `#/$defs/MergeProgress/required`,
-                      keyword: `required`,
-                      params: { missingProperty: `seals` },
-                      message: `must have required property 'seals'`,
-                    };
-                    (c === null ? (c = [e]) : c.push(e), l++);
-                  }
-                  if (e.rewards === void 0) {
-                    let e = {
-                      instancePath: t + `/summary/source`,
-                      schemaPath: `#/$defs/MergeProgress/required`,
-                      keyword: `required`,
-                      params: { missingProperty: `rewards` },
-                      message: `must have required property 'rewards'`,
-                    };
-                    (c === null ? (c = [e]) : c.push(e), l++);
-                  }
-                  for (let n in e)
-                    if (
-                      n !== `nickname` &&
-                      n !== `runs` &&
-                      n !== `verified` &&
-                      n !== `best_ranked_score` &&
-                      n !== `regions` &&
-                      n !== `seals` &&
-                      n !== `rewards`
-                    ) {
-                      let e = {
-                        instancePath: t + `/summary/source`,
-                        schemaPath: `#/$defs/MergeProgress/additionalProperties`,
-                        keyword: `additionalProperties`,
-                        params: { additionalProperty: n },
-                        message: `must NOT have additional properties`,
-                      };
-                      (c === null ? (c = [e]) : c.push(e), l++);
-                    }
-                  if (e.nickname !== void 0) {
-                    let n = e.nickname;
-                    if (typeof n != `string` && n !== null) {
-                      let e = {
-                        instancePath: t + `/summary/source/nickname`,
-                        schemaPath: `#/$defs/MergeProgress/properties/nickname/type`,
-                        keyword: `type`,
-                        params: { type: S.properties.nickname.type },
-                        message: `must be string,null`,
-                      };
-                      (c === null ? (c = [e]) : c.push(e), l++);
-                    }
-                  }
-                  if (e.runs !== void 0) {
-                    let n = e.runs;
-                    if (
-                      typeof n != `number` ||
-                      n % 1 ||
-                      isNaN(n) ||
-                      !isFinite(n)
-                    ) {
-                      let e = {
-                        instancePath: t + `/summary/source/runs`,
-                        schemaPath: `#/$defs/MergeProgress/properties/runs/type`,
-                        keyword: `type`,
-                        params: { type: `integer` },
-                        message: `must be integer`,
-                      };
-                      (c === null ? (c = [e]) : c.push(e), l++);
-                    }
-                    if (
-                      typeof n == `number` &&
-                      isFinite(n) &&
-                      (n < 0 || isNaN(n))
-                    ) {
-                      let e = {
-                        instancePath: t + `/summary/source/runs`,
-                        schemaPath: `#/$defs/MergeProgress/properties/runs/minimum`,
-                        keyword: `minimum`,
-                        params: { comparison: `>=`, limit: 0 },
-                        message: `must be >= 0`,
-                      };
-                      (c === null ? (c = [e]) : c.push(e), l++);
-                    }
-                  }
-                  if (e.verified !== void 0) {
-                    let n = e.verified;
-                    if (
-                      typeof n != `number` ||
-                      n % 1 ||
-                      isNaN(n) ||
-                      !isFinite(n)
-                    ) {
-                      let e = {
-                        instancePath: t + `/summary/source/verified`,
-                        schemaPath: `#/$defs/MergeProgress/properties/verified/type`,
-                        keyword: `type`,
-                        params: { type: `integer` },
-                        message: `must be integer`,
-                      };
-                      (c === null ? (c = [e]) : c.push(e), l++);
-                    }
-                    if (
-                      typeof n == `number` &&
-                      isFinite(n) &&
-                      (n < 0 || isNaN(n))
-                    ) {
-                      let e = {
-                        instancePath: t + `/summary/source/verified`,
-                        schemaPath: `#/$defs/MergeProgress/properties/verified/minimum`,
-                        keyword: `minimum`,
-                        params: { comparison: `>=`, limit: 0 },
-                        message: `must be >= 0`,
-                      };
-                      (c === null ? (c = [e]) : c.push(e), l++);
-                    }
-                  }
-                  if (e.best_ranked_score !== void 0) {
-                    let n = e.best_ranked_score;
-                    if (typeof n != `string` && n !== null) {
-                      let e = {
-                        instancePath: t + `/summary/source/best_ranked_score`,
-                        schemaPath: `#/$defs/MergeProgress/properties/best_ranked_score/type`,
-                        keyword: `type`,
-                        params: { type: S.properties.best_ranked_score.type },
-                        message: `must be string,null`,
-                      };
-                      (c === null ? (c = [e]) : c.push(e), l++);
-                    }
-                    if (typeof n == `string` && !C.test(n)) {
-                      let e = {
-                        instancePath: t + `/summary/source/best_ranked_score`,
-                        schemaPath: `#/$defs/MergeProgress/properties/best_ranked_score/pattern`,
-                        keyword: `pattern`,
-                        params: { pattern: `^(0|[1-9][0-9]*)$` },
-                        message: `must match pattern "^(0|[1-9][0-9]*)$"`,
-                      };
-                      (c === null ? (c = [e]) : c.push(e), l++);
-                    }
-                  }
-                  if (e.regions !== void 0) {
-                    let n = e.regions;
-                    if (Array.isArray(n)) {
-                      let e = n.length;
-                      for (let r = 0; r < e; r++)
-                        if (typeof n[r] != `string`) {
-                          let e = {
-                            instancePath: t + `/summary/source/regions/` + r,
-                            schemaPath: `#/$defs/MergeProgress/properties/regions/items/type`,
-                            keyword: `type`,
-                            params: { type: `string` },
-                            message: `must be string`,
-                          };
-                          (c === null ? (c = [e]) : c.push(e), l++);
-                        }
-                    } else {
-                      let e = {
-                        instancePath: t + `/summary/source/regions`,
-                        schemaPath: `#/$defs/MergeProgress/properties/regions/type`,
-                        keyword: `type`,
-                        params: { type: `array` },
-                        message: `must be array`,
-                      };
-                      (c === null ? (c = [e]) : c.push(e), l++);
-                    }
-                  }
-                  if (e.seals !== void 0) {
-                    let n = e.seals;
-                    if (Array.isArray(n)) {
-                      let e = n.length;
-                      for (let r = 0; r < e; r++)
-                        if (typeof n[r] != `string`) {
-                          let e = {
-                            instancePath: t + `/summary/source/seals/` + r,
-                            schemaPath: `#/$defs/MergeProgress/properties/seals/items/type`,
-                            keyword: `type`,
-                            params: { type: `string` },
-                            message: `must be string`,
-                          };
-                          (c === null ? (c = [e]) : c.push(e), l++);
-                        }
-                    } else {
-                      let e = {
-                        instancePath: t + `/summary/source/seals`,
-                        schemaPath: `#/$defs/MergeProgress/properties/seals/type`,
-                        keyword: `type`,
-                        params: { type: `array` },
-                        message: `must be array`,
-                      };
-                      (c === null ? (c = [e]) : c.push(e), l++);
-                    }
-                  }
-                  if (e.rewards !== void 0) {
-                    let n = e.rewards;
-                    if (Array.isArray(n)) {
-                      let e = n.length;
-                      for (let r = 0; r < e; r++)
-                        if (typeof n[r] != `string`) {
-                          let e = {
-                            instancePath: t + `/summary/source/rewards/` + r,
-                            schemaPath: `#/$defs/MergeProgress/properties/rewards/items/type`,
-                            keyword: `type`,
-                            params: { type: `string` },
-                            message: `must be string`,
-                          };
-                          (c === null ? (c = [e]) : c.push(e), l++);
-                        }
-                    } else {
-                      let e = {
-                        instancePath: t + `/summary/source/rewards`,
-                        schemaPath: `#/$defs/MergeProgress/properties/rewards/type`,
-                        keyword: `type`,
-                        params: { type: `array` },
-                        message: `must be array`,
-                      };
-                      (c === null ? (c = [e]) : c.push(e), l++);
-                    }
-                  }
-                } else {
-                  let e = {
-                    instancePath: t + `/summary/source`,
-                    schemaPath: `#/$defs/MergeProgress/type`,
-                    keyword: `type`,
-                    params: { type: `object` },
-                    message: `must be object`,
-                  };
-                  (c === null ? (c = [e]) : c.push(e), l++);
-                }
-              }
-              if (n.target !== void 0) {
-                let e = n.target;
-                if (e && typeof e == `object` && !Array.isArray(e)) {
-                  if (e.nickname === void 0) {
-                    let e = {
-                      instancePath: t + `/summary/target`,
-                      schemaPath: `#/$defs/MergeProgress/required`,
-                      keyword: `required`,
-                      params: { missingProperty: `nickname` },
-                      message: `must have required property 'nickname'`,
-                    };
-                    (c === null ? (c = [e]) : c.push(e), l++);
-                  }
-                  if (e.runs === void 0) {
-                    let e = {
-                      instancePath: t + `/summary/target`,
-                      schemaPath: `#/$defs/MergeProgress/required`,
-                      keyword: `required`,
-                      params: { missingProperty: `runs` },
-                      message: `must have required property 'runs'`,
-                    };
-                    (c === null ? (c = [e]) : c.push(e), l++);
-                  }
-                  if (e.verified === void 0) {
-                    let e = {
-                      instancePath: t + `/summary/target`,
-                      schemaPath: `#/$defs/MergeProgress/required`,
-                      keyword: `required`,
-                      params: { missingProperty: `verified` },
-                      message: `must have required property 'verified'`,
-                    };
-                    (c === null ? (c = [e]) : c.push(e), l++);
-                  }
-                  if (e.best_ranked_score === void 0) {
-                    let e = {
-                      instancePath: t + `/summary/target`,
-                      schemaPath: `#/$defs/MergeProgress/required`,
-                      keyword: `required`,
-                      params: { missingProperty: `best_ranked_score` },
-                      message: `must have required property 'best_ranked_score'`,
-                    };
-                    (c === null ? (c = [e]) : c.push(e), l++);
-                  }
-                  if (e.regions === void 0) {
-                    let e = {
-                      instancePath: t + `/summary/target`,
-                      schemaPath: `#/$defs/MergeProgress/required`,
-                      keyword: `required`,
-                      params: { missingProperty: `regions` },
-                      message: `must have required property 'regions'`,
-                    };
-                    (c === null ? (c = [e]) : c.push(e), l++);
-                  }
-                  if (e.seals === void 0) {
-                    let e = {
-                      instancePath: t + `/summary/target`,
-                      schemaPath: `#/$defs/MergeProgress/required`,
-                      keyword: `required`,
-                      params: { missingProperty: `seals` },
-                      message: `must have required property 'seals'`,
-                    };
-                    (c === null ? (c = [e]) : c.push(e), l++);
-                  }
-                  if (e.rewards === void 0) {
-                    let e = {
-                      instancePath: t + `/summary/target`,
-                      schemaPath: `#/$defs/MergeProgress/required`,
-                      keyword: `required`,
-                      params: { missingProperty: `rewards` },
-                      message: `must have required property 'rewards'`,
-                    };
-                    (c === null ? (c = [e]) : c.push(e), l++);
-                  }
-                  for (let n in e)
-                    if (
-                      n !== `nickname` &&
-                      n !== `runs` &&
-                      n !== `verified` &&
-                      n !== `best_ranked_score` &&
-                      n !== `regions` &&
-                      n !== `seals` &&
-                      n !== `rewards`
-                    ) {
-                      let e = {
-                        instancePath: t + `/summary/target`,
-                        schemaPath: `#/$defs/MergeProgress/additionalProperties`,
-                        keyword: `additionalProperties`,
-                        params: { additionalProperty: n },
-                        message: `must NOT have additional properties`,
-                      };
-                      (c === null ? (c = [e]) : c.push(e), l++);
-                    }
-                  if (e.nickname !== void 0) {
-                    let n = e.nickname;
-                    if (typeof n != `string` && n !== null) {
-                      let e = {
-                        instancePath: t + `/summary/target/nickname`,
-                        schemaPath: `#/$defs/MergeProgress/properties/nickname/type`,
-                        keyword: `type`,
-                        params: { type: S.properties.nickname.type },
-                        message: `must be string,null`,
-                      };
-                      (c === null ? (c = [e]) : c.push(e), l++);
-                    }
-                  }
-                  if (e.runs !== void 0) {
-                    let n = e.runs;
-                    if (
-                      typeof n != `number` ||
-                      n % 1 ||
-                      isNaN(n) ||
-                      !isFinite(n)
-                    ) {
-                      let e = {
-                        instancePath: t + `/summary/target/runs`,
-                        schemaPath: `#/$defs/MergeProgress/properties/runs/type`,
-                        keyword: `type`,
-                        params: { type: `integer` },
-                        message: `must be integer`,
-                      };
-                      (c === null ? (c = [e]) : c.push(e), l++);
-                    }
-                    if (
-                      typeof n == `number` &&
-                      isFinite(n) &&
-                      (n < 0 || isNaN(n))
-                    ) {
-                      let e = {
-                        instancePath: t + `/summary/target/runs`,
-                        schemaPath: `#/$defs/MergeProgress/properties/runs/minimum`,
-                        keyword: `minimum`,
-                        params: { comparison: `>=`, limit: 0 },
-                        message: `must be >= 0`,
-                      };
-                      (c === null ? (c = [e]) : c.push(e), l++);
-                    }
-                  }
-                  if (e.verified !== void 0) {
-                    let n = e.verified;
-                    if (
-                      typeof n != `number` ||
-                      n % 1 ||
-                      isNaN(n) ||
-                      !isFinite(n)
-                    ) {
-                      let e = {
-                        instancePath: t + `/summary/target/verified`,
-                        schemaPath: `#/$defs/MergeProgress/properties/verified/type`,
-                        keyword: `type`,
-                        params: { type: `integer` },
-                        message: `must be integer`,
-                      };
-                      (c === null ? (c = [e]) : c.push(e), l++);
-                    }
-                    if (
-                      typeof n == `number` &&
-                      isFinite(n) &&
-                      (n < 0 || isNaN(n))
-                    ) {
-                      let e = {
-                        instancePath: t + `/summary/target/verified`,
-                        schemaPath: `#/$defs/MergeProgress/properties/verified/minimum`,
-                        keyword: `minimum`,
-                        params: { comparison: `>=`, limit: 0 },
-                        message: `must be >= 0`,
-                      };
-                      (c === null ? (c = [e]) : c.push(e), l++);
-                    }
-                  }
-                  if (e.best_ranked_score !== void 0) {
-                    let n = e.best_ranked_score;
-                    if (typeof n != `string` && n !== null) {
-                      let e = {
-                        instancePath: t + `/summary/target/best_ranked_score`,
-                        schemaPath: `#/$defs/MergeProgress/properties/best_ranked_score/type`,
-                        keyword: `type`,
-                        params: { type: S.properties.best_ranked_score.type },
-                        message: `must be string,null`,
-                      };
-                      (c === null ? (c = [e]) : c.push(e), l++);
-                    }
-                    if (typeof n == `string` && !C.test(n)) {
-                      let e = {
-                        instancePath: t + `/summary/target/best_ranked_score`,
-                        schemaPath: `#/$defs/MergeProgress/properties/best_ranked_score/pattern`,
-                        keyword: `pattern`,
-                        params: { pattern: `^(0|[1-9][0-9]*)$` },
-                        message: `must match pattern "^(0|[1-9][0-9]*)$"`,
-                      };
-                      (c === null ? (c = [e]) : c.push(e), l++);
-                    }
-                  }
-                  if (e.regions !== void 0) {
-                    let n = e.regions;
-                    if (Array.isArray(n)) {
-                      let e = n.length;
-                      for (let r = 0; r < e; r++)
-                        if (typeof n[r] != `string`) {
-                          let e = {
-                            instancePath: t + `/summary/target/regions/` + r,
-                            schemaPath: `#/$defs/MergeProgress/properties/regions/items/type`,
-                            keyword: `type`,
-                            params: { type: `string` },
-                            message: `must be string`,
-                          };
-                          (c === null ? (c = [e]) : c.push(e), l++);
-                        }
-                    } else {
-                      let e = {
-                        instancePath: t + `/summary/target/regions`,
-                        schemaPath: `#/$defs/MergeProgress/properties/regions/type`,
-                        keyword: `type`,
-                        params: { type: `array` },
-                        message: `must be array`,
-                      };
-                      (c === null ? (c = [e]) : c.push(e), l++);
-                    }
-                  }
-                  if (e.seals !== void 0) {
-                    let n = e.seals;
-                    if (Array.isArray(n)) {
-                      let e = n.length;
-                      for (let r = 0; r < e; r++)
-                        if (typeof n[r] != `string`) {
-                          let e = {
-                            instancePath: t + `/summary/target/seals/` + r,
-                            schemaPath: `#/$defs/MergeProgress/properties/seals/items/type`,
-                            keyword: `type`,
-                            params: { type: `string` },
-                            message: `must be string`,
-                          };
-                          (c === null ? (c = [e]) : c.push(e), l++);
-                        }
-                    } else {
-                      let e = {
-                        instancePath: t + `/summary/target/seals`,
-                        schemaPath: `#/$defs/MergeProgress/properties/seals/type`,
-                        keyword: `type`,
-                        params: { type: `array` },
-                        message: `must be array`,
-                      };
-                      (c === null ? (c = [e]) : c.push(e), l++);
-                    }
-                  }
-                  if (e.rewards !== void 0) {
-                    let n = e.rewards;
-                    if (Array.isArray(n)) {
-                      let e = n.length;
-                      for (let r = 0; r < e; r++)
-                        if (typeof n[r] != `string`) {
-                          let e = {
-                            instancePath: t + `/summary/target/rewards/` + r,
-                            schemaPath: `#/$defs/MergeProgress/properties/rewards/items/type`,
-                            keyword: `type`,
-                            params: { type: `string` },
-                            message: `must be string`,
-                          };
-                          (c === null ? (c = [e]) : c.push(e), l++);
-                        }
-                    } else {
-                      let e = {
-                        instancePath: t + `/summary/target/rewards`,
-                        schemaPath: `#/$defs/MergeProgress/properties/rewards/type`,
-                        keyword: `type`,
-                        params: { type: `array` },
-                        message: `must be array`,
-                      };
-                      (c === null ? (c = [e]) : c.push(e), l++);
-                    }
-                  }
-                } else {
-                  let e = {
+              (n.source !== void 0 &&
+                (E(n.source, {
+                  instancePath: t + `/summary/source`,
+                  parentData: n,
+                  parentDataProperty: `source`,
+                  rootData: i,
+                  dynamicAnchors: s,
+                }) ||
+                  ((c = c === null ? E.errors : c.concat(E.errors)),
+                  (l = c.length))),
+                n.target !== void 0 &&
+                  (E(n.target, {
                     instancePath: t + `/summary/target`,
-                    schemaPath: `#/$defs/MergeProgress/type`,
-                    keyword: `type`,
-                    params: { type: `object` },
-                    message: `must be object`,
-                  };
-                  (c === null ? (c = [e]) : c.push(e), l++);
-                }
-              }
+                    parentData: n,
+                    parentDataProperty: `target`,
+                    rootData: i,
+                    dynamicAnchors: s,
+                  }) ||
+                    ((c = c === null ? E.errors : c.concat(E.errors)),
+                    (l = c.length))));
             } else {
               let e = {
                 instancePath: t + `/summary`,
@@ -5015,17 +4924,17 @@ var e = Object.create,
           };
           (c === null ? (c = [e]) : c.push(e), l++);
         }
-        return ((T.errors = c), l === 0);
+        return ((ee.errors = c), l === 0);
       }
-      ((T.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
-        (e.GoogleConfig = E));
-      let ee = {
+      ((ee.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.GoogleConfig = ne));
+      let te = {
         type: `object`,
         additionalProperties: !1,
         required: [`client_id`],
         properties: { client_id: { type: [`string`, `null`] } },
       };
-      function E(
+      function ne(
         e,
         {
           instancePath: t = ``,
@@ -5037,7 +4946,7 @@ var e = Object.create,
       ) {
         let o = null,
           s = 0,
-          c = E.evaluated;
+          c = ne.evaluated;
         if (
           (c.dynamicProps && (c.props = void 0),
           c.dynamicItems && (c.items = void 0),
@@ -5071,7 +4980,7 @@ var e = Object.create,
                 instancePath: t + `/client_id`,
                 schemaPath: `#/properties/client_id/type`,
                 keyword: `type`,
-                params: { type: ee.properties.client_id.type },
+                params: { type: te.properties.client_id.type },
                 message: `must be string,null`,
               };
               (o === null ? (o = [e]) : o.push(e), s++);
@@ -5087,11 +4996,11 @@ var e = Object.create,
           };
           (o === null ? (o = [e]) : o.push(e), s++);
         }
-        return ((E.errors = o), s === 0);
+        return ((ne.errors = o), s === 0);
       }
-      ((E.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
-        (e.GoogleChallengeRequest = ne));
-      let te = {
+      ((ne.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.GoogleChallengeRequest = D));
+      let re = {
         type: `object`,
         additionalProperties: !1,
         required: [`purpose`],
@@ -5102,7 +5011,7 @@ var e = Object.create,
           },
         },
       };
-      function ne(
+      function D(
         e,
         {
           instancePath: t = ``,
@@ -5114,7 +5023,7 @@ var e = Object.create,
       ) {
         let o = null,
           s = 0,
-          c = ne.evaluated;
+          c = D.evaluated;
         if (
           (c.dynamicProps && (c.props = void 0),
           c.dynamicItems && (c.items = void 0),
@@ -5163,7 +5072,7 @@ var e = Object.create,
                 instancePath: t + `/purpose`,
                 schemaPath: `#/properties/purpose/enum`,
                 keyword: `enum`,
-                params: { allowedValues: te.properties.purpose.enum },
+                params: { allowedValues: re.properties.purpose.enum },
                 message: `must be equal to one of the allowed values`,
               };
               (o === null ? (o = [e]) : o.push(e), s++);
@@ -5179,11 +5088,11 @@ var e = Object.create,
           };
           (o === null ? (o = [e]) : o.push(e), s++);
         }
-        return ((ne.errors = o), s === 0);
+        return ((D.errors = o), s === 0);
       }
-      ((ne.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
-        (e.GoogleChallenge = D));
-      function D(
+      ((D.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.GoogleChallenge = O));
+      function O(
         e,
         {
           instancePath: t = ``,
@@ -5195,7 +5104,7 @@ var e = Object.create,
       ) {
         let o = null,
           s = 0,
-          c = D.evaluated;
+          c = O.evaluated;
         if (
           (c.dynamicProps && (c.props = void 0),
           c.dynamicItems && (c.items = void 0),
@@ -5225,7 +5134,7 @@ var e = Object.create,
           if (e.nonce !== void 0) {
             let n = e.nonce;
             if (typeof n == `string`) {
-              if (!b.test(n)) {
+              if (!S.test(n)) {
                 let e = {
                   instancePath: t + `/nonce`,
                   schemaPath: `#/properties/nonce/pattern`,
@@ -5256,11 +5165,11 @@ var e = Object.create,
           };
           (o === null ? (o = [e]) : o.push(e), s++);
         }
-        return ((D.errors = o), s === 0);
+        return ((O.errors = o), s === 0);
       }
-      ((D.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
-        (e.GoogleCredential = O));
-      function O(
+      ((O.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.GoogleCredential = k));
+      function k(
         e,
         {
           instancePath: t = ``,
@@ -5272,7 +5181,7 @@ var e = Object.create,
       ) {
         let o = null,
           s = 0,
-          c = O.evaluated;
+          c = k.evaluated;
         if (
           (c.dynamicProps && (c.props = void 0),
           c.dynamicItems && (c.items = void 0),
@@ -5302,7 +5211,7 @@ var e = Object.create,
           if (e.id_token !== void 0) {
             let n = e.id_token;
             if (typeof n == `string`) {
-              if (v(n) > 5500) {
+              if (y(n) > 5500) {
                 let e = {
                   instancePath: t + `/id_token`,
                   schemaPath: `#/properties/id_token/maxLength`,
@@ -5312,7 +5221,7 @@ var e = Object.create,
                 };
                 (o === null ? (o = [e]) : o.push(e), s++);
               }
-              if (v(n) < 1) {
+              if (y(n) < 1) {
                 let e = {
                   instancePath: t + `/id_token`,
                   schemaPath: `#/properties/id_token/minLength`,
@@ -5343,11 +5252,11 @@ var e = Object.create,
           };
           (o === null ? (o = [e]) : o.push(e), s++);
         }
-        return ((O.errors = o), s === 0);
+        return ((k.errors = o), s === 0);
       }
-      ((O.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
-        (e.UpdateProfileRequest = k));
-      function k(
+      ((k.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.UpdateProfileRequest = A));
+      function A(
         e,
         {
           instancePath: t = ``,
@@ -5359,7 +5268,7 @@ var e = Object.create,
       ) {
         let o = null,
           s = 0,
-          c = k.evaluated;
+          c = A.evaluated;
         if (
           (c.dynamicProps && (c.props = void 0),
           c.dynamicItems && (c.items = void 0),
@@ -5389,7 +5298,7 @@ var e = Object.create,
           if (e.nickname !== void 0) {
             let n = e.nickname;
             if (typeof n == `string`) {
-              if (v(n) > 20) {
+              if (y(n) > 20) {
                 let e = {
                   instancePath: t + `/nickname`,
                   schemaPath: `#/properties/nickname/maxLength`,
@@ -5399,7 +5308,7 @@ var e = Object.create,
                 };
                 (o === null ? (o = [e]) : o.push(e), s++);
               }
-              if (v(n) < 3) {
+              if (y(n) < 3) {
                 let e = {
                   instancePath: t + `/nickname`,
                   schemaPath: `#/properties/nickname/minLength`,
@@ -5443,11 +5352,11 @@ var e = Object.create,
           };
           (o === null ? (o = [e]) : o.push(e), s++);
         }
-        return ((k.errors = o), s === 0);
+        return ((A.errors = o), s === 0);
       }
-      ((k.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
-        (e.RegisterRequest = A));
-      let re = {
+      ((A.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.RegisterRequest = j));
+      let ie = {
         type: `object`,
         required: [`email`, `password`],
         properties: {
@@ -5458,7 +5367,7 @@ var e = Object.create,
         },
         additionalProperties: !1,
       };
-      function A(
+      function j(
         e,
         {
           instancePath: t = ``,
@@ -5470,7 +5379,7 @@ var e = Object.create,
       ) {
         let s = null,
           c = 0,
-          l = A.evaluated;
+          l = j.evaluated;
         if (
           (l.dynamicProps && (l.props = void 0),
           l.dynamicItems && (l.items = void 0),
@@ -5529,7 +5438,7 @@ var e = Object.create,
                 instancePath: t + `/locale`,
                 schemaPath: `#/properties/locale/enum`,
                 keyword: `enum`,
-                params: { allowedValues: re.properties.locale.enum },
+                params: { allowedValues: ie.properties.locale.enum },
                 message: `must be equal to one of the allowed values`,
               };
               (s === null ? (s = [e]) : s.push(e), c++);
@@ -5538,7 +5447,7 @@ var e = Object.create,
           if (e.email !== void 0) {
             let n = e.email;
             if (typeof n == `string`) {
-              if (v(n) > 254) {
+              if (y(n) > 254) {
                 let e = {
                   instancePath: t + `/email`,
                   schemaPath: `#/properties/email/maxLength`,
@@ -5572,7 +5481,7 @@ var e = Object.create,
           if (e.password !== void 0) {
             let n = e.password;
             if (typeof n == `string`) {
-              if (v(n) > 256) {
+              if (y(n) > 256) {
                 let e = {
                   instancePath: t + `/password`,
                   schemaPath: `#/properties/password/maxLength`,
@@ -5582,7 +5491,7 @@ var e = Object.create,
                 };
                 (s === null ? (s = [e]) : s.push(e), c++);
               }
-              if (v(n) < 12) {
+              if (y(n) < 12) {
                 let e = {
                   instancePath: t + `/password`,
                   schemaPath: `#/properties/password/minLength`,
@@ -5606,7 +5515,7 @@ var e = Object.create,
           if (e.nickname !== void 0) {
             let n = e.nickname;
             if (typeof n == `string`) {
-              if (v(n) > 20) {
+              if (y(n) > 20) {
                 let e = {
                   instancePath: t + `/nickname`,
                   schemaPath: `#/properties/nickname/maxLength`,
@@ -5616,7 +5525,7 @@ var e = Object.create,
                 };
                 (s === null ? (s = [e]) : s.push(e), c++);
               }
-              if (v(n) < 3) {
+              if (y(n) < 3) {
                 let e = {
                   instancePath: t + `/nickname`,
                   schemaPath: `#/properties/nickname/minLength`,
@@ -5647,11 +5556,11 @@ var e = Object.create,
           };
           (s === null ? (s = [e]) : s.push(e), c++);
         }
-        return ((A.errors = s), c === 0);
+        return ((j.errors = s), c === 0);
       }
-      ((A.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
-        (e.EmailLoginRequest = j));
-      function j(
+      ((j.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.EmailLoginRequest = M));
+      function M(
         e,
         {
           instancePath: t = ``,
@@ -5663,7 +5572,7 @@ var e = Object.create,
       ) {
         let s = null,
           c = 0,
-          l = j.evaluated;
+          l = M.evaluated;
         if (
           (l.dynamicProps && (l.props = void 0),
           l.dynamicItems && (l.items = void 0),
@@ -5703,7 +5612,7 @@ var e = Object.create,
           if (e.email !== void 0) {
             let n = e.email;
             if (typeof n == `string`) {
-              if (v(n) > 254) {
+              if (y(n) > 254) {
                 let e = {
                   instancePath: t + `/email`,
                   schemaPath: `#/properties/email/maxLength`,
@@ -5737,7 +5646,7 @@ var e = Object.create,
           if (e.password !== void 0) {
             let n = e.password;
             if (typeof n == `string`) {
-              if (v(n) > 256) {
+              if (y(n) > 256) {
                 let e = {
                   instancePath: t + `/password`,
                   schemaPath: `#/properties/password/maxLength`,
@@ -5747,7 +5656,7 @@ var e = Object.create,
                 };
                 (s === null ? (s = [e]) : s.push(e), c++);
               }
-              if (v(n) < 1) {
+              if (y(n) < 1) {
                 let e = {
                   instancePath: t + `/password`,
                   schemaPath: `#/properties/password/minLength`,
@@ -5778,23 +5687,52 @@ var e = Object.create,
           };
           (s === null ? (s = [e]) : s.push(e), c++);
         }
-        return ((j.errors = s), c === 0);
+        return ((M.errors = s), c === 0);
       }
-      ((j.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
-        (e.CharacterPart = M));
-      let ie = {
+      ((M.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.CharacterCatalog = P));
+      let N = {
         type: `object`,
-        required: [`part_id`, `slot`, `is_basic_free`, `rig_version`],
+        required: [
+          `part_id`,
+          `slot`,
+          `asset_id`,
+          `rig_version`,
+          `is_basic_free`,
+          `unlock_requirement_id`,
+          `labels`,
+        ],
+        additionalProperties: !1,
         properties: {
           part_id: { type: `string` },
-          slot: { type: `string` },
+          slot: {
+            type: `string`,
+            enum: [
+              `body_palette`,
+              `hair_style`,
+              `hair_color`,
+              `eye_style`,
+              `face_detail`,
+              `outfit_id`,
+              `head_accessory_id`,
+              `katana_visual_id`,
+              `slash_effect_id`,
+              `profile_emblem_id`,
+            ],
+          },
+          asset_id: { type: `string` },
+          rig_version: { type: `string` },
           is_basic_free: { type: `boolean` },
           unlock_requirement_id: { type: [`string`, `null`] },
-          rig_version: { type: `string` },
-          locale_key: { type: `string` },
+          labels: {
+            type: `object`,
+            additionalProperties: !1,
+            required: [`pt-BR`, `en`],
+            properties: { "pt-BR": { type: `string` }, en: { type: `string` } },
+          },
         },
       };
-      function M(
+      function P(
         e,
         {
           instancePath: t = ``,
@@ -5806,7 +5744,750 @@ var e = Object.create,
       ) {
         let o = null,
           s = 0,
-          c = M.evaluated;
+          c = P.evaluated;
+        if (
+          (c.dynamicProps && (c.props = void 0),
+          c.dynamicItems && (c.items = void 0),
+          e && typeof e == `object` && !Array.isArray(e))
+        ) {
+          if (e.catalog_version === void 0) {
+            let e = {
+              instancePath: t,
+              schemaPath: `#/required`,
+              keyword: `required`,
+              params: { missingProperty: `catalog_version` },
+              message: `must have required property 'catalog_version'`,
+            };
+            (o === null ? (o = [e]) : o.push(e), s++);
+          }
+          if (e.parts === void 0) {
+            let e = {
+              instancePath: t,
+              schemaPath: `#/required`,
+              keyword: `required`,
+              params: { missingProperty: `parts` },
+              message: `must have required property 'parts'`,
+            };
+            (o === null ? (o = [e]) : o.push(e), s++);
+          }
+          for (let n in e)
+            if (n !== `catalog_version` && n !== `parts`) {
+              let e = {
+                instancePath: t,
+                schemaPath: `#/additionalProperties`,
+                keyword: `additionalProperties`,
+                params: { additionalProperty: n },
+                message: `must NOT have additional properties`,
+              };
+              (o === null ? (o = [e]) : o.push(e), s++);
+            }
+          if (
+            e.catalog_version !== void 0 &&
+            typeof e.catalog_version != `string`
+          ) {
+            let e = {
+              instancePath: t + `/catalog_version`,
+              schemaPath: `#/properties/catalog_version/type`,
+              keyword: `type`,
+              params: { type: `string` },
+              message: `must be string`,
+            };
+            (o === null ? (o = [e]) : o.push(e), s++);
+          }
+          if (e.parts !== void 0) {
+            let n = e.parts;
+            if (Array.isArray(n)) {
+              let e = n.length;
+              for (let r = 0; r < e; r++) {
+                let e = n[r];
+                if (e && typeof e == `object` && !Array.isArray(e)) {
+                  if (e.part_id === void 0) {
+                    let e = {
+                      instancePath: t + `/parts/` + r,
+                      schemaPath: `#/$defs/CharacterPart/required`,
+                      keyword: `required`,
+                      params: { missingProperty: `part_id` },
+                      message: `must have required property 'part_id'`,
+                    };
+                    (o === null ? (o = [e]) : o.push(e), s++);
+                  }
+                  if (e.slot === void 0) {
+                    let e = {
+                      instancePath: t + `/parts/` + r,
+                      schemaPath: `#/$defs/CharacterPart/required`,
+                      keyword: `required`,
+                      params: { missingProperty: `slot` },
+                      message: `must have required property 'slot'`,
+                    };
+                    (o === null ? (o = [e]) : o.push(e), s++);
+                  }
+                  if (e.asset_id === void 0) {
+                    let e = {
+                      instancePath: t + `/parts/` + r,
+                      schemaPath: `#/$defs/CharacterPart/required`,
+                      keyword: `required`,
+                      params: { missingProperty: `asset_id` },
+                      message: `must have required property 'asset_id'`,
+                    };
+                    (o === null ? (o = [e]) : o.push(e), s++);
+                  }
+                  if (e.rig_version === void 0) {
+                    let e = {
+                      instancePath: t + `/parts/` + r,
+                      schemaPath: `#/$defs/CharacterPart/required`,
+                      keyword: `required`,
+                      params: { missingProperty: `rig_version` },
+                      message: `must have required property 'rig_version'`,
+                    };
+                    (o === null ? (o = [e]) : o.push(e), s++);
+                  }
+                  if (e.is_basic_free === void 0) {
+                    let e = {
+                      instancePath: t + `/parts/` + r,
+                      schemaPath: `#/$defs/CharacterPart/required`,
+                      keyword: `required`,
+                      params: { missingProperty: `is_basic_free` },
+                      message: `must have required property 'is_basic_free'`,
+                    };
+                    (o === null ? (o = [e]) : o.push(e), s++);
+                  }
+                  if (e.unlock_requirement_id === void 0) {
+                    let e = {
+                      instancePath: t + `/parts/` + r,
+                      schemaPath: `#/$defs/CharacterPart/required`,
+                      keyword: `required`,
+                      params: { missingProperty: `unlock_requirement_id` },
+                      message: `must have required property 'unlock_requirement_id'`,
+                    };
+                    (o === null ? (o = [e]) : o.push(e), s++);
+                  }
+                  if (e.labels === void 0) {
+                    let e = {
+                      instancePath: t + `/parts/` + r,
+                      schemaPath: `#/$defs/CharacterPart/required`,
+                      keyword: `required`,
+                      params: { missingProperty: `labels` },
+                      message: `must have required property 'labels'`,
+                    };
+                    (o === null ? (o = [e]) : o.push(e), s++);
+                  }
+                  for (let n in e)
+                    if (
+                      n !== `part_id` &&
+                      n !== `slot` &&
+                      n !== `asset_id` &&
+                      n !== `rig_version` &&
+                      n !== `is_basic_free` &&
+                      n !== `unlock_requirement_id` &&
+                      n !== `labels`
+                    ) {
+                      let e = {
+                        instancePath: t + `/parts/` + r,
+                        schemaPath: `#/$defs/CharacterPart/additionalProperties`,
+                        keyword: `additionalProperties`,
+                        params: { additionalProperty: n },
+                        message: `must NOT have additional properties`,
+                      };
+                      (o === null ? (o = [e]) : o.push(e), s++);
+                    }
+                  if (e.part_id !== void 0 && typeof e.part_id != `string`) {
+                    let e = {
+                      instancePath: t + `/parts/` + r + `/part_id`,
+                      schemaPath: `#/$defs/CharacterPart/properties/part_id/type`,
+                      keyword: `type`,
+                      params: { type: `string` },
+                      message: `must be string`,
+                    };
+                    (o === null ? (o = [e]) : o.push(e), s++);
+                  }
+                  if (e.slot !== void 0) {
+                    let n = e.slot;
+                    if (typeof n != `string`) {
+                      let e = {
+                        instancePath: t + `/parts/` + r + `/slot`,
+                        schemaPath: `#/$defs/CharacterPart/properties/slot/type`,
+                        keyword: `type`,
+                        params: { type: `string` },
+                        message: `must be string`,
+                      };
+                      (o === null ? (o = [e]) : o.push(e), s++);
+                    }
+                    if (
+                      n !== `body_palette` &&
+                      n !== `hair_style` &&
+                      n !== `hair_color` &&
+                      n !== `eye_style` &&
+                      n !== `face_detail` &&
+                      n !== `outfit_id` &&
+                      n !== `head_accessory_id` &&
+                      n !== `katana_visual_id` &&
+                      n !== `slash_effect_id` &&
+                      n !== `profile_emblem_id`
+                    ) {
+                      let e = {
+                        instancePath: t + `/parts/` + r + `/slot`,
+                        schemaPath: `#/$defs/CharacterPart/properties/slot/enum`,
+                        keyword: `enum`,
+                        params: { allowedValues: N.properties.slot.enum },
+                        message: `must be equal to one of the allowed values`,
+                      };
+                      (o === null ? (o = [e]) : o.push(e), s++);
+                    }
+                  }
+                  if (e.asset_id !== void 0 && typeof e.asset_id != `string`) {
+                    let e = {
+                      instancePath: t + `/parts/` + r + `/asset_id`,
+                      schemaPath: `#/$defs/CharacterPart/properties/asset_id/type`,
+                      keyword: `type`,
+                      params: { type: `string` },
+                      message: `must be string`,
+                    };
+                    (o === null ? (o = [e]) : o.push(e), s++);
+                  }
+                  if (
+                    e.rig_version !== void 0 &&
+                    typeof e.rig_version != `string`
+                  ) {
+                    let e = {
+                      instancePath: t + `/parts/` + r + `/rig_version`,
+                      schemaPath: `#/$defs/CharacterPart/properties/rig_version/type`,
+                      keyword: `type`,
+                      params: { type: `string` },
+                      message: `must be string`,
+                    };
+                    (o === null ? (o = [e]) : o.push(e), s++);
+                  }
+                  if (
+                    e.is_basic_free !== void 0 &&
+                    typeof e.is_basic_free != `boolean`
+                  ) {
+                    let e = {
+                      instancePath: t + `/parts/` + r + `/is_basic_free`,
+                      schemaPath: `#/$defs/CharacterPart/properties/is_basic_free/type`,
+                      keyword: `type`,
+                      params: { type: `boolean` },
+                      message: `must be boolean`,
+                    };
+                    (o === null ? (o = [e]) : o.push(e), s++);
+                  }
+                  if (e.unlock_requirement_id !== void 0) {
+                    let n = e.unlock_requirement_id;
+                    if (typeof n != `string` && n !== null) {
+                      let e = {
+                        instancePath:
+                          t + `/parts/` + r + `/unlock_requirement_id`,
+                        schemaPath: `#/$defs/CharacterPart/properties/unlock_requirement_id/type`,
+                        keyword: `type`,
+                        params: {
+                          type: N.properties.unlock_requirement_id.type,
+                        },
+                        message: `must be string,null`,
+                      };
+                      (o === null ? (o = [e]) : o.push(e), s++);
+                    }
+                  }
+                  if (e.labels !== void 0) {
+                    let n = e.labels;
+                    if (n && typeof n == `object` && !Array.isArray(n)) {
+                      if (n[`pt-BR`] === void 0) {
+                        let e = {
+                          instancePath: t + `/parts/` + r + `/labels`,
+                          schemaPath: `#/$defs/CharacterPart/properties/labels/required`,
+                          keyword: `required`,
+                          params: { missingProperty: `pt-BR` },
+                          message: `must have required property 'pt-BR'`,
+                        };
+                        (o === null ? (o = [e]) : o.push(e), s++);
+                      }
+                      if (n.en === void 0) {
+                        let e = {
+                          instancePath: t + `/parts/` + r + `/labels`,
+                          schemaPath: `#/$defs/CharacterPart/properties/labels/required`,
+                          keyword: `required`,
+                          params: { missingProperty: `en` },
+                          message: `must have required property 'en'`,
+                        };
+                        (o === null ? (o = [e]) : o.push(e), s++);
+                      }
+                      for (let e in n)
+                        if (e !== `pt-BR` && e !== `en`) {
+                          let n = {
+                            instancePath: t + `/parts/` + r + `/labels`,
+                            schemaPath: `#/$defs/CharacterPart/properties/labels/additionalProperties`,
+                            keyword: `additionalProperties`,
+                            params: { additionalProperty: e },
+                            message: `must NOT have additional properties`,
+                          };
+                          (o === null ? (o = [n]) : o.push(n), s++);
+                        }
+                      if (
+                        n[`pt-BR`] !== void 0 &&
+                        typeof n[`pt-BR`] != `string`
+                      ) {
+                        let e = {
+                          instancePath: t + `/parts/` + r + `/labels/pt-BR`,
+                          schemaPath: `#/$defs/CharacterPart/properties/labels/properties/pt-BR/type`,
+                          keyword: `type`,
+                          params: { type: `string` },
+                          message: `must be string`,
+                        };
+                        (o === null ? (o = [e]) : o.push(e), s++);
+                      }
+                      if (n.en !== void 0 && typeof n.en != `string`) {
+                        let e = {
+                          instancePath: t + `/parts/` + r + `/labels/en`,
+                          schemaPath: `#/$defs/CharacterPart/properties/labels/properties/en/type`,
+                          keyword: `type`,
+                          params: { type: `string` },
+                          message: `must be string`,
+                        };
+                        (o === null ? (o = [e]) : o.push(e), s++);
+                      }
+                    } else {
+                      let e = {
+                        instancePath: t + `/parts/` + r + `/labels`,
+                        schemaPath: `#/$defs/CharacterPart/properties/labels/type`,
+                        keyword: `type`,
+                        params: { type: `object` },
+                        message: `must be object`,
+                      };
+                      (o === null ? (o = [e]) : o.push(e), s++);
+                    }
+                  }
+                } else {
+                  let e = {
+                    instancePath: t + `/parts/` + r,
+                    schemaPath: `#/$defs/CharacterPart/type`,
+                    keyword: `type`,
+                    params: { type: `object` },
+                    message: `must be object`,
+                  };
+                  (o === null ? (o = [e]) : o.push(e), s++);
+                }
+              }
+            } else {
+              let e = {
+                instancePath: t + `/parts`,
+                schemaPath: `#/properties/parts/type`,
+                keyword: `type`,
+                params: { type: `array` },
+                message: `must be array`,
+              };
+              (o === null ? (o = [e]) : o.push(e), s++);
+            }
+          }
+        } else {
+          let e = {
+            instancePath: t,
+            schemaPath: `#/type`,
+            keyword: `type`,
+            params: { type: `object` },
+            message: `must be object`,
+          };
+          (o === null ? (o = [e]) : o.push(e), s++);
+        }
+        return ((P.errors = o), s === 0);
+      }
+      ((P.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.CosmeticInventory = F));
+      function F(
+        e,
+        {
+          instancePath: t = ``,
+          parentData: n,
+          parentDataProperty: r,
+          rootData: i = e,
+          dynamicAnchors: o = {},
+        } = {},
+      ) {
+        let s = null,
+          c = 0,
+          l = F.evaluated;
+        if (
+          (l.dynamicProps && (l.props = void 0),
+          l.dynamicItems && (l.items = void 0),
+          e && typeof e == `object` && !Array.isArray(e))
+        ) {
+          if (e.unlocked_part_ids === void 0) {
+            let e = {
+              instancePath: t,
+              schemaPath: `#/required`,
+              keyword: `required`,
+              params: { missingProperty: `unlocked_part_ids` },
+              message: `must have required property 'unlocked_part_ids'`,
+            };
+            (s === null ? (s = [e]) : s.push(e), c++);
+          }
+          if (e.equipped === void 0) {
+            let e = {
+              instancePath: t,
+              schemaPath: `#/required`,
+              keyword: `required`,
+              params: { missingProperty: `equipped` },
+              message: `must have required property 'equipped'`,
+            };
+            (s === null ? (s = [e]) : s.push(e), c++);
+          }
+          for (let n in e)
+            if (n !== `unlocked_part_ids` && n !== `equipped`) {
+              let e = {
+                instancePath: t,
+                schemaPath: `#/additionalProperties`,
+                keyword: `additionalProperties`,
+                params: { additionalProperty: n },
+                message: `must NOT have additional properties`,
+              };
+              (s === null ? (s = [e]) : s.push(e), c++);
+            }
+          if (e.unlocked_part_ids !== void 0) {
+            let n = e.unlocked_part_ids;
+            if (Array.isArray(n)) {
+              let e = n.length;
+              for (let r = 0; r < e; r++)
+                if (typeof n[r] != `string`) {
+                  let e = {
+                    instancePath: t + `/unlocked_part_ids/` + r,
+                    schemaPath: `#/properties/unlocked_part_ids/items/type`,
+                    keyword: `type`,
+                    params: { type: `string` },
+                    message: `must be string`,
+                  };
+                  (s === null ? (s = [e]) : s.push(e), c++);
+                }
+            } else {
+              let e = {
+                instancePath: t + `/unlocked_part_ids`,
+                schemaPath: `#/properties/unlocked_part_ids/type`,
+                keyword: `type`,
+                params: { type: `array` },
+                message: `must be array`,
+              };
+              (s === null ? (s = [e]) : s.push(e), c++);
+            }
+          }
+          if (e.equipped !== void 0) {
+            let n = e.equipped;
+            if (n && typeof n == `object` && !Array.isArray(n)) {
+              if (n.player_id === void 0) {
+                let e = {
+                  instancePath: t + `/equipped`,
+                  schemaPath: `#/$defs/Character/required`,
+                  keyword: `required`,
+                  params: { missingProperty: `player_id` },
+                  message: `must have required property 'player_id'`,
+                };
+                (s === null ? (s = [e]) : s.push(e), c++);
+              }
+              if (n.appearance_version === void 0) {
+                let e = {
+                  instancePath: t + `/equipped`,
+                  schemaPath: `#/$defs/Character/required`,
+                  keyword: `required`,
+                  params: { missingProperty: `appearance_version` },
+                  message: `must have required property 'appearance_version'`,
+                };
+                (s === null ? (s = [e]) : s.push(e), c++);
+              }
+              if (n.slots === void 0) {
+                let e = {
+                  instancePath: t + `/equipped`,
+                  schemaPath: `#/$defs/Character/required`,
+                  keyword: `required`,
+                  params: { missingProperty: `slots` },
+                  message: `must have required property 'slots'`,
+                };
+                (s === null ? (s = [e]) : s.push(e), c++);
+              }
+              for (let e in n)
+                if (
+                  e !== `player_id` &&
+                  e !== `appearance_version` &&
+                  e !== `slots`
+                ) {
+                  let n = {
+                    instancePath: t + `/equipped`,
+                    schemaPath: `#/$defs/Character/additionalProperties`,
+                    keyword: `additionalProperties`,
+                    params: { additionalProperty: e },
+                    message: `must NOT have additional properties`,
+                  };
+                  (s === null ? (s = [n]) : s.push(n), c++);
+                }
+              if (n.player_id !== void 0) {
+                let e = n.player_id;
+                if (typeof e == `string`) {
+                  if (!a.test(e)) {
+                    let e = {
+                      instancePath: t + `/equipped/player_id`,
+                      schemaPath: `#/$defs/Character/properties/player_id/format`,
+                      keyword: `format`,
+                      params: { format: `uuid` },
+                      message: `must match format "uuid"`,
+                    };
+                    (s === null ? (s = [e]) : s.push(e), c++);
+                  }
+                } else {
+                  let e = {
+                    instancePath: t + `/equipped/player_id`,
+                    schemaPath: `#/$defs/Character/properties/player_id/type`,
+                    keyword: `type`,
+                    params: { type: `string` },
+                    message: `must be string`,
+                  };
+                  (s === null ? (s = [e]) : s.push(e), c++);
+                }
+              }
+              if (n.appearance_version !== void 0) {
+                let e = n.appearance_version;
+                if (typeof e != `number` || e % 1 || isNaN(e) || !isFinite(e)) {
+                  let e = {
+                    instancePath: t + `/equipped/appearance_version`,
+                    schemaPath: `#/$defs/Character/properties/appearance_version/type`,
+                    keyword: `type`,
+                    params: { type: `integer` },
+                    message: `must be integer`,
+                  };
+                  (s === null ? (s = [e]) : s.push(e), c++);
+                }
+                if (
+                  typeof e == `number` &&
+                  isFinite(e) &&
+                  (e < 1 || isNaN(e))
+                ) {
+                  let e = {
+                    instancePath: t + `/equipped/appearance_version`,
+                    schemaPath: `#/$defs/Character/properties/appearance_version/minimum`,
+                    keyword: `minimum`,
+                    params: { comparison: `>=`, limit: 1 },
+                    message: `must be >= 1`,
+                  };
+                  (s === null ? (s = [e]) : s.push(e), c++);
+                }
+              }
+              if (n.slots !== void 0) {
+                let e = n.slots;
+                if (e && typeof e == `object` && !Array.isArray(e)) {
+                  if (Object.keys(e).length < 10) {
+                    let e = {
+                      instancePath: t + `/equipped/slots`,
+                      schemaPath: `#/$defs/Character/properties/slots/minProperties`,
+                      keyword: `minProperties`,
+                      params: { limit: 10 },
+                      message: `must NOT have fewer than 10 properties`,
+                    };
+                    (s === null ? (s = [e]) : s.push(e), c++);
+                  }
+                  for (let n in e) {
+                    let e = c;
+                    if (
+                      n !== `body_palette` &&
+                      n !== `hair_style` &&
+                      n !== `hair_color` &&
+                      n !== `eye_style` &&
+                      n !== `face_detail` &&
+                      n !== `outfit_id` &&
+                      n !== `head_accessory_id` &&
+                      n !== `katana_visual_id` &&
+                      n !== `slash_effect_id` &&
+                      n !== `profile_emblem_id`
+                    ) {
+                      let e = {
+                        instancePath: t + `/equipped/slots`,
+                        schemaPath: `#/$defs/Character/properties/slots/propertyNames/enum`,
+                        keyword: `enum`,
+                        params: {
+                          allowedValues: g.properties.slots.propertyNames.enum,
+                        },
+                        message: `must be equal to one of the allowed values`,
+                        propertyName: n,
+                      };
+                      (s === null ? (s = [e]) : s.push(e), c++);
+                    }
+                    if (e !== c) {
+                      let e = {
+                        instancePath: t + `/equipped/slots`,
+                        schemaPath: `#/$defs/Character/properties/slots/propertyNames`,
+                        keyword: `propertyNames`,
+                        params: { propertyName: n },
+                        message: `property name must be valid`,
+                      };
+                      (s === null ? (s = [e]) : s.push(e), c++);
+                    }
+                  }
+                  for (let n in e)
+                    if (typeof e[n] != `string`) {
+                      let e = {
+                        instancePath:
+                          t +
+                          `/equipped/slots/` +
+                          n.replace(/~/g, `~0`).replace(/\//g, `~1`),
+                        schemaPath: `#/$defs/Character/properties/slots/additionalProperties/type`,
+                        keyword: `type`,
+                        params: { type: `string` },
+                        message: `must be string`,
+                      };
+                      (s === null ? (s = [e]) : s.push(e), c++);
+                    }
+                } else {
+                  let e = {
+                    instancePath: t + `/equipped/slots`,
+                    schemaPath: `#/$defs/Character/properties/slots/type`,
+                    keyword: `type`,
+                    params: { type: `object` },
+                    message: `must be object`,
+                  };
+                  (s === null ? (s = [e]) : s.push(e), c++);
+                }
+              }
+            } else {
+              let e = {
+                instancePath: t + `/equipped`,
+                schemaPath: `#/$defs/Character/type`,
+                keyword: `type`,
+                params: { type: `object` },
+                message: `must be object`,
+              };
+              (s === null ? (s = [e]) : s.push(e), c++);
+            }
+          }
+        } else {
+          let e = {
+            instancePath: t,
+            schemaPath: `#/type`,
+            keyword: `type`,
+            params: { type: `object` },
+            message: `must be object`,
+          };
+          (s === null ? (s = [e]) : s.push(e), c++);
+        }
+        return ((F.errors = s), c === 0);
+      }
+      ((F.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.EmblemUpdate = I));
+      let ae = {
+        type: `object`,
+        additionalProperties: !1,
+        required: [`emblem_instance_id`],
+        properties: {
+          emblem_instance_id: { type: [`string`, `null`], maxLength: 64 },
+          expected_appearance_version: { type: `integer`, minimum: 1 },
+        },
+      };
+      function I(
+        e,
+        {
+          instancePath: t = ``,
+          parentData: n,
+          parentDataProperty: r,
+          rootData: i = e,
+          dynamicAnchors: a = {},
+        } = {},
+      ) {
+        let o = null,
+          s = 0,
+          c = I.evaluated;
+        if (
+          (c.dynamicProps && (c.props = void 0),
+          c.dynamicItems && (c.items = void 0),
+          e && typeof e == `object` && !Array.isArray(e))
+        ) {
+          if (e.emblem_instance_id === void 0) {
+            let e = {
+              instancePath: t,
+              schemaPath: `#/required`,
+              keyword: `required`,
+              params: { missingProperty: `emblem_instance_id` },
+              message: `must have required property 'emblem_instance_id'`,
+            };
+            (o === null ? (o = [e]) : o.push(e), s++);
+          }
+          for (let n in e)
+            if (
+              n !== `emblem_instance_id` &&
+              n !== `expected_appearance_version`
+            ) {
+              let e = {
+                instancePath: t,
+                schemaPath: `#/additionalProperties`,
+                keyword: `additionalProperties`,
+                params: { additionalProperty: n },
+                message: `must NOT have additional properties`,
+              };
+              (o === null ? (o = [e]) : o.push(e), s++);
+            }
+          if (e.emblem_instance_id !== void 0) {
+            let n = e.emblem_instance_id;
+            if (typeof n != `string` && n !== null) {
+              let e = {
+                instancePath: t + `/emblem_instance_id`,
+                schemaPath: `#/properties/emblem_instance_id/type`,
+                keyword: `type`,
+                params: { type: ae.properties.emblem_instance_id.type },
+                message: `must be string,null`,
+              };
+              (o === null ? (o = [e]) : o.push(e), s++);
+            }
+            if (typeof n == `string` && y(n) > 64) {
+              let e = {
+                instancePath: t + `/emblem_instance_id`,
+                schemaPath: `#/properties/emblem_instance_id/maxLength`,
+                keyword: `maxLength`,
+                params: { limit: 64 },
+                message: `must NOT have more than 64 characters`,
+              };
+              (o === null ? (o = [e]) : o.push(e), s++);
+            }
+          }
+          if (e.expected_appearance_version !== void 0) {
+            let n = e.expected_appearance_version;
+            if (typeof n != `number` || n % 1 || isNaN(n) || !isFinite(n)) {
+              let e = {
+                instancePath: t + `/expected_appearance_version`,
+                schemaPath: `#/properties/expected_appearance_version/type`,
+                keyword: `type`,
+                params: { type: `integer` },
+                message: `must be integer`,
+              };
+              (o === null ? (o = [e]) : o.push(e), s++);
+            }
+            if (typeof n == `number` && isFinite(n) && (n < 1 || isNaN(n))) {
+              let e = {
+                instancePath: t + `/expected_appearance_version`,
+                schemaPath: `#/properties/expected_appearance_version/minimum`,
+                keyword: `minimum`,
+                params: { comparison: `>=`, limit: 1 },
+                message: `must be >= 1`,
+              };
+              (o === null ? (o = [e]) : o.push(e), s++);
+            }
+          }
+        } else {
+          let e = {
+            instancePath: t,
+            schemaPath: `#/type`,
+            keyword: `type`,
+            params: { type: `object` },
+            message: `must be object`,
+          };
+          (o === null ? (o = [e]) : o.push(e), s++);
+        }
+        return ((I.errors = o), s === 0);
+      }
+      ((I.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.CharacterPart = L));
+      function L(
+        e,
+        {
+          instancePath: t = ``,
+          parentData: n,
+          parentDataProperty: r,
+          rootData: i = e,
+          dynamicAnchors: a = {},
+        } = {},
+      ) {
+        let o = null,
+          s = 0,
+          c = L.evaluated;
         if (
           (c.dynamicProps && (c.props = void 0),
           c.dynamicItems && (c.items = void 0),
@@ -5832,13 +6513,13 @@ var e = Object.create,
             };
             (o === null ? (o = [e]) : o.push(e), s++);
           }
-          if (e.is_basic_free === void 0) {
+          if (e.asset_id === void 0) {
             let e = {
               instancePath: t,
               schemaPath: `#/required`,
               keyword: `required`,
-              params: { missingProperty: `is_basic_free` },
-              message: `must have required property 'is_basic_free'`,
+              params: { missingProperty: `asset_id` },
+              message: `must have required property 'asset_id'`,
             };
             (o === null ? (o = [e]) : o.push(e), s++);
           }
@@ -5852,6 +6533,55 @@ var e = Object.create,
             };
             (o === null ? (o = [e]) : o.push(e), s++);
           }
+          if (e.is_basic_free === void 0) {
+            let e = {
+              instancePath: t,
+              schemaPath: `#/required`,
+              keyword: `required`,
+              params: { missingProperty: `is_basic_free` },
+              message: `must have required property 'is_basic_free'`,
+            };
+            (o === null ? (o = [e]) : o.push(e), s++);
+          }
+          if (e.unlock_requirement_id === void 0) {
+            let e = {
+              instancePath: t,
+              schemaPath: `#/required`,
+              keyword: `required`,
+              params: { missingProperty: `unlock_requirement_id` },
+              message: `must have required property 'unlock_requirement_id'`,
+            };
+            (o === null ? (o = [e]) : o.push(e), s++);
+          }
+          if (e.labels === void 0) {
+            let e = {
+              instancePath: t,
+              schemaPath: `#/required`,
+              keyword: `required`,
+              params: { missingProperty: `labels` },
+              message: `must have required property 'labels'`,
+            };
+            (o === null ? (o = [e]) : o.push(e), s++);
+          }
+          for (let n in e)
+            if (
+              n !== `part_id` &&
+              n !== `slot` &&
+              n !== `asset_id` &&
+              n !== `rig_version` &&
+              n !== `is_basic_free` &&
+              n !== `unlock_requirement_id` &&
+              n !== `labels`
+            ) {
+              let e = {
+                instancePath: t,
+                schemaPath: `#/additionalProperties`,
+                keyword: `additionalProperties`,
+                params: { additionalProperty: n },
+                message: `must NOT have additional properties`,
+              };
+              (o === null ? (o = [e]) : o.push(e), s++);
+            }
           if (e.part_id !== void 0 && typeof e.part_id != `string`) {
             let e = {
               instancePath: t + `/part_id`,
@@ -5862,10 +6592,54 @@ var e = Object.create,
             };
             (o === null ? (o = [e]) : o.push(e), s++);
           }
-          if (e.slot !== void 0 && typeof e.slot != `string`) {
+          if (e.slot !== void 0) {
+            let n = e.slot;
+            if (typeof n != `string`) {
+              let e = {
+                instancePath: t + `/slot`,
+                schemaPath: `#/properties/slot/type`,
+                keyword: `type`,
+                params: { type: `string` },
+                message: `must be string`,
+              };
+              (o === null ? (o = [e]) : o.push(e), s++);
+            }
+            if (
+              n !== `body_palette` &&
+              n !== `hair_style` &&
+              n !== `hair_color` &&
+              n !== `eye_style` &&
+              n !== `face_detail` &&
+              n !== `outfit_id` &&
+              n !== `head_accessory_id` &&
+              n !== `katana_visual_id` &&
+              n !== `slash_effect_id` &&
+              n !== `profile_emblem_id`
+            ) {
+              let e = {
+                instancePath: t + `/slot`,
+                schemaPath: `#/properties/slot/enum`,
+                keyword: `enum`,
+                params: { allowedValues: N.properties.slot.enum },
+                message: `must be equal to one of the allowed values`,
+              };
+              (o === null ? (o = [e]) : o.push(e), s++);
+            }
+          }
+          if (e.asset_id !== void 0 && typeof e.asset_id != `string`) {
             let e = {
-              instancePath: t + `/slot`,
-              schemaPath: `#/properties/slot/type`,
+              instancePath: t + `/asset_id`,
+              schemaPath: `#/properties/asset_id/type`,
+              keyword: `type`,
+              params: { type: `string` },
+              message: `must be string`,
+            };
+            (o === null ? (o = [e]) : o.push(e), s++);
+          }
+          if (e.rig_version !== void 0 && typeof e.rig_version != `string`) {
+            let e = {
+              instancePath: t + `/rig_version`,
+              schemaPath: `#/properties/rig_version/type`,
               keyword: `type`,
               params: { type: `string` },
               message: `must be string`,
@@ -5892,31 +6666,76 @@ var e = Object.create,
                 instancePath: t + `/unlock_requirement_id`,
                 schemaPath: `#/properties/unlock_requirement_id/type`,
                 keyword: `type`,
-                params: { type: ie.properties.unlock_requirement_id.type },
+                params: { type: N.properties.unlock_requirement_id.type },
                 message: `must be string,null`,
               };
               (o === null ? (o = [e]) : o.push(e), s++);
             }
           }
-          if (e.rig_version !== void 0 && typeof e.rig_version != `string`) {
-            let e = {
-              instancePath: t + `/rig_version`,
-              schemaPath: `#/properties/rig_version/type`,
-              keyword: `type`,
-              params: { type: `string` },
-              message: `must be string`,
-            };
-            (o === null ? (o = [e]) : o.push(e), s++);
-          }
-          if (e.locale_key !== void 0 && typeof e.locale_key != `string`) {
-            let e = {
-              instancePath: t + `/locale_key`,
-              schemaPath: `#/properties/locale_key/type`,
-              keyword: `type`,
-              params: { type: `string` },
-              message: `must be string`,
-            };
-            (o === null ? (o = [e]) : o.push(e), s++);
+          if (e.labels !== void 0) {
+            let n = e.labels;
+            if (n && typeof n == `object` && !Array.isArray(n)) {
+              if (n[`pt-BR`] === void 0) {
+                let e = {
+                  instancePath: t + `/labels`,
+                  schemaPath: `#/properties/labels/required`,
+                  keyword: `required`,
+                  params: { missingProperty: `pt-BR` },
+                  message: `must have required property 'pt-BR'`,
+                };
+                (o === null ? (o = [e]) : o.push(e), s++);
+              }
+              if (n.en === void 0) {
+                let e = {
+                  instancePath: t + `/labels`,
+                  schemaPath: `#/properties/labels/required`,
+                  keyword: `required`,
+                  params: { missingProperty: `en` },
+                  message: `must have required property 'en'`,
+                };
+                (o === null ? (o = [e]) : o.push(e), s++);
+              }
+              for (let e in n)
+                if (e !== `pt-BR` && e !== `en`) {
+                  let n = {
+                    instancePath: t + `/labels`,
+                    schemaPath: `#/properties/labels/additionalProperties`,
+                    keyword: `additionalProperties`,
+                    params: { additionalProperty: e },
+                    message: `must NOT have additional properties`,
+                  };
+                  (o === null ? (o = [n]) : o.push(n), s++);
+                }
+              if (n[`pt-BR`] !== void 0 && typeof n[`pt-BR`] != `string`) {
+                let e = {
+                  instancePath: t + `/labels/pt-BR`,
+                  schemaPath: `#/properties/labels/properties/pt-BR/type`,
+                  keyword: `type`,
+                  params: { type: `string` },
+                  message: `must be string`,
+                };
+                (o === null ? (o = [e]) : o.push(e), s++);
+              }
+              if (n.en !== void 0 && typeof n.en != `string`) {
+                let e = {
+                  instancePath: t + `/labels/en`,
+                  schemaPath: `#/properties/labels/properties/en/type`,
+                  keyword: `type`,
+                  params: { type: `string` },
+                  message: `must be string`,
+                };
+                (o === null ? (o = [e]) : o.push(e), s++);
+              }
+            } else {
+              let e = {
+                instancePath: t + `/labels`,
+                schemaPath: `#/properties/labels/type`,
+                keyword: `type`,
+                params: { type: `object` },
+                message: `must be object`,
+              };
+              (o === null ? (o = [e]) : o.push(e), s++);
+            }
           }
         } else {
           let e = {
@@ -5928,22 +6747,11 @@ var e = Object.create,
           };
           (o === null ? (o = [e]) : o.push(e), s++);
         }
-        return ((M.errors = o), s === 0);
+        return ((L.errors = o), s === 0);
       }
-      ((M.evaluated = {
-        props: {
-          part_id: !0,
-          slot: !0,
-          is_basic_free: !0,
-          unlock_requirement_id: !0,
-          rig_version: !0,
-          locale_key: !0,
-        },
-        dynamicProps: !1,
-        dynamicItems: !1,
-      }),
-        (e.Character = N));
-      function N(
+      ((L.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.Character = R));
+      function R(
         e,
         {
           instancePath: t = ``,
@@ -5955,7 +6763,7 @@ var e = Object.create,
       ) {
         let s = null,
           c = 0,
-          l = N.evaluated;
+          l = R.evaluated;
         if (
           (l.dynamicProps && (l.props = void 0),
           l.dynamicItems && (l.items = void 0),
@@ -5991,6 +6799,21 @@ var e = Object.create,
             };
             (s === null ? (s = [e]) : s.push(e), c++);
           }
+          for (let n in e)
+            if (
+              n !== `player_id` &&
+              n !== `appearance_version` &&
+              n !== `slots`
+            ) {
+              let e = {
+                instancePath: t,
+                schemaPath: `#/additionalProperties`,
+                keyword: `additionalProperties`,
+                params: { additionalProperty: n },
+                message: `must NOT have additional properties`,
+              };
+              (s === null ? (s = [e]) : s.push(e), c++);
+            }
           if (e.player_id !== void 0) {
             let n = e.player_id;
             if (typeof n == `string`) {
@@ -6041,6 +6864,53 @@ var e = Object.create,
           if (e.slots !== void 0) {
             let n = e.slots;
             if (n && typeof n == `object` && !Array.isArray(n)) {
+              if (Object.keys(n).length < 10) {
+                let e = {
+                  instancePath: t + `/slots`,
+                  schemaPath: `#/properties/slots/minProperties`,
+                  keyword: `minProperties`,
+                  params: { limit: 10 },
+                  message: `must NOT have fewer than 10 properties`,
+                };
+                (s === null ? (s = [e]) : s.push(e), c++);
+              }
+              for (let e in n) {
+                let n = c;
+                if (
+                  e !== `body_palette` &&
+                  e !== `hair_style` &&
+                  e !== `hair_color` &&
+                  e !== `eye_style` &&
+                  e !== `face_detail` &&
+                  e !== `outfit_id` &&
+                  e !== `head_accessory_id` &&
+                  e !== `katana_visual_id` &&
+                  e !== `slash_effect_id` &&
+                  e !== `profile_emblem_id`
+                ) {
+                  let n = {
+                    instancePath: t + `/slots`,
+                    schemaPath: `#/properties/slots/propertyNames/enum`,
+                    keyword: `enum`,
+                    params: {
+                      allowedValues: g.properties.slots.propertyNames.enum,
+                    },
+                    message: `must be equal to one of the allowed values`,
+                    propertyName: e,
+                  };
+                  (s === null ? (s = [n]) : s.push(n), c++);
+                }
+                if (n !== c) {
+                  let n = {
+                    instancePath: t + `/slots`,
+                    schemaPath: `#/properties/slots/propertyNames`,
+                    keyword: `propertyNames`,
+                    params: { propertyName: e },
+                    message: `property name must be valid`,
+                  };
+                  (s === null ? (s = [n]) : s.push(n), c++);
+                }
+              }
               for (let e in n)
                 if (typeof n[e] != `string`) {
                   let n = {
@@ -6076,15 +6946,46 @@ var e = Object.create,
           };
           (s === null ? (s = [e]) : s.push(e), c++);
         }
-        return ((N.errors = s), c === 0);
+        return ((R.errors = s), c === 0);
       }
-      ((N.evaluated = {
-        props: { player_id: !0, appearance_version: !0, slots: !0 },
-        dynamicProps: !1,
-        dynamicItems: !1,
-      }),
-        (e.CharacterUpdate = P));
-      function P(
+      ((R.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.CharacterUpdate = z));
+      let oe = {
+        type: `object`,
+        additionalProperties: !1,
+        required: [`expected_appearance_version`, `slots`],
+        properties: {
+          expected_appearance_version: {
+            type: `integer`,
+            minimum: 1,
+            maximum: 2147483647,
+          },
+          slots: {
+            type: `object`,
+            minProperties: 1,
+            propertyNames: {
+              enum: [
+                `body_palette`,
+                `hair_style`,
+                `hair_color`,
+                `eye_style`,
+                `face_detail`,
+                `outfit_id`,
+                `head_accessory_id`,
+                `katana_visual_id`,
+                `slash_effect_id`,
+                `profile_emblem_id`,
+              ],
+            },
+            additionalProperties: {
+              type: `string`,
+              minLength: 1,
+              maxLength: 64,
+            },
+          },
+        },
+      };
+      function z(
         e,
         {
           instancePath: t = ``,
@@ -6096,7 +6997,7 @@ var e = Object.create,
       ) {
         let o = null,
           s = 0,
-          c = P.evaluated;
+          c = z.evaluated;
         if (
           (c.dynamicProps && (c.props = void 0),
           c.dynamicItems && (c.items = void 0),
@@ -6145,22 +7046,109 @@ var e = Object.create,
               };
               (o === null ? (o = [e]) : o.push(e), s++);
             }
-            if (typeof n == `number` && isFinite(n) && (n < 1 || isNaN(n))) {
-              let e = {
-                instancePath: t + `/expected_appearance_version`,
-                schemaPath: `#/properties/expected_appearance_version/minimum`,
-                keyword: `minimum`,
-                params: { comparison: `>=`, limit: 1 },
-                message: `must be >= 1`,
-              };
-              (o === null ? (o = [e]) : o.push(e), s++);
+            if (typeof n == `number` && isFinite(n)) {
+              if (n > 2147483647 || isNaN(n)) {
+                let e = {
+                  instancePath: t + `/expected_appearance_version`,
+                  schemaPath: `#/properties/expected_appearance_version/maximum`,
+                  keyword: `maximum`,
+                  params: { comparison: `<=`, limit: 2147483647 },
+                  message: `must be <= 2147483647`,
+                };
+                (o === null ? (o = [e]) : o.push(e), s++);
+              }
+              if (n < 1 || isNaN(n)) {
+                let e = {
+                  instancePath: t + `/expected_appearance_version`,
+                  schemaPath: `#/properties/expected_appearance_version/minimum`,
+                  keyword: `minimum`,
+                  params: { comparison: `>=`, limit: 1 },
+                  message: `must be >= 1`,
+                };
+                (o === null ? (o = [e]) : o.push(e), s++);
+              }
             }
           }
           if (e.slots !== void 0) {
             let n = e.slots;
             if (n && typeof n == `object` && !Array.isArray(n)) {
-              for (let e in n)
-                if (typeof n[e] != `string`) {
+              if (Object.keys(n).length < 1) {
+                let e = {
+                  instancePath: t + `/slots`,
+                  schemaPath: `#/properties/slots/minProperties`,
+                  keyword: `minProperties`,
+                  params: { limit: 1 },
+                  message: `must NOT have fewer than 1 properties`,
+                };
+                (o === null ? (o = [e]) : o.push(e), s++);
+              }
+              for (let e in n) {
+                let n = s;
+                if (
+                  e !== `body_palette` &&
+                  e !== `hair_style` &&
+                  e !== `hair_color` &&
+                  e !== `eye_style` &&
+                  e !== `face_detail` &&
+                  e !== `outfit_id` &&
+                  e !== `head_accessory_id` &&
+                  e !== `katana_visual_id` &&
+                  e !== `slash_effect_id` &&
+                  e !== `profile_emblem_id`
+                ) {
+                  let n = {
+                    instancePath: t + `/slots`,
+                    schemaPath: `#/properties/slots/propertyNames/enum`,
+                    keyword: `enum`,
+                    params: {
+                      allowedValues: oe.properties.slots.propertyNames.enum,
+                    },
+                    message: `must be equal to one of the allowed values`,
+                    propertyName: e,
+                  };
+                  (o === null ? (o = [n]) : o.push(n), s++);
+                }
+                if (n !== s) {
+                  let n = {
+                    instancePath: t + `/slots`,
+                    schemaPath: `#/properties/slots/propertyNames`,
+                    keyword: `propertyNames`,
+                    params: { propertyName: e },
+                    message: `property name must be valid`,
+                  };
+                  (o === null ? (o = [n]) : o.push(n), s++);
+                }
+              }
+              for (let e in n) {
+                let r = n[e];
+                if (typeof r == `string`) {
+                  if (y(r) > 64) {
+                    let n = {
+                      instancePath:
+                        t +
+                        `/slots/` +
+                        e.replace(/~/g, `~0`).replace(/\//g, `~1`),
+                      schemaPath: `#/properties/slots/additionalProperties/maxLength`,
+                      keyword: `maxLength`,
+                      params: { limit: 64 },
+                      message: `must NOT have more than 64 characters`,
+                    };
+                    (o === null ? (o = [n]) : o.push(n), s++);
+                  }
+                  if (y(r) < 1) {
+                    let n = {
+                      instancePath:
+                        t +
+                        `/slots/` +
+                        e.replace(/~/g, `~0`).replace(/\//g, `~1`),
+                      schemaPath: `#/properties/slots/additionalProperties/minLength`,
+                      keyword: `minLength`,
+                      params: { limit: 1 },
+                      message: `must NOT have fewer than 1 characters`,
+                    };
+                    (o === null ? (o = [n]) : o.push(n), s++);
+                  }
+                } else {
                   let n = {
                     instancePath:
                       t +
@@ -6173,6 +7161,7 @@ var e = Object.create,
                   };
                   (o === null ? (o = [n]) : o.push(n), s++);
                 }
+              }
             } else {
               let e = {
                 instancePath: t + `/slots`,
@@ -6194,11 +7183,11 @@ var e = Object.create,
           };
           (o === null ? (o = [e]) : o.push(e), s++);
         }
-        return ((P.errors = o), s === 0);
+        return ((z.errors = o), s === 0);
       }
-      ((P.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
-        (e.RunTicket = I));
-      let ae = {
+      ((z.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.RunTicket = V));
+      let se = {
           type: `object`,
           properties: {
             run_id: { type: `string`, format: `uuid` },
@@ -6236,7 +7225,7 @@ var e = Object.create,
             { properties: { mode: { const: `REGIONAL` } } },
           ],
         },
-        oe = {
+        ce = {
           type: `object`,
           properties: {
             segment_ticks: { type: `integer`, const: 3600 },
@@ -6289,9 +7278,9 @@ var e = Object.create,
           ],
           additionalProperties: !1,
         },
-        se = RegExp(`^[a-f0-9]{32}$`, `u`),
-        F = RegExp(`^[a-f0-9]{64}$`, `u`);
-      function I(
+        le = RegExp(`^[a-f0-9]{32}$`, `u`),
+        B = RegExp(`^[a-f0-9]{64}$`, `u`);
+      function V(
         e,
         {
           instancePath: n = ``,
@@ -6303,7 +7292,7 @@ var e = Object.create,
       ) {
         let l = null,
           u = 0,
-          d = I.evaluated;
+          d = V.evaluated;
         (d.dynamicProps && (d.props = void 0),
           d.dynamicItems && (d.items = void 0));
         let f = u,
@@ -6335,11 +7324,11 @@ var e = Object.create,
             (l === null ? (l = [e]) : l.push(e), u++);
           }
         }
-        var _ = h === u;
-        if (_) {
+        var g = h === u;
+        if (g) {
           ((p = !0), (m = 0));
-          var y = {};
-          ((y.mode = !0), (y.starting_region_id = !0));
+          var v = {};
+          ((v.mode = !0), (v.starting_region_id = !0));
         }
         let b = u;
         if (
@@ -6358,11 +7347,11 @@ var e = Object.create,
           };
           (l === null ? (l = [e]) : l.push(e), u++);
         }
-        var _ = b === u;
+        var g = b === u;
         if (
-          (_ && p
+          (g && p
             ? ((p = !1), (m = [m, 1]))
-            : _ && ((p = !0), (m = 1), y !== !0 && ((y ||= {}), (y.mode = !0))),
+            : g && ((p = !0), (m = 1), v !== !0 && ((v ||= {}), (v.mode = !0))),
           p)
         )
           ((u = f), l !== null && (f ? (l.length = f) : (l = null)));
@@ -6468,7 +7457,7 @@ var e = Object.create,
             (l === null ? (l = [e]) : l.push(e), u++);
           }
           for (let t in e)
-            if (!g.call(ae.properties, t)) {
+            if (!_.call(se.properties, t)) {
               let e = {
                 instancePath: n,
                 schemaPath: `#/additionalProperties`,
@@ -6548,7 +7537,7 @@ var e = Object.create,
                 schemaPath: `#/properties/starting_region_id/enum`,
                 keyword: `enum`,
                 params: {
-                  allowedValues: ae.properties.starting_region_id.enum,
+                  allowedValues: se.properties.starting_region_id.enum,
                 },
                 message: `must be equal to one of the allowed values`,
               };
@@ -6558,7 +7547,7 @@ var e = Object.create,
           if (e.seed !== void 0) {
             let t = e.seed;
             if (typeof t == `string`) {
-              if (!se.test(t)) {
+              if (!le.test(t)) {
                 let e = {
                   instancePath: n + `/seed`,
                   schemaPath: `#/properties/seed/pattern`,
@@ -6744,7 +7733,7 @@ var e = Object.create,
               if (t.generator_version !== void 0) {
                 let e = t.generator_version;
                 if (typeof e == `string`) {
-                  if (v(e) < 1) {
+                  if (y(e) < 1) {
                     let e = {
                       instancePath: n + `/versions/generator_version`,
                       schemaPath: `#/$defs/RunVersions/properties/generator_version/minLength`,
@@ -6768,7 +7757,7 @@ var e = Object.create,
               if (t.scoring_version !== void 0) {
                 let e = t.scoring_version;
                 if (typeof e == `string`) {
-                  if (v(e) < 1) {
+                  if (y(e) < 1) {
                     let e = {
                       instancePath: n + `/versions/scoring_version`,
                       schemaPath: `#/$defs/RunVersions/properties/scoring_version/minLength`,
@@ -6815,7 +7804,7 @@ var e = Object.create,
               if (t.rules_manifest_hash !== void 0) {
                 let e = t.rules_manifest_hash;
                 if (typeof e == `string`) {
-                  if (!F.test(e)) {
+                  if (!B.test(e)) {
                     let e = {
                       instancePath: n + `/versions/rules_manifest_hash`,
                       schemaPath: `#/$defs/RunVersions/properties/rules_manifest_hash/pattern`,
@@ -6839,7 +7828,7 @@ var e = Object.create,
               if (t.assets_manifest_version !== void 0) {
                 let e = t.assets_manifest_version;
                 if (typeof e == `string`) {
-                  if (v(e) < 1) {
+                  if (y(e) < 1) {
                     let e = {
                       instancePath: n + `/versions/assets_manifest_version`,
                       schemaPath: `#/$defs/RunVersions/properties/assets_manifest_version/minLength`,
@@ -7023,7 +8012,7 @@ var e = Object.create,
                 (l === null ? (l = [e]) : l.push(e), u++);
               }
               for (let e in t)
-                if (!g.call(oe.properties, e)) {
+                if (!_.call(ce.properties, e)) {
                   let t = {
                     instancePath: n + `/limits`,
                     schemaPath: `#/$defs/RunLimits/additionalProperties`,
@@ -7368,11 +8357,11 @@ var e = Object.create,
           };
           (l === null ? (l = [e]) : l.push(e), u++);
         }
-        return ((I.errors = l), u === 0);
+        return ((V.errors = l), u === 0);
       }
-      ((I.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
-        (e.SegmentAck = L));
-      function L(
+      ((V.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.SegmentAck = H));
+      function H(
         e,
         {
           instancePath: t = ``,
@@ -7384,7 +8373,7 @@ var e = Object.create,
       ) {
         let s = null,
           c = 0,
-          l = L.evaluated;
+          l = H.evaluated;
         if (
           (l.dynamicProps && (l.props = void 0),
           l.dynamicItems && (l.items = void 0),
@@ -7496,7 +8485,7 @@ var e = Object.create,
           if (e.segment_hash !== void 0) {
             let n = e.segment_hash;
             if (typeof n == `string`) {
-              if (!F.test(n)) {
+              if (!B.test(n)) {
                 let e = {
                   instancePath: t + `/segment_hash`,
                   schemaPath: `#/properties/segment_hash/pattern`,
@@ -7550,11 +8539,11 @@ var e = Object.create,
           };
           (s === null ? (s = [e]) : s.push(e), c++);
         }
-        return ((L.errors = s), c === 0);
+        return ((H.errors = s), c === 0);
       }
-      ((L.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
-        (e.RunStatus = z));
-      let R = {
+      ((H.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.RunStatus = W));
+      let U = {
           type: `object`,
           required: [`run_id`, `status`],
           properties: {
@@ -7632,7 +8621,7 @@ var e = Object.create,
             },
           ],
         },
-        ce = {
+        ue = {
           type: `object`,
           additionalProperties: !1,
           required: [`boss_id`, `defeated`, `retreated`, `bonus`],
@@ -7643,7 +8632,7 @@ var e = Object.create,
             bonus: { type: `string`, pattern: `^(0|[1-9][0-9]*)$` },
           },
         };
-      function z(
+      function W(
         e,
         {
           instancePath: t = ``,
@@ -7655,7 +8644,7 @@ var e = Object.create,
       ) {
         let c = null,
           l = 0,
-          u = z.evaluated;
+          u = W.evaluated;
         (u.dynamicProps && (u.props = void 0),
           u.dynamicItems && (u.items = void 0));
         let d = l,
@@ -7783,13 +8772,13 @@ var e = Object.create,
           }
           var m = n === l;
           if (((f = m), f)) {
-            var _ = {};
-            ((_.score = !0),
-              (_.distance_m = !0),
-              (_.verified_at = !0),
-              (_.end_reason = !0),
-              (_.ranked = !0),
-              (_.status = !0));
+            var g = {};
+            ((g.score = !0),
+              (g.distance_m = !0),
+              (g.verified_at = !0),
+              (g.end_reason = !0),
+              (g.ranked = !0),
+              (g.status = !0));
           }
           h = `then`;
         } else {
@@ -7839,12 +8828,12 @@ var e = Object.create,
           var m = n === l;
           ((f = m),
             f &&
-              _ !== !0 &&
-              ((_ ||= {}),
-              (_.score = !0),
-              (_.distance_m = !0),
-              (_.verified_at = !0),
-              (_.ranked = !0)),
+              g !== !0 &&
+              ((g ||= {}),
+              (g.score = !0),
+              (g.distance_m = !0),
+              (g.verified_at = !0),
+              (g.ranked = !0)),
             (h = `else`));
         }
         if (!f) {
@@ -7885,7 +8874,7 @@ var e = Object.create,
                 schemaPath: `#/allOf/1/then/properties/ranked/enum`,
                 keyword: `enum`,
                 params: {
-                  allowedValues: R.allOf[1].then.properties.ranked.enum,
+                  allowedValues: U.allOf[1].then.properties.ranked.enum,
                 },
                 message: `must be equal to one of the allowed values`,
               };
@@ -7909,9 +8898,9 @@ var e = Object.create,
           (c === null ? (c = [e]) : c.push(e), l++);
         }
         if (
-          (_ !== !0 &&
+          (g !== !0 &&
             S !== void 0 &&
-            (S === !0 ? (_ = !0) : ((_ ||= {}), Object.assign(_, S))),
+            (S === !0 ? (g = !0) : ((g ||= {}), Object.assign(g, S))),
           e && typeof e == `object` && !Array.isArray(e))
         ) {
           if (e.run_id === void 0) {
@@ -7935,7 +8924,7 @@ var e = Object.create,
             (c === null ? (c = [e]) : c.push(e), l++);
           }
           for (let n in e)
-            if (!g.call(R.properties, n)) {
+            if (!_.call(U.properties, n)) {
               let e = {
                 instancePath: t,
                 schemaPath: `#/additionalProperties`,
@@ -8040,7 +9029,7 @@ var e = Object.create,
                         instancePath: t + `/boss_results/` + r + `/boss_id`,
                         schemaPath: `#/$defs/BossResultSummary/properties/boss_id/enum`,
                         keyword: `enum`,
-                        params: { allowedValues: ce.properties.boss_id.enum },
+                        params: { allowedValues: ue.properties.boss_id.enum },
                         message: `must be equal to one of the allowed values`,
                       };
                       (c === null ? (c = [e]) : c.push(e), l++);
@@ -8113,7 +9102,7 @@ var e = Object.create,
                   if (e.bonus !== void 0) {
                     let n = e.bonus;
                     if (typeof n == `string`) {
-                      if (!C.test(n)) {
+                      if (!T.test(n)) {
                         let e = {
                           instancePath: t + `/boss_results/` + r + `/bonus`,
                           schemaPath: `#/$defs/BossResultSummary/properties/bonus/pattern`,
@@ -8207,7 +9196,7 @@ var e = Object.create,
                 instancePath: t + `/status`,
                 schemaPath: `#/properties/status/enum`,
                 keyword: `enum`,
-                params: { allowedValues: R.properties.status.enum },
+                params: { allowedValues: U.properties.status.enum },
                 message: `must be equal to one of the allowed values`,
               };
               (c === null ? (c = [e]) : c.push(e), l++);
@@ -8220,12 +9209,12 @@ var e = Object.create,
                 instancePath: t + `/score`,
                 schemaPath: `#/properties/score/type`,
                 keyword: `type`,
-                params: { type: R.properties.score.type },
+                params: { type: U.properties.score.type },
                 message: `must be string,null`,
               };
               (c === null ? (c = [e]) : c.push(e), l++);
             }
-            if (typeof n == `string` && !C.test(n)) {
+            if (typeof n == `string` && !T.test(n)) {
               let e = {
                 instancePath: t + `/score`,
                 schemaPath: `#/properties/score/pattern`,
@@ -8246,7 +9235,7 @@ var e = Object.create,
                 instancePath: t + `/distance_m`,
                 schemaPath: `#/properties/distance_m/type`,
                 keyword: `type`,
-                params: { type: R.properties.distance_m.type },
+                params: { type: U.properties.distance_m.type },
                 message: `must be integer,null`,
               };
               (c === null ? (c = [e]) : c.push(e), l++);
@@ -8269,7 +9258,7 @@ var e = Object.create,
                 instancePath: t + `/verified_at`,
                 schemaPath: `#/properties/verified_at/type`,
                 keyword: `type`,
-                params: { type: R.properties.verified_at.type },
+                params: { type: U.properties.verified_at.type },
                 message: `must be string,null`,
               };
               (c === null ? (c = [e]) : c.push(e), l++);
@@ -8292,7 +9281,7 @@ var e = Object.create,
                 instancePath: t + `/rejection_code`,
                 schemaPath: `#/properties/rejection_code/type`,
                 keyword: `type`,
-                params: { type: R.properties.rejection_code.type },
+                params: { type: U.properties.rejection_code.type },
                 message: `must be string,null`,
               };
               (c === null ? (c = [e]) : c.push(e), l++);
@@ -8305,7 +9294,7 @@ var e = Object.create,
                 instancePath: t + `/end_reason`,
                 schemaPath: `#/properties/end_reason/type`,
                 keyword: `type`,
-                params: { type: R.properties.end_reason.type },
+                params: { type: U.properties.end_reason.type },
                 message: `must be string,null`,
               };
               (c === null ? (c = [e]) : c.push(e), l++);
@@ -8320,7 +9309,7 @@ var e = Object.create,
                 instancePath: t + `/end_reason`,
                 schemaPath: `#/properties/end_reason/enum`,
                 keyword: `enum`,
-                params: { allowedValues: R.properties.end_reason.enum },
+                params: { allowedValues: U.properties.end_reason.enum },
                 message: `must be equal to one of the allowed values`,
               };
               (c === null ? (c = [e]) : c.push(e), l++);
@@ -8333,7 +9322,7 @@ var e = Object.create,
                 instancePath: t + `/ranked`,
                 schemaPath: `#/properties/ranked/type`,
                 keyword: `type`,
-                params: { type: R.properties.ranked.type },
+                params: { type: U.properties.ranked.type },
                 message: `must be boolean,null`,
               };
               (c === null ? (c = [e]) : c.push(e), l++);
@@ -8370,7 +9359,7 @@ var e = Object.create,
                 instancePath: t + `/upload_deadline`,
                 schemaPath: `#/properties/upload_deadline/type`,
                 keyword: `type`,
-                params: { type: R.properties.upload_deadline.type },
+                params: { type: U.properties.upload_deadline.type },
                 message: `must be string,null`,
               };
               (c === null ? (c = [e]) : c.push(e), l++);
@@ -8393,7 +9382,7 @@ var e = Object.create,
                 instancePath: t + `/submitted_complete_at`,
                 schemaPath: `#/properties/submitted_complete_at/type`,
                 keyword: `type`,
-                params: { type: R.properties.submitted_complete_at.type },
+                params: { type: U.properties.submitted_complete_at.type },
                 message: `must be string,null`,
               };
               (c === null ? (c = [e]) : c.push(e), l++);
@@ -8419,11 +9408,11 @@ var e = Object.create,
           };
           (c === null ? (c = [e]) : c.push(e), l++);
         }
-        return ((z.errors = c), l === 0);
+        return ((W.errors = c), l === 0);
       }
-      ((z.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
-        (e.LeaderboardEntry = B));
-      function B(
+      ((W.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.LeaderboardEntry = G));
+      function G(
         e,
         {
           instancePath: t = ``,
@@ -8435,7 +9424,7 @@ var e = Object.create,
       ) {
         let s = null,
           c = 0,
-          l = B.evaluated;
+          l = G.evaluated;
         if (
           (l.dynamicProps && (l.props = void 0),
           l.dynamicItems && (l.items = void 0),
@@ -8642,9 +9631,9 @@ var e = Object.create,
           };
           (s === null ? (s = [e]) : s.push(e), c++);
         }
-        return ((B.errors = s), c === 0);
+        return ((G.errors = s), c === 0);
       }
-      ((B.evaluated = {
+      ((G.evaluated = {
         props: {
           rank: !0,
           player_id: !0,
@@ -8657,8 +9646,8 @@ var e = Object.create,
         dynamicProps: !1,
         dynamicItems: !1,
       }),
-        (e.LeaderboardPage = V));
-      let le = {
+        (e.LeaderboardPage = K));
+      let de = {
         type: `object`,
         required: [`entries`, `rules_major`],
         properties: {
@@ -8670,7 +9659,7 @@ var e = Object.create,
           rules_major: { type: `integer`, minimum: 1 },
         },
       };
-      function V(
+      function K(
         e,
         {
           instancePath: t = ``,
@@ -8682,7 +9671,7 @@ var e = Object.create,
       ) {
         let s = null,
           c = 0,
-          l = V.evaluated;
+          l = K.evaluated;
         if (
           (l.dynamicProps && (l.props = void 0),
           l.dynamicItems && (l.items = void 0),
@@ -8967,7 +9956,7 @@ var e = Object.create,
                 instancePath: t + `/next_cursor`,
                 schemaPath: `#/properties/next_cursor/type`,
                 keyword: `type`,
-                params: { type: le.properties.next_cursor.type },
+                params: { type: de.properties.next_cursor.type },
                 message: `must be string,null`,
               };
               (s === null ? (s = [e]) : s.push(e), c++);
@@ -9006,15 +9995,15 @@ var e = Object.create,
           };
           (s === null ? (s = [e]) : s.push(e), c++);
         }
-        return ((V.errors = s), c === 0);
+        return ((K.errors = s), c === 0);
       }
-      ((V.evaluated = {
+      ((K.evaluated = {
         props: { entries: !0, next_cursor: !0, rules_major: !0 },
         dynamicProps: !1,
         dynamicItems: !1,
       }),
-        (e.WeeklyEdition = H));
-      let ue = {
+        (e.WeeklyEdition = q));
+      let fe = {
         type: `object`,
         required: [`week_id`, `starts_at`, `ends_at`, `challenges`],
         properties: {
@@ -9045,7 +10034,7 @@ var e = Object.create,
           },
         },
       };
-      function H(
+      function q(
         e,
         {
           instancePath: t = ``,
@@ -9057,7 +10046,7 @@ var e = Object.create,
       ) {
         let s = null,
           c = 0,
-          l = H.evaluated;
+          l = q.evaluated;
         if (
           (l.dynamicProps && (l.props = void 0),
           l.dynamicItems && (l.items = void 0),
@@ -9270,7 +10259,7 @@ var e = Object.create,
                         keyword: `enum`,
                         params: {
                           allowedValues:
-                            ue.properties.challenges.items.properties.tier.enum,
+                            fe.properties.challenges.items.properties.tier.enum,
                         },
                         message: `must be equal to one of the allowed values`,
                       };
@@ -9364,15 +10353,15 @@ var e = Object.create,
           };
           (s === null ? (s = [e]) : s.push(e), c++);
         }
-        return ((H.errors = s), c === 0);
+        return ((q.errors = s), c === 0);
       }
-      ((H.evaluated = {
+      ((q.evaluated = {
         props: { week_id: !0, starts_at: !0, ends_at: !0, challenges: !0 },
         dynamicProps: !1,
         dynamicItems: !1,
       }),
-        (e.ApiError = U));
-      function U(
+        (e.ApiError = J));
+      function J(
         e,
         {
           instancePath: t = ``,
@@ -9384,7 +10373,7 @@ var e = Object.create,
       ) {
         let o = null,
           s = 0,
-          c = U.evaluated;
+          c = J.evaluated;
         if (
           (c.dynamicProps && (c.props = void 0),
           c.dynamicItems && (c.items = void 0),
@@ -9500,15 +10489,15 @@ var e = Object.create,
           };
           (o === null ? (o = [e]) : o.push(e), s++);
         }
-        return ((U.errors = o), s === 0);
+        return ((J.errors = o), s === 0);
       }
-      ((U.evaluated = {
+      ((J.evaluated = {
         props: { error: !0 },
         dynamicProps: !1,
         dynamicItems: !1,
       }),
-        (e.Health = W));
-      function W(
+        (e.Health = Y));
+      function Y(
         e,
         {
           instancePath: t = ``,
@@ -9520,7 +10509,7 @@ var e = Object.create,
       ) {
         let o = null,
           s = 0,
-          c = W.evaluated;
+          c = Y.evaluated;
         if (
           (c.dynamicProps && (c.props = void 0),
           c.dynamicItems && (c.items = void 0),
@@ -9613,11 +10602,11 @@ var e = Object.create,
           };
           (o === null ? (o = [e]) : o.push(e), s++);
         }
-        return ((W.errors = o), s === 0);
+        return ((Y.errors = o), s === 0);
       }
-      ((W.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
-        (e.RunStart = G));
-      let de = {
+      ((Y.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.RunStart = X));
+      let pe = {
         type: `object`,
         properties: {
           mode: { $ref: `#/$defs/RunMode` },
@@ -9642,7 +10631,7 @@ var e = Object.create,
           },
         ],
       };
-      function G(
+      function X(
         e,
         {
           instancePath: n = ``,
@@ -9654,7 +10643,7 @@ var e = Object.create,
       ) {
         let s = null,
           c = 0,
-          l = G.evaluated;
+          l = X.evaluated;
         (l.dynamicProps && (l.props = void 0),
           l.dynamicItems && (l.items = void 0));
         let u = c,
@@ -9734,7 +10723,7 @@ var e = Object.create,
                 schemaPath: `#/oneOf/1/properties/region_id/enum`,
                 keyword: `enum`,
                 params: {
-                  allowedValues: de.oneOf[1].properties.region_id.enum,
+                  allowedValues: pe.oneOf[1].properties.region_id.enum,
                 },
                 message: `must be equal to one of the allowed values`,
               };
@@ -9830,7 +10819,7 @@ var e = Object.create,
                 instancePath: n + `/region_id`,
                 schemaPath: `#/properties/region_id/enum`,
                 keyword: `enum`,
-                params: { allowedValues: de.properties.region_id.enum },
+                params: { allowedValues: pe.properties.region_id.enum },
                 message: `must be equal to one of the allowed values`,
               };
               (s === null ? (s = [e]) : s.push(e), c++);
@@ -9846,11 +10835,11 @@ var e = Object.create,
           };
           (s === null ? (s = [e]) : s.push(e), c++);
         }
-        return ((G.errors = s), c === 0);
+        return ((X.errors = s), c === 0);
       }
-      ((G.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
-        (e.RunVersions = fe));
-      function fe(
+      ((X.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.RunVersions = me));
+      function me(
         e,
         {
           instancePath: t = ``,
@@ -9862,7 +10851,7 @@ var e = Object.create,
       ) {
         let o = null,
           s = 0,
-          c = fe.evaluated;
+          c = me.evaluated;
         if (
           (c.dynamicProps && (c.props = void 0),
           c.dynamicItems && (c.items = void 0),
@@ -10030,7 +11019,7 @@ var e = Object.create,
           if (e.generator_version !== void 0) {
             let n = e.generator_version;
             if (typeof n == `string`) {
-              if (v(n) < 1) {
+              if (y(n) < 1) {
                 let e = {
                   instancePath: t + `/generator_version`,
                   schemaPath: `#/properties/generator_version/minLength`,
@@ -10054,7 +11043,7 @@ var e = Object.create,
           if (e.scoring_version !== void 0) {
             let n = e.scoring_version;
             if (typeof n == `string`) {
-              if (v(n) < 1) {
+              if (y(n) < 1) {
                 let e = {
                   instancePath: t + `/scoring_version`,
                   schemaPath: `#/properties/scoring_version/minLength`,
@@ -10101,7 +11090,7 @@ var e = Object.create,
           if (e.rules_manifest_hash !== void 0) {
             let n = e.rules_manifest_hash;
             if (typeof n == `string`) {
-              if (!F.test(n)) {
+              if (!B.test(n)) {
                 let e = {
                   instancePath: t + `/rules_manifest_hash`,
                   schemaPath: `#/properties/rules_manifest_hash/pattern`,
@@ -10125,7 +11114,7 @@ var e = Object.create,
           if (e.assets_manifest_version !== void 0) {
             let n = e.assets_manifest_version;
             if (typeof n == `string`) {
-              if (v(n) < 1) {
+              if (y(n) < 1) {
                 let e = {
                   instancePath: t + `/assets_manifest_version`,
                   schemaPath: `#/properties/assets_manifest_version/minLength`,
@@ -10156,11 +11145,11 @@ var e = Object.create,
           };
           (o === null ? (o = [e]) : o.push(e), s++);
         }
-        return ((fe.errors = o), s === 0);
+        return ((me.errors = o), s === 0);
       }
-      ((fe.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
-        (e.RunLimits = K));
-      function K(
+      ((me.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.RunLimits = he));
+      function he(
         e,
         {
           instancePath: t = ``,
@@ -10172,7 +11161,7 @@ var e = Object.create,
       ) {
         let o = null,
           s = 0,
-          c = K.evaluated;
+          c = he.evaluated;
         if (
           (c.dynamicProps && (c.props = void 0),
           c.dynamicItems && (c.items = void 0),
@@ -10279,7 +11268,7 @@ var e = Object.create,
             (o === null ? (o = [e]) : o.push(e), s++);
           }
           for (let n in e)
-            if (!g.call(oe.properties, n)) {
+            if (!_.call(ce.properties, n)) {
               let e = {
                 instancePath: t,
                 schemaPath: `#/additionalProperties`,
@@ -10589,11 +11578,11 @@ var e = Object.create,
           };
           (o === null ? (o = [e]) : o.push(e), s++);
         }
-        return ((K.errors = o), s === 0);
+        return ((he.errors = o), s === 0);
       }
-      ((K.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
-        (e.FinishRequest = q));
-      let pe = {
+      ((he.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.FinishRequest = _e));
+      let ge = {
         type: `object`,
         properties: {
           final_segment_index: {
@@ -10617,7 +11606,7 @@ var e = Object.create,
         ],
         additionalProperties: !1,
       };
-      function q(
+      function _e(
         e,
         {
           instancePath: t = ``,
@@ -10629,7 +11618,7 @@ var e = Object.create,
       ) {
         let o = null,
           s = 0,
-          c = q.evaluated;
+          c = _e.evaluated;
         if (
           (c.dynamicProps && (c.props = void 0),
           c.dynamicItems && (c.items = void 0),
@@ -10764,7 +11753,7 @@ var e = Object.create,
           if (e.final_hash !== void 0) {
             let n = e.final_hash;
             if (typeof n == `string`) {
-              if (!F.test(n)) {
+              if (!B.test(n)) {
                 let e = {
                   instancePath: t + `/final_hash`,
                   schemaPath: `#/properties/final_hash/pattern`,
@@ -10802,7 +11791,7 @@ var e = Object.create,
                 instancePath: t + `/end_reason`,
                 schemaPath: `#/properties/end_reason/enum`,
                 keyword: `enum`,
-                params: { allowedValues: pe.properties.end_reason.enum },
+                params: { allowedValues: ge.properties.end_reason.enum },
                 message: `must be equal to one of the allowed values`,
               };
               (o === null ? (o = [e]) : o.push(e), s++);
@@ -10818,11 +11807,11 @@ var e = Object.create,
           };
           (o === null ? (o = [e]) : o.push(e), s++);
         }
-        return ((q.errors = o), s === 0);
+        return ((_e.errors = o), s === 0);
       }
-      ((q.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
-        (e.ReplayAction = J));
-      let me = {
+      ((_e.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.ReplayAction = ye));
+      let ve = {
         type: `object`,
         properties: {
           tick: { type: `integer`, minimum: 0, maximum: 9007199254740991 },
@@ -10831,7 +11820,7 @@ var e = Object.create,
         required: [`tick`, `action`],
         additionalProperties: !1,
       };
-      function J(
+      function ye(
         e,
         {
           instancePath: t = ``,
@@ -10843,7 +11832,7 @@ var e = Object.create,
       ) {
         let o = null,
           s = 0,
-          c = J.evaluated;
+          c = ye.evaluated;
         if (
           (c.dynamicProps && (c.props = void 0),
           c.dynamicItems && (c.items = void 0),
@@ -10932,7 +11921,7 @@ var e = Object.create,
                 instancePath: t + `/action`,
                 schemaPath: `#/properties/action/enum`,
                 keyword: `enum`,
-                params: { allowedValues: me.properties.action.enum },
+                params: { allowedValues: ve.properties.action.enum },
                 message: `must be equal to one of the allowed values`,
               };
               (o === null ? (o = [e]) : o.push(e), s++);
@@ -10948,11 +11937,11 @@ var e = Object.create,
           };
           (o === null ? (o = [e]) : o.push(e), s++);
         }
-        return ((J.errors = o), s === 0);
+        return ((ye.errors = o), s === 0);
       }
-      ((J.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
-        (e.ReplayControl = Y));
-      let he = {
+      ((ye.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.ReplayControl = xe));
+      let be = {
         type: `object`,
         properties: {
           tick: { type: `integer`, minimum: 0, maximum: 9007199254740991 },
@@ -10962,7 +11951,7 @@ var e = Object.create,
         required: [`tick`, `sequence`, `action`],
         additionalProperties: !1,
       };
-      function Y(
+      function xe(
         e,
         {
           instancePath: t = ``,
@@ -10974,7 +11963,7 @@ var e = Object.create,
       ) {
         let o = null,
           s = 0,
-          c = Y.evaluated;
+          c = xe.evaluated;
         if (
           (c.dynamicProps && (c.props = void 0),
           c.dynamicItems && (c.items = void 0),
@@ -11108,7 +12097,7 @@ var e = Object.create,
                 instancePath: t + `/action`,
                 schemaPath: `#/properties/action/enum`,
                 keyword: `enum`,
-                params: { allowedValues: he.properties.action.enum },
+                params: { allowedValues: be.properties.action.enum },
                 message: `must be equal to one of the allowed values`,
               };
               (o === null ? (o = [e]) : o.push(e), s++);
@@ -11124,11 +12113,11 @@ var e = Object.create,
           };
           (o === null ? (o = [e]) : o.push(e), s++);
         }
-        return ((Y.errors = o), s === 0);
+        return ((xe.errors = o), s === 0);
       }
-      ((Y.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
-        (e.ReplaySegment = X));
-      function X(
+      ((xe.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.ReplaySegment = Se));
+      function Se(
         e,
         {
           instancePath: t = ``,
@@ -11140,7 +12129,7 @@ var e = Object.create,
       ) {
         let s = null,
           c = 0,
-          l = X.evaluated;
+          l = Se.evaluated;
         if (
           (l.dynamicProps && (l.props = void 0),
           l.dynamicItems && (l.items = void 0),
@@ -11404,7 +12393,7 @@ var e = Object.create,
               i = !1,
               a = c;
             if (typeof n == `string`) {
-              if (!F.test(n)) {
+              if (!B.test(n)) {
                 let e = {
                   instancePath: t + `/previous_hash`,
                   schemaPath: `#/properties/previous_hash/anyOf/0/pattern`,
@@ -11556,7 +12545,7 @@ var e = Object.create,
                         instancePath: t + `/actions/` + r + `/action`,
                         schemaPath: `#/$defs/ReplayAction/properties/action/enum`,
                         keyword: `enum`,
-                        params: { allowedValues: me.properties.action.enum },
+                        params: { allowedValues: ve.properties.action.enum },
                         message: `must be equal to one of the allowed values`,
                       };
                       (s === null ? (s = [e]) : s.push(e), c++);
@@ -11739,7 +12728,7 @@ var e = Object.create,
                         instancePath: t + `/controls/` + r + `/action`,
                         schemaPath: `#/$defs/ReplayControl/properties/action/enum`,
                         keyword: `enum`,
-                        params: { allowedValues: he.properties.action.enum },
+                        params: { allowedValues: be.properties.action.enum },
                         message: `must be equal to one of the allowed values`,
                       };
                       (s === null ? (s = [e]) : s.push(e), c++);
@@ -11777,11 +12766,11 @@ var e = Object.create,
           };
           (s === null ? (s = [e]) : s.push(e), c++);
         }
-        return ((X.errors = s), c === 0);
+        return ((Se.errors = s), c === 0);
       }
-      ((X.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
-        (e.GuestRequest = Z));
-      function Z(
+      ((Se.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.GuestRequest = Ce));
+      function Ce(
         e,
         {
           instancePath: t = ``,
@@ -11793,7 +12782,7 @@ var e = Object.create,
       ) {
         let o = null,
           s = 0,
-          c = Z.evaluated;
+          c = Ce.evaluated;
         if (
           (c.dynamicProps && (c.props = void 0),
           c.dynamicItems && (c.items = void 0),
@@ -11819,11 +12808,11 @@ var e = Object.create,
           };
           (o === null ? (o = [e]) : o.push(e), s++);
         }
-        return ((Z.errors = o), s === 0);
+        return ((Ce.errors = o), s === 0);
       }
-      ((Z.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
-        (e.PhysicsRules = ve));
-      let ge = {
+      ((Ce.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.PhysicsRules = Ee));
+      let we = {
           type: `object`,
           required: [
             `version`,
@@ -11978,8 +12967,8 @@ var e = Object.create,
             },
           },
         },
-        _e = RegExp(`^[a-zA-Z0-9._-]{1,100}$`, `u`);
-      function ve(
+        Te = RegExp(`^[a-zA-Z0-9._-]{1,100}$`, `u`);
+      function Ee(
         e,
         {
           instancePath: t = ``,
@@ -11991,7 +12980,7 @@ var e = Object.create,
       ) {
         let o = null,
           s = 0,
-          c = ve.evaluated;
+          c = Ee.evaluated;
         if (
           (c.dynamicProps && (c.props = void 0),
           c.dynamicItems && (c.items = void 0),
@@ -12238,7 +13227,7 @@ var e = Object.create,
             (o === null ? (o = [e]) : o.push(e), s++);
           }
           for (let n in e)
-            if (!g.call(ge.properties, n)) {
+            if (!_.call(we.properties, n)) {
               let e = {
                 instancePath: t,
                 schemaPath: `#/additionalProperties`,
@@ -12251,7 +13240,7 @@ var e = Object.create,
           if (e.version !== void 0) {
             let n = e.version;
             if (typeof n == `string`) {
-              if (!_e.test(n)) {
+              if (!Te.test(n)) {
                 let e = {
                   instancePath: t + `/version`,
                   schemaPath: `#/properties/version/pattern`,
@@ -13460,11 +14449,11 @@ var e = Object.create,
           };
           (o === null ? (o = [e]) : o.push(e), s++);
         }
-        return ((ve.errors = o), s === 0);
+        return ((Ee.errors = o), s === 0);
       }
-      ((ve.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
-        (e.RunnerManifest = Q));
-      function Q(
+      ((Ee.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.RunnerManifest = Z));
+      function Z(
         e,
         {
           instancePath: t = ``,
@@ -13476,7 +14465,7 @@ var e = Object.create,
       ) {
         let o = null,
           s = 0,
-          c = Q.evaluated;
+          c = Z.evaluated;
         if (
           (c.dynamicProps && (c.props = void 0),
           c.dynamicItems && (c.items = void 0),
@@ -13620,7 +14609,7 @@ var e = Object.create,
           if (e.generator_version !== void 0) {
             let n = e.generator_version;
             if (typeof n == `string`) {
-              if (v(n) < 1) {
+              if (y(n) < 1) {
                 let e = {
                   instancePath: t + `/generator_version`,
                   schemaPath: `#/properties/generator_version/minLength`,
@@ -13644,7 +14633,7 @@ var e = Object.create,
           if (e.scoring_version !== void 0) {
             let n = e.scoring_version;
             if (typeof n == `string`) {
-              if (v(n) < 1) {
+              if (y(n) < 1) {
                 let e = {
                   instancePath: t + `/scoring_version`,
                   schemaPath: `#/properties/scoring_version/minLength`,
@@ -13691,7 +14680,7 @@ var e = Object.create,
           if (e.assets_manifest_version !== void 0) {
             let n = e.assets_manifest_version;
             if (typeof n == `string`) {
-              if (v(n) < 1) {
+              if (y(n) < 1) {
                 let e = {
                   instancePath: t + `/assets_manifest_version`,
                   schemaPath: `#/properties/assets_manifest_version/minLength`,
@@ -13956,7 +14945,7 @@ var e = Object.create,
                 (o === null ? (o = [e]) : o.push(e), s++);
               }
               for (let e in n)
-                if (!g.call(ge.properties, e)) {
+                if (!_.call(we.properties, e)) {
                   let n = {
                     instancePath: t + `/physics`,
                     schemaPath: `#/$defs/PhysicsRules/additionalProperties`,
@@ -13969,7 +14958,7 @@ var e = Object.create,
               if (n.version !== void 0) {
                 let e = n.version;
                 if (typeof e == `string`) {
-                  if (!_e.test(e)) {
+                  if (!Te.test(e)) {
                     let e = {
                       instancePath: t + `/physics/version`,
                       schemaPath: `#/$defs/PhysicsRules/properties/version/pattern`,
@@ -15189,11 +16178,11 @@ var e = Object.create,
           };
           (o === null ? (o = [e]) : o.push(e), s++);
         }
-        return ((Q.errors = o), s === 0);
+        return ((Z.errors = o), s === 0);
       }
-      ((Q.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
-        (e.RegionUnlocks = be));
-      let ye = {
+      ((Z.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.RegionUnlocks = Oe));
+      let De = {
         type: `object`,
         additionalProperties: !1,
         required: [`unlocked_regions`],
@@ -15210,7 +16199,7 @@ var e = Object.create,
           },
         },
       };
-      function be(
+      function Oe(
         e,
         {
           instancePath: t = ``,
@@ -15222,7 +16211,7 @@ var e = Object.create,
       ) {
         let o = null,
           s = 0,
-          c = be.evaluated;
+          c = Oe.evaluated;
         if (
           (c.dynamicProps && (c.props = void 0),
           c.dynamicItems && (c.items = void 0),
@@ -15296,7 +16285,7 @@ var e = Object.create,
                     schemaPath: `#/properties/unlocked_regions/items/enum`,
                     keyword: `enum`,
                     params: {
-                      allowedValues: ye.properties.unlocked_regions.items.enum,
+                      allowedValues: De.properties.unlocked_regions.items.enum,
                     },
                     message: `must be equal to one of the allowed values`,
                   };
@@ -15352,11 +16341,11 @@ var e = Object.create,
           };
           (o === null ? (o = [e]) : o.push(e), s++);
         }
-        return ((be.errors = o), s === 0);
+        return ((Oe.errors = o), s === 0);
       }
-      ((be.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
-        (e.RunManifest = $));
-      function $(
+      ((Oe.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.RunManifest = Q));
+      function Q(
         e,
         {
           instancePath: t = ``,
@@ -15368,7 +16357,7 @@ var e = Object.create,
       ) {
         let o = null,
           s = 0,
-          c = $.evaluated;
+          c = Q.evaluated;
         if (
           (c.dynamicProps && (c.props = void 0),
           c.dynamicItems && (c.items = void 0),
@@ -15408,7 +16397,7 @@ var e = Object.create,
           if (e.manifest_hash !== void 0) {
             let n = e.manifest_hash;
             if (typeof n == `string`) {
-              if (!F.test(n)) {
+              if (!B.test(n)) {
                 let e = {
                   instancePath: t + `/manifest_hash`,
                   schemaPath: `#/properties/manifest_hash/pattern`,
@@ -15430,14 +16419,14 @@ var e = Object.create,
             }
           }
           e.manifest !== void 0 &&
-            (Q(e.manifest, {
+            (Z(e.manifest, {
               instancePath: t + `/manifest`,
               parentData: e,
               parentDataProperty: `manifest`,
               rootData: i,
               dynamicAnchors: a,
             }) ||
-              ((o = o === null ? Q.errors : o.concat(Q.errors)),
+              ((o = o === null ? Z.errors : o.concat(Z.errors)),
               (s = o.length)));
         } else {
           let e = {
@@ -15449,11 +16438,11 @@ var e = Object.create,
           };
           (o === null ? (o = [e]) : o.push(e), s++);
         }
-        return (($.errors = o), s === 0);
+        return ((Q.errors = o), s === 0);
       }
-      (($.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
-        (e.BossResultSummary = xe));
-      function xe(
+      ((Q.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.BossResultSummary = ke));
+      function ke(
         e,
         {
           instancePath: t = ``,
@@ -15465,7 +16454,7 @@ var e = Object.create,
       ) {
         let o = null,
           s = 0,
-          c = xe.evaluated;
+          c = ke.evaluated;
         if (
           (c.dynamicProps && (c.props = void 0),
           c.dynamicItems && (c.items = void 0),
@@ -15544,7 +16533,7 @@ var e = Object.create,
                 instancePath: t + `/boss_id`,
                 schemaPath: `#/properties/boss_id/enum`,
                 keyword: `enum`,
-                params: { allowedValues: ce.properties.boss_id.enum },
+                params: { allowedValues: ue.properties.boss_id.enum },
                 message: `must be equal to one of the allowed values`,
               };
               (o === null ? (o = [e]) : o.push(e), s++);
@@ -15599,7 +16588,7 @@ var e = Object.create,
           if (e.bonus !== void 0) {
             let n = e.bonus;
             if (typeof n == `string`) {
-              if (!C.test(n)) {
+              if (!T.test(n)) {
                 let e = {
                   instancePath: t + `/bonus`,
                   schemaPath: `#/properties/bonus/pattern`,
@@ -15630,11 +16619,11 @@ var e = Object.create,
           };
           (o === null ? (o = [e]) : o.push(e), s++);
         }
-        return ((xe.errors = o), s === 0);
+        return ((ke.errors = o), s === 0);
       }
-      ((xe.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
-        (e.BossProgress = Ce));
-      let Se = {
+      ((ke.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.BossProgress = je));
+      let Ae = {
         type: `object`,
         additionalProperties: !1,
         required: [`seals`, `rewards`],
@@ -15664,7 +16653,7 @@ var e = Object.create,
           },
         },
       };
-      function Ce(
+      function je(
         e,
         {
           instancePath: t = ``,
@@ -15676,7 +16665,7 @@ var e = Object.create,
       ) {
         let o = null,
           s = 0,
-          c = Ce.evaluated;
+          c = je.evaluated;
         if (
           (c.dynamicProps && (c.props = void 0),
           c.dynamicItems && (c.items = void 0),
@@ -15744,7 +16733,7 @@ var e = Object.create,
                     instancePath: t + `/seals/` + r,
                     schemaPath: `#/properties/seals/items/enum`,
                     keyword: `enum`,
-                    params: { allowedValues: Se.properties.seals.items.enum },
+                    params: { allowedValues: Ae.properties.seals.items.enum },
                     message: `must be equal to one of the allowed values`,
                   };
                   (o === null ? (o = [e]) : o.push(e), s++);
@@ -15828,7 +16817,7 @@ var e = Object.create,
                     instancePath: t + `/rewards/` + r,
                     schemaPath: `#/properties/rewards/items/enum`,
                     keyword: `enum`,
-                    params: { allowedValues: Se.properties.rewards.items.enum },
+                    params: { allowedValues: Ae.properties.rewards.items.enum },
                     message: `must be equal to one of the allowed values`,
                   };
                   (o === null ? (o = [e]) : o.push(e), s++);
@@ -15883,16 +16872,16 @@ var e = Object.create,
           };
           (o === null ? (o = [e]) : o.push(e), s++);
         }
-        return ((Ce.errors = o), s === 0);
+        return ((je.errors = o), s === 0);
       }
-      ((Ce.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
-        (e.ResendEmailRequest = Te));
-      let we = {
+      ((je.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.ResendEmailRequest = Ne));
+      let Me = {
         type: `object`,
         additionalProperties: !1,
         properties: { locale: { type: `string`, enum: [`pt-BR`, `en`] } },
       };
-      function Te(
+      function Ne(
         e,
         {
           instancePath: t = ``,
@@ -15904,7 +16893,7 @@ var e = Object.create,
       ) {
         let o = null,
           s = 0,
-          c = Te.evaluated;
+          c = Ne.evaluated;
         if (
           (c.dynamicProps && (c.props = void 0),
           c.dynamicItems && (c.items = void 0),
@@ -15938,7 +16927,7 @@ var e = Object.create,
                 instancePath: t + `/locale`,
                 schemaPath: `#/properties/locale/enum`,
                 keyword: `enum`,
-                params: { allowedValues: we.properties.locale.enum },
+                params: { allowedValues: Me.properties.locale.enum },
                 message: `must be equal to one of the allowed values`,
               };
               (o === null ? (o = [e]) : o.push(e), s++);
@@ -15954,11 +16943,11 @@ var e = Object.create,
           };
           (o === null ? (o = [e]) : o.push(e), s++);
         }
-        return ((Te.errors = o), s === 0);
+        return ((Ne.errors = o), s === 0);
       }
-      ((Te.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
-        (e.EmptyRequest = Ee));
-      function Ee(
+      ((Ne.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.EmptyRequest = Pe));
+      function Pe(
         e,
         {
           instancePath: t = ``,
@@ -15970,7 +16959,7 @@ var e = Object.create,
       ) {
         let o = null,
           s = 0,
-          c = Ee.evaluated;
+          c = Pe.evaluated;
         if (
           (c.dynamicProps && (c.props = void 0),
           c.dynamicItems && (c.items = void 0),
@@ -15996,11 +16985,11 @@ var e = Object.create,
           };
           (o === null ? (o = [e]) : o.push(e), s++);
         }
-        return ((Ee.errors = o), s === 0);
+        return ((Pe.errors = o), s === 0);
       }
-      ((Ee.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
-        (e.AuthAccepted = De));
-      function De(
+      ((Pe.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.AuthAccepted = Fe));
+      function Fe(
         e,
         {
           instancePath: t = ``,
@@ -16012,7 +17001,7 @@ var e = Object.create,
       ) {
         let o = null,
           s = 0,
-          c = De.evaluated;
+          c = Fe.evaluated;
         if (
           (c.dynamicProps && (c.props = void 0),
           c.dynamicItems && (c.items = void 0),
@@ -16072,11 +17061,11 @@ var e = Object.create,
           };
           (o === null ? (o = [e]) : o.push(e), s++);
         }
-        return ((De.errors = o), s === 0);
+        return ((Fe.errors = o), s === 0);
       }
-      ((De.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
-        (e.AuthTokenRequest = Oe));
-      function Oe(
+      ((Fe.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.AuthTokenRequest = Ie));
+      function Ie(
         e,
         {
           instancePath: t = ``,
@@ -16088,7 +17077,7 @@ var e = Object.create,
       ) {
         let o = null,
           s = 0,
-          c = Oe.evaluated;
+          c = Ie.evaluated;
         if (
           (c.dynamicProps && (c.props = void 0),
           c.dynamicItems && (c.items = void 0),
@@ -16118,7 +17107,7 @@ var e = Object.create,
           if (e.token !== void 0) {
             let n = e.token;
             if (typeof n == `string`) {
-              if (!b.test(n)) {
+              if (!S.test(n)) {
                 let e = {
                   instancePath: t + `/token`,
                   schemaPath: `#/properties/token/pattern`,
@@ -16149,11 +17138,11 @@ var e = Object.create,
           };
           (o === null ? (o = [e]) : o.push(e), s++);
         }
-        return ((Oe.errors = o), s === 0);
+        return ((Ie.errors = o), s === 0);
       }
-      ((Oe.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
-        (e.ForgotPasswordRequest = ke));
-      function ke(
+      ((Ie.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.ForgotPasswordRequest = Le));
+      function Le(
         e,
         {
           instancePath: t = ``,
@@ -16165,7 +17154,7 @@ var e = Object.create,
       ) {
         let s = null,
           c = 0,
-          l = ke.evaluated;
+          l = Le.evaluated;
         if (
           (l.dynamicProps && (l.props = void 0),
           l.dynamicItems && (l.items = void 0),
@@ -16195,7 +17184,7 @@ var e = Object.create,
           if (e.email !== void 0) {
             let n = e.email;
             if (typeof n == `string`) {
-              if (v(n) > 254) {
+              if (y(n) > 254) {
                 let e = {
                   instancePath: t + `/email`,
                   schemaPath: `#/properties/email/maxLength`,
@@ -16236,11 +17225,11 @@ var e = Object.create,
           };
           (s === null ? (s = [e]) : s.push(e), c++);
         }
-        return ((ke.errors = s), c === 0);
+        return ((Le.errors = s), c === 0);
       }
-      ((ke.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
-        (e.ResetPasswordRequest = Ae));
-      function Ae(
+      ((Le.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.ResetPasswordRequest = Re));
+      function Re(
         e,
         {
           instancePath: t = ``,
@@ -16252,7 +17241,7 @@ var e = Object.create,
       ) {
         let o = null,
           s = 0,
-          c = Ae.evaluated;
+          c = Re.evaluated;
         if (
           (c.dynamicProps && (c.props = void 0),
           c.dynamicItems && (c.items = void 0),
@@ -16292,7 +17281,7 @@ var e = Object.create,
           if (e.token !== void 0) {
             let n = e.token;
             if (typeof n == `string`) {
-              if (!b.test(n)) {
+              if (!S.test(n)) {
                 let e = {
                   instancePath: t + `/token`,
                   schemaPath: `#/properties/token/pattern`,
@@ -16316,7 +17305,7 @@ var e = Object.create,
           if (e.new_password !== void 0) {
             let n = e.new_password;
             if (typeof n == `string`) {
-              if (v(n) > 256) {
+              if (y(n) > 256) {
                 let e = {
                   instancePath: t + `/new_password`,
                   schemaPath: `#/properties/new_password/maxLength`,
@@ -16326,7 +17315,7 @@ var e = Object.create,
                 };
                 (o === null ? (o = [e]) : o.push(e), s++);
               }
-              if (v(n) < 12) {
+              if (y(n) < 12) {
                 let e = {
                   instancePath: t + `/new_password`,
                   schemaPath: `#/properties/new_password/minLength`,
@@ -16357,11 +17346,11 @@ var e = Object.create,
           };
           (o === null ? (o = [e]) : o.push(e), s++);
         }
-        return ((Ae.errors = o), s === 0);
+        return ((Re.errors = o), s === 0);
       }
-      ((Ae.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
-        (e.ReauthRequest = je));
-      function je(
+      ((Re.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.ReauthRequest = ze));
+      function ze(
         e,
         {
           instancePath: t = ``,
@@ -16373,7 +17362,7 @@ var e = Object.create,
       ) {
         let o = null,
           s = 0,
-          c = je.evaluated;
+          c = ze.evaluated;
         if (
           (c.dynamicProps && (c.props = void 0),
           c.dynamicItems && (c.items = void 0),
@@ -16403,7 +17392,7 @@ var e = Object.create,
           if (e.password !== void 0) {
             let n = e.password;
             if (typeof n == `string`) {
-              if (v(n) > 256) {
+              if (y(n) > 256) {
                 let e = {
                   instancePath: t + `/password`,
                   schemaPath: `#/properties/password/maxLength`,
@@ -16413,7 +17402,7 @@ var e = Object.create,
                 };
                 (o === null ? (o = [e]) : o.push(e), s++);
               }
-              if (v(n) < 1) {
+              if (y(n) < 1) {
                 let e = {
                   instancePath: t + `/password`,
                   schemaPath: `#/properties/password/minLength`,
@@ -16444,11 +17433,11 @@ var e = Object.create,
           };
           (o === null ? (o = [e]) : o.push(e), s++);
         }
-        return ((je.errors = o), s === 0);
+        return ((ze.errors = o), s === 0);
       }
-      ((je.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
-        (e.AccountSessions = Me));
-      function Me(
+      ((ze.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 }),
+        (e.AccountSessions = $));
+      function $(
         e,
         {
           instancePath: t = ``,
@@ -16460,7 +17449,7 @@ var e = Object.create,
       ) {
         let c = null,
           l = 0,
-          u = Me.evaluated;
+          u = $.evaluated;
         if (
           (u.dynamicProps && (u.props = void 0),
           u.dynamicItems && (u.items = void 0),
@@ -16709,9 +17698,9 @@ var e = Object.create,
           };
           (c === null ? (c = [e]) : c.push(e), l++);
         }
-        return ((Me.errors = c), l === 0);
+        return (($.errors = c), l === 0);
       }
-      Me.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+      $.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
     })(),
   ).default;
 export { d as validators };
